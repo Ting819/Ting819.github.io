@@ -2256,7 +2256,8 @@ html body .tierMotion.A{
 
     let e=sel.enemy;
     $('arena').innerHTML=`<div class="enemy"><div class="cardTop"><div><b>${e.name}</b><div class="sub">ATK ${e.atk.toFixed(0)}｜DEF ${e.def.toFixed(0)}｜攻速 ${e.speed.toFixed(1)}</div></div><b>${Math.round(e.hp)} / ${e.max}</b></div><div class="monsterHp174"><div class="mh174top"><span>❤️ 怪物 HP</span><span class="mh174num">${Math.round(e.hp)} / ${e.max}</span></div><div class="mh174track"><div class="mh174fill" style="width:${Math.max(0,Math.min(100,100*e.hp/e.max))}%"></div></div><div class="mh174pct">剩餘 ${Math.round(Math.max(0,Math.min(100,100*e.hp/e.max)))}%</div></div><div class="gbar" style="margin-top:5px"><i style="width:${e.g}%"></i></div></div><div class="cards">${sel.party.map(p=>{let c=R[sel.city].find(x=>x.id===p.id);return `<div class="card ${p.alive?'':'dead'}"><div class="cardTop"><div><div class="name">${p.name}</div><div class="sub">Lv.${c.lv}｜EXP ${c.xp}/${xpNeed(c.lv)}</div></div><b>${Math.round(p.hp)}/${p.max}</b></div><div class="bar"><i style="width:${100*p.hp/p.max}%"></i></div><div class="gbar" style="margin-top:5px"><i style="width:${p.g}%"></i></div>${window.ctBattleTreasureInline126(c)}<div class="stats"><div class="stat">ATK<b>${p.atk}</b></div><div class="stat">DEF<b>${p.def}</b></div><div class="stat">攻速<b>${p.speed.toFixed(1)}</b></div><div class="stat">爆擊<b>${Math.round(p.crit*100)}%</b></div><div class="stat">閃避<b>${Math.round((p.dodge||0)*100)}%</b></div><div class="stat">爆傷<b>+${Math.round((p.critDmg||.50)*100)}%</b></div></div></div>`}).join('')}</div>`;
-    $('battlelog').innerHTML='<div class="sub">'+sel.city+'｜'+(TEAMN[sel.city]||'')+'</div>'+sel.log.slice(0,18).map(x=>'<div>'+x+'</div>').join('');
+    const battleLogEl=$('log')||$('battlelog');
+    if(battleLogEl) battleLogEl.innerHTML='<div class="sub">'+sel.city+'｜'+(TEAMN[sel.city]||'')+'</div>'+sel.log.slice(0,18).map(x=>'<div>'+x+'</div>').join('');
   };
 
   // ===== 3) Team tier thresholds kept but widened as latest logic =====
@@ -3549,4 +3550,5 @@ try{if(typeof render==='function')render();if(typeof save==='function')save(true
 }
 </style>
 <!-- CT X selected-rating center pivot fix END -->
+<!-- CT official world boss Battle Log null-fix -->
 </body></html>
