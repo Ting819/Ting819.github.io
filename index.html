@@ -5,8 +5,8 @@
 <meta name="theme-color" content="#08101d">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="CITY TOWER">
-<title>CITY TOWER V17.4.108｜X/U/S/A 同步節奏版</title>
+<meta name="apple-mobile-web-app-title" content="Taiwan City Tower">
+<title>Taiwan City Tower</title>
 <style>
 :root{--bg:#08101d;--p:#101b2d;--p2:#17243a;--bd:#2b3e5d;--tx:#eef5ff;--mu:#93a4bf;--gold:#ffd56a;--red:#ff6d7d;--green:#6fe0a2}
 *{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
@@ -118,7 +118,7 @@ html,body,.app,.modal,button,select,input,textarea{
 </head><body>
 <div class="app">
 <div class="top">
-<h1>⚔️ CITY TOWER V17.4.108｜<span class="ctTitleTier73 tierLetter tierMotion S">S</span>/<span class="ctTitleTier73 tierLetter tierMotion U">U</span>/<span class="ctTitleTier73 tierLetter tierMotion X">X</span>同步節奏版</h1><div class="sub">人物修復基底｜22隊×12人｜寶物掉落／合成／配裝｜iPad主畫面App</div>
+<h1>⚔️ Taiwan City Tower</h1><div class="sub">人物修復基底｜22隊×12人｜寶物掉落／合成／配裝｜iPad主畫面App</div>
 <div class="controls">
 <select id="speed"><option value="1">1×｜1秒1回合</option><option value="5">5×</option><option value="10">10×</option><option value="25">25×</option></select>
 <button id="step">戰鬥1回合</button><button id="auto" class="primary">▶ 自動</button><button id="teams">📚 隊伍資料</button><button id="treasures">🎁 寶物</button><button id="manualWB">🌐 手動世界Boss</button><button id="manualBrawl">⚔️ 手動22隊大混鬥</button><button id="manualLeague">🏆 手動城市聯賽</button>
@@ -254,7 +254,7 @@ function showCities(){let m=meta();$('mt').textContent='📚 隊伍資料｜22�
 function showRoster(city){let s=states.find(x=>x.city===city),active=new Set(s.party.map(p=>p.id));$('mt').textContent='👥 '+city+'｜12人完整資料';$('back').style.display='';$('mbo').innerHTML='<div class="roster">'+[...R[city]].sort((a,b)=>craw(b)-craw(a)).map((c,i)=>{let st=cstats(c),pct=100*c.xp/xpNeed(c.lv);return `<div class="rosterCard ${active.has(c.id)?'active':''}"><div class="cardTop"><div><b>#${i+1} ${c.name}</b><div class="sub">原始階級 ${c.grade}｜原始總分 ${c.total}</div></div><b>Lv.${c.lv}</b></div><div class="xp"><i style="width:${pct}%"></i></div><div class="sub">EXP ${c.xp}/${xpNeed(c.lv)}｜個人戰力 ${(10*craw(c)/initialTop).toFixed(2)}</div><div class="stats"><div class="stat">HP<b>${st.hp}</b></div><div class="stat">ATK<b>${st.atk}</b></div><div class="stat">DEF<b>${st.def}</b></div><div class="stat">攻速<b>${st.speed.toFixed(1)}</b></div><div class="stat">暴擊<b>${(st.crit*100).toFixed(1)}%</b></div><div class="stat">擊殺<b>${c.kills}</b></div></div><div class="sub">出場 ${c.deploys}｜攻擊 ${c.attacks}｜暴擊 ${c.crits}</div></div>`}).join('')+'</div>'}
 $('step').onclick=()=>tick();$('auto').onclick=start;$('teams').onclick=()=>{$('mb').classList.add('open');showCities()};$('close').onclick=()=>$('mb').classList.remove('open');$('back').onclick=showCities;$('save').onclick=()=>save(false);
 $('reset').onclick=()=>{if(confirm('確定要清除目前進度並開新遊戲？')){localStorage.removeItem(SAVE);init()}};
-$('install').onclick=()=>alert('iPad：請用 Safari 開啟本頁 → 點「分享」→「加入主畫面」→ 名稱 CITY TOWER → 加入。之後請從桌面 CITY TOWER 圖示開啟。');
+$('install').onclick=()=>alert('iPad：請用 Safari 開啟本頁 → 點「分享」→「加入主畫面」→ 名稱 Taiwan City Tower → 加入。之後請從桌面 Taiwan City Tower 圖示開啟。');
 document.addEventListener('visibilitychange',()=>{if(document.hidden)save(true)});window.addEventListener('pagehide',()=>save(true));setInterval(()=>{if(turn)save(true)},5000);
 if(!load())init();
 </script><script>
