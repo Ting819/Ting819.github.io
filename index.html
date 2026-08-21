@@ -2007,13 +2007,11 @@ html body .tierMotion.U{
 }
 html body .tierMotion.S{
   color:var(--rS)!important;-webkit-text-fill-color:var(--rS)!important;
-  text-shadow:0 0 5px #ff0000,0 0 13px rgba(255,0,0,.68),0 0 24px rgba(255,0,0,.30)!important;
   animation:v97S var(--rCycle) ease-in-out infinite!important;-webkit-animation:v97S var(--rCycle) ease-in-out infinite!important;
   transform-origin:50% 50%!important;-webkit-transform-origin:50% 50%!important;
 }
 html body .tierMotion.A{
   color:var(--rA)!important;-webkit-text-fill-color:var(--rA)!important;
-  text-shadow:0 0 4px #ff8000,0 0 10px rgba(255,128,0,.52)!important;
   animation:v97A 3.3s ease-in-out infinite!important;-webkit-animation:v97A 3.3s ease-in-out infinite!important;
 }
 
@@ -2562,191 +2560,9 @@ html body .tierMotion.A{
 <!-- CT174108 END -->
 
 
-<!-- CT174109 START -->
-<style id="ct174109GlobalTierClock">
-/* V17.4.109：所有 X/U/S/A 評級共用完全相同的 3 秒節奏與線性時間軸。
-   不改字體、顏色、光暈強度；只統一「何時上、何時到頂、何時下、何時光暈最亮」。 */
-html body .tierMotion.X,
-html body .tierMotion.U,
-html body .tierMotion.S,
-html body .tierMotion.A{
-  animation-duration:3s!important;
-  -webkit-animation-duration:3s!important;
-  animation-timing-function:linear!important;
-  -webkit-animation-timing-function:linear!important;
-  animation-iteration-count:infinite!important;
-  -webkit-animation-iteration-count:infinite!important;
-}
-
-/* 所有評級相關光暈也使用同一個 3 秒線性時鐘。 */
-:is(.ratingText.X,.ratingText.U,.ratingText.S,.ratingText.A,
-    .teamTint.X .city,.teamTint.X .sub,.teamTint.U .city,.teamTint.U .sub,.teamTint.S .city,.teamTint.S .sub,.teamTint.A .city,.teamTint.A .sub,
-    .powerTint.X,.powerTint.U,.powerTint.S,.powerTint.A,
-    .tierWord17434.X,.tierWord17434.U,.tierWord17434.S,.tierWord17434.A,
-    .tGrade.X,.tGrade.U,.tGrade.S,.tGrade.A,
-    .tItem.tX .tName,.tItem.tU .tName,.tItem.tS .tName,.tItem.tA .tName,
-    .tRosterEquip.X b,.tRosterEquip.U b,.tRosterEquip.S b,.tRosterEquip.A b){
-  animation-duration:3s!important;
-  -webkit-animation-duration:3s!important;
-  animation-timing-function:linear!important;
-  -webkit-animation-timing-function:linear!important;
-  animation-iteration-count:infinite!important;
-  -webkit-animation-iteration-count:infinite!important;
-}
-</style>
-<script id="ct174109GlobalTierClockScript">
-(()=>{
-  'use strict';
-  const CYCLE=3000;
-  const tierOf109=el=>['X','U','S','A'].find(t=>el.classList&&el.classList.contains(t))||'';
-  const phaseDelay109=()=>-((Date.now()%CYCLE)/1000)+'s';
-
-  // Important: only set phase on a newly-created element or when its tier really changes.
-  // Never rewrite it every battle paint, otherwise Safari would visibly restart/stutter the animation.
-  function syncOne109(el){
-    const t=tierOf109(el);if(!t)return;
-    if(el.dataset.ctPhaseTier109===t)return;
-    const d=phaseDelay109();
-    el.style.setProperty('animation-delay',d,'important');
-    el.style.setProperty('-webkit-animation-delay',d,'important');
-    el.dataset.ctPhaseTier109=t;
-  }
-  function syncTierClock109(root=document){
-    if(!root||!root.querySelectorAll)return;
-    root.querySelectorAll('.tierMotion.X,.tierMotion.U,.tierMotion.S,.tierMotion.A,.ratingText.X,.ratingText.U,.ratingText.S,.ratingText.A,.teamTint.X .city,.teamTint.X .sub,.teamTint.U .city,.teamTint.U .sub,.teamTint.S .city,.teamTint.S .sub,.teamTint.A .city,.teamTint.A .sub,.powerTint.X,.powerTint.U,.powerTint.S,.powerTint.A,.tierWord17434.X,.tierWord17434.U,.tierWord17434.S,.tierWord17434.A,.tGrade.X,.tGrade.U,.tGrade.S,.tGrade.A,.tItem.tX .tName,.tItem.tU .tName,.tItem.tS .tName,.tItem.tA .tName,.tRosterEquip.X b,.tRosterEquip.U b,.tRosterEquip.S b,.tRosterEquip.A b').forEach(syncOne109);
-  }
-  window.syncTierClock109=syncTierClock109;
-
-  // Main tower paint: selected-team rating and every leaderboard rating share one clock.
-  const prevRender109=window.render;
-  if(typeof prevRender109==='function'){
-    window.render=render=function(){
-      const r=prevRender109.apply(this,arguments);
-      syncTierClock109(document);
-      return r;
-    };
-  }
-
-  // Modal/team/character views can create tier nodes later; phase-align them once after creation.
-  for(const name of ['showCities','showRoster','showTreasures','tRender','tRenderCatalog']){
-    const old=window[name];
-    if(typeof old!=='function'||old.__ct109Wrapped)continue;
-    const wrapped=function(){
-      const r=old.apply(this,arguments);
-      requestAnimationFrame(()=>syncTierClock109(document));
-      return r;
-    };
-    wrapped.__ct109Wrapped=true;
-    window[name]=wrapped;
-  }
-
-  // Align everything already on screen, including title and selected-team rating.
-  syncTierClock109(document);
-  requestAnimationFrame(()=>syncTierClock109(document));
-
-  try{
-    document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.109');
-    const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.109');
-  }catch(e){}
-  window.__CT_BUILD='V17.4.109-global-tier-clock';
-})();
-</script>
-<!-- CT174109 END -->
 
 
 
-<!-- CT174110 START -->
-<style id="ct174110HardGlobalClockStyle">
-/* V17.4.111：只修正 X/U/S/A 的全域動畫相位，不改字體、顏色、光暈、尺寸或動作內容。 */
-html body .tierMotion.X,
-html body .tierMotion.U,
-html body .tierMotion.S,
-html body .tierMotion.A,
-html body .ratingText.X,
-html body .ratingText.U,
-html body .ratingText.S,
-html body .ratingText.A{
-  animation-delay:0s!important;
-  -webkit-animation-delay:0s!important;
-}
-</style>
-<script id="ct174110HardGlobalClockScript">
-(()=>{
-  'use strict';
-  const CYCLE=42000;
-  const SEL='.tierMotion.X,.tierMotion.U,.tierMotion.S,.tierMotion.A,.ratingText.X,.ratingText.U,.ratingText.S,.ratingText.A,.teamTint.X .city,.teamTint.X .sub,.teamTint.U .city,.teamTint.U .sub,.teamTint.S .city,.teamTint.S .sub,.teamTint.A .city,.teamTint.A .sub,.powerTint.X,.powerTint.U,.powerTint.S,.powerTint.A,.tierWord17434.X,.tierWord17434.U,.tierWord17434.S,.tierWord17434.A,.tGrade.X,.tGrade.U,.tGrade.S,.tGrade.A,.tItem.tX .tName,.tItem.tU .tName,.tItem.tS .tName,.tItem.tA .tName,.tRosterEquip.X b,.tRosterEquip.U b,.tRosterEquip.S b,.tRosterEquip.A b';
-
-  function tier110(el){return ['X','U','S','A'].find(t=>el.classList&&el.classList.contains(t))||'';}
-  function timelineNow110(){
-    const t=document.timeline&&document.timeline.currentTime;
-    return typeof t==='number'?t:performance.now();
-  }
-  function hardSync110(root=document){
-    if(!root||!root.querySelectorAll)return;
-    const now=timelineNow110();
-    const anchor=now-(now%CYCLE);
-    root.querySelectorAll(SEL).forEach(el=>{
-      const t=tier110(el);if(!t)return;
-      // Remove V17.4.109's per-element delay; phase now comes from one shared animation start time.
-      el.style.setProperty('animation-delay','0s','important');
-      el.style.setProperty('-webkit-animation-delay','0s','important');
-      try{
-        const anims=el.getAnimations?el.getAnimations():[];
-        for(const a of anims){
-          try{
-            a.playbackRate=1;
-            // Every animation uses the exact same timeline anchor, independent of when the DOM node was created.
-            a.startTime=anchor;
-            if(a.playState==='paused')a.play();
-          }catch(_){
-            try{a.currentTime=now%CYCLE;}catch(__){}
-          }
-        }
-        el.dataset.ctHardClock110=t;
-      }catch(e){}
-    });
-  }
-  window.syncTierClock109=hardSync110;
-  window.syncTierClock110=hardSync110;
-
-  // Main tower / selected team / leaderboard.
-  const oldRender=window.render;
-  if(typeof oldRender==='function'&&!oldRender.__ct110Wrapped){
-    const wrapped=function(){
-      const r=oldRender.apply(this,arguments);
-      hardSync110(document);
-      requestAnimationFrame(()=>hardSync110(document));
-      return r;
-    };
-    wrapped.__ct110Wrapped=true;
-    window.render=render=wrapped;
-  }
-
-  // Views that create rating nodes after the main page has already been running.
-  for(const name of ['showCities','showRoster','showTreasures','tRender','tRenderCatalog']){
-    const old=window[name];
-    if(typeof old!=='function'||old.__ct110Wrapped)continue;
-    const wrapped=function(){
-      const r=old.apply(this,arguments);
-      requestAnimationFrame(()=>hardSync110(document));
-      return r;
-    };
-    wrapped.__ct110Wrapped=true;
-    window[name]=wrapped;
-  }
-
-  // Two passes cover existing nodes and CSS animations instantiated on the next Safari paint.
-  hardSync110(document);
-  requestAnimationFrame(()=>hardSync110(document));
-
-  try{
-    document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.111');
-    const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.111');
-  }catch(e){}
-  window.__CT_BUILD='V17.4.111-hard-global-tier-clock';
-})();
-</script>
-<!-- CT174110 END -->
 
 
 <!-- CT174111 LOGIC: league rewards visible, match-point score colors, U20/X50 team+character -->
@@ -4177,16 +3993,12 @@ html body .tierMotion.S{
   -webkit-animation:v108S 3s linear infinite!important;
   transform-origin:50% 50%!important;
   -webkit-transform-origin:50% 50%!important;
-  filter:drop-shadow(0 0 4px rgba(255,0,0,.85))!important;
-  text-shadow:0 0 7px rgba(255,0,0,.95),0 0 14px rgba(255,0,0,.62)!important;
 }
 html body .tierMotion.A{
   animation:v108A 3s ease-in-out infinite!important;
   -webkit-animation:v108A 3s ease-in-out infinite!important;
   transform-origin:50% 50%!important;
   -webkit-transform-origin:50% 50%!important;
-  filter:drop-shadow(0 0 3px rgba(255,128,0,.72))!important;
-  text-shadow:0 0 6px rgba(255,128,0,.88),0 0 12px rgba(255,128,0,.48)!important;
 }
 /* Restore the non-moving rating/name/power glow cadence too. */
 :is(.ratingText.S,.teamTint.S .city,.teamTint.S .sub,.powerTint.S,.tierWord17434.S,.tGrade.S,.tItem.tS .tName,.tRosterEquip.S b){
@@ -5180,5 +4992,796 @@ html body .ctGlobalTierGlyph.Z{
 })();
 </script>
 <!-- CT TEAM PR RATING SYSTEM END -->
+
+
+<!-- CT FINAL VISIBLE BREATH EVERYWHERE START -->
+<style id="ctFinalVisibleBreathEverywhere">
+/*
+  FINAL visual layer:
+  make breathing visible even on small tier glyphs everywhere,
+  while preview uses exactly the same keyframes.
+*/
+
+/* Ensure all real glyph variants are isolated layers on Safari/iPad. */
+html body .tierMotion.X, html body .tierMotion.U,
+html body .tierMotion.S, html body .tierMotion.A,
+html body .ctGlobalTierGlyph.X, html body .ctGlobalTierGlyph.U,
+html body .ctGlobalTierGlyph.S, html body .ctGlobalTierGlyph.A,
+html body .ctTierFxLetter.X, html body .ctTierFxLetter.U,
+html body .ctTierFxLetter.S, html body .ctTierFxLetter.A{
+  display:inline-grid!important;
+  place-items:center!important;
+  width:1em!important;
+  min-width:1em!important;
+  height:1em!important;
+  min-height:1em!important;
+  line-height:1!important;
+  overflow:visible!important;
+  transform-origin:50% 50%!important;
+  -webkit-transform-origin:50% 50%!important;
+  transform-box:border-box!important;
+  backface-visibility:hidden!important;
+  -webkit-backface-visibility:hidden!important;
+  will-change:transform,filter,text-shadow!important;
+}
+
+/* X: every 1.5s normal up/down is one clearly visible gold breath;
+   after 5 cycles, keep the current smaller 3s rainbow + 10 CCW turns. */
+html body .tierMotion.X,
+html body .ctGlobalTierGlyph.X,
+html body .ctTierFxLetter.X{
+  animation:ctXBreathVisibleEverywhere 10.5s linear infinite!important;
+  -webkit-animation:ctXBreathVisibleEverywhere 10.5s linear infinite!important;
+}
+@keyframes ctXBreathVisibleEverywhere{
+  0%{transform:translateY(0) rotate(0deg) scale(1);filter:brightness(.95) drop-shadow(0 0 3px #ffe55e);text-shadow:0 0 5px #ffe55e,0 0 10px rgba(255,229,94,.58)}
+  7.1429%{transform:translateY(-12px) rotate(-180deg) scale(1.105);filter:brightness(1.34) drop-shadow(0 0 8px #fff5b1) drop-shadow(0 0 14px #ffe55e);text-shadow:0 0 10px #fff7c8,0 0 19px #ffe55e}
+  14.2857%{transform:translateY(0) rotate(-360deg) scale(1);filter:brightness(.95) drop-shadow(0 0 3px #ffe55e);text-shadow:0 0 5px #ffe55e,0 0 10px rgba(255,229,94,.58)}
+
+  21.4286%{transform:translateY(-12px) rotate(0deg) scale(1.105);filter:brightness(1.34) drop-shadow(0 0 8px #fff5b1) drop-shadow(0 0 14px #ffe55e);text-shadow:0 0 10px #fff7c8,0 0 19px #ffe55e}
+  28.5714%{transform:translateY(0) rotate(360deg) scale(1);filter:brightness(.95) drop-shadow(0 0 3px #ffe55e);text-shadow:0 0 5px #ffe55e,0 0 10px rgba(255,229,94,.58)}
+
+  35.7143%{transform:translateY(-12px) rotate(180deg) scale(1.105);filter:brightness(1.34) drop-shadow(0 0 8px #fff5b1) drop-shadow(0 0 14px #ffe55e);text-shadow:0 0 10px #fff7c8,0 0 19px #ffe55e}
+  42.8571%{transform:translateY(0) rotate(0deg) scale(1);filter:brightness(.95) drop-shadow(0 0 3px #ffe55e);text-shadow:0 0 5px #ffe55e,0 0 10px rgba(255,229,94,.58)}
+
+  50%{transform:translateY(-12px) rotate(360deg) scale(1.105);filter:brightness(1.34) drop-shadow(0 0 8px #fff5b1) drop-shadow(0 0 14px #ffe55e);text-shadow:0 0 10px #fff7c8,0 0 19px #ffe55e}
+  57.1429%{transform:translateY(0) rotate(720deg) scale(1);filter:brightness(.95) drop-shadow(0 0 3px #ffe55e);text-shadow:0 0 5px #ffe55e,0 0 10px rgba(255,229,94,.58)}
+
+  64.2857%{transform:translateY(-12px) rotate(540deg) scale(1.105);filter:brightness(1.34) drop-shadow(0 0 8px #fff5b1) drop-shadow(0 0 14px #ffe55e);text-shadow:0 0 10px #fff7c8,0 0 19px #ffe55e}
+  71.4286%{transform:translateY(0) rotate(360deg) scale(1);filter:brightness(.95) drop-shadow(0 0 3px #ffe55e);text-shadow:0 0 5px #ffe55e,0 0 10px rgba(255,229,94,.58)}
+
+  /* special 3 sec: bigger and more ornate rainbow burst, still 10 CCW turns */
+  85.7143%{
+    transform:translateY(0) rotate(-1440deg) scale(1.10);
+    filter:brightness(1.30) drop-shadow(0 0 6px #ff5a50) drop-shadow(0 0 10px #ffd83a) drop-shadow(0 0 14px #4fe07a) drop-shadow(0 0 18px #3aa1ff) drop-shadow(0 0 22px #d47aff);
+    text-shadow:-4px 0 7px #ff5a50,4px 0 7px #4fe07a,0 -4px 8px #3aa1ff,0 4px 8px #d47aff,0 0 16px #fff6b2;
+  }
+  92.8571%{
+    transform:translateY(0) rotate(-2340deg) scale(1.16);
+    filter:brightness(1.56) drop-shadow(0 0 9px #fff3b5) drop-shadow(0 0 14px #ff6a57) drop-shadow(0 0 20px #ffe24f) drop-shadow(0 0 26px #56e58d) drop-shadow(0 0 32px #48a8ff) drop-shadow(0 0 38px #e08aff);
+    text-shadow:-6px 0 10px #ff6a57,6px 0 10px #56e58d,0 -6px 11px #48a8ff,0 6px 11px #e08aff,0 0 24px #fff,0 0 38px #ffe55e;
+  }
+  97.1429%{
+    transform:translateY(0) rotate(-2880deg) scale(1.12);
+    filter:brightness(1.40) drop-shadow(0 0 7px #fff0a8) drop-shadow(0 0 12px #ff6250) drop-shadow(0 0 18px #ffd83a) drop-shadow(0 0 24px #4fe07a) drop-shadow(0 0 30px #3aa1ff) drop-shadow(0 0 36px #d47aff);
+    text-shadow:-5px 0 8px #ff6250,5px 0 8px #4fe07a,0 -5px 9px #3aa1ff,0 5px 9px #d47aff,0 0 22px #fff;
+  }
+  100%{transform:translateY(0) rotate(-3240deg) scale(1);filter:brightness(.95) drop-shadow(0 0 3px #ffe55e);text-shadow:0 0 5px #ffe55e,0 0 10px rgba(255,229,94,.58)}
+}
+@-webkit-keyframes ctXBreathVisibleEverywhere{
+  0%{-webkit-transform:translateY(0) rotate(0deg) scale(1);filter:brightness(.95) drop-shadow(0 0 3px #ffe55e);text-shadow:0 0 5px #ffe55e,0 0 10px rgba(255,229,94,.58)}
+  7.1429%{-webkit-transform:translateY(-12px) rotate(-180deg) scale(1.105);filter:brightness(1.34) drop-shadow(0 0 8px #fff5b1) drop-shadow(0 0 14px #ffe55e);text-shadow:0 0 10px #fff7c8,0 0 19px #ffe55e}
+  14.2857%{-webkit-transform:translateY(0) rotate(-360deg) scale(1);filter:brightness(.95) drop-shadow(0 0 3px #ffe55e);text-shadow:0 0 5px #ffe55e,0 0 10px rgba(255,229,94,.58)}
+  21.4286%{-webkit-transform:translateY(-12px) rotate(0deg) scale(1.105);filter:brightness(1.34) drop-shadow(0 0 8px #fff5b1) drop-shadow(0 0 14px #ffe55e);text-shadow:0 0 10px #fff7c8,0 0 19px #ffe55e}
+  28.5714%{-webkit-transform:translateY(0) rotate(360deg) scale(1);filter:brightness(.95) drop-shadow(0 0 3px #ffe55e);text-shadow:0 0 5px #ffe55e,0 0 10px rgba(255,229,94,.58)}
+  35.7143%{-webkit-transform:translateY(-12px) rotate(180deg) scale(1.105);filter:brightness(1.34) drop-shadow(0 0 8px #fff5b1) drop-shadow(0 0 14px #ffe55e);text-shadow:0 0 10px #fff7c8,0 0 19px #ffe55e}
+  42.8571%{-webkit-transform:translateY(0) rotate(0deg) scale(1);filter:brightness(.95) drop-shadow(0 0 3px #ffe55e);text-shadow:0 0 5px #ffe55e,0 0 10px rgba(255,229,94,.58)}
+  50%{-webkit-transform:translateY(-12px) rotate(360deg) scale(1.105);filter:brightness(1.34) drop-shadow(0 0 8px #fff5b1) drop-shadow(0 0 14px #ffe55e);text-shadow:0 0 10px #fff7c8,0 0 19px #ffe55e}
+  57.1429%{-webkit-transform:translateY(0) rotate(720deg) scale(1);filter:brightness(.95) drop-shadow(0 0 3px #ffe55e);text-shadow:0 0 5px #ffe55e,0 0 10px rgba(255,229,94,.58)}
+  64.2857%{-webkit-transform:translateY(-12px) rotate(540deg) scale(1.105);filter:brightness(1.34) drop-shadow(0 0 8px #fff5b1) drop-shadow(0 0 14px #ffe55e);text-shadow:0 0 10px #fff7c8,0 0 19px #ffe55e}
+  71.4286%{-webkit-transform:translateY(0) rotate(360deg) scale(1);filter:brightness(.95) drop-shadow(0 0 3px #ffe55e);text-shadow:0 0 5px #ffe55e,0 0 10px rgba(255,229,94,.58)}
+  85.7143%{-webkit-transform:translateY(0) rotate(-1440deg) scale(1.10);filter:brightness(1.30) drop-shadow(0 0 6px #ff5a50) drop-shadow(0 0 10px #ffd83a) drop-shadow(0 0 14px #4fe07a) drop-shadow(0 0 18px #3aa1ff) drop-shadow(0 0 22px #d47aff);text-shadow:-4px 0 7px #ff5a50,4px 0 7px #4fe07a,0 -4px 8px #3aa1ff,0 4px 8px #d47aff,0 0 16px #fff6b2}
+  92.8571%{-webkit-transform:translateY(0) rotate(-2340deg) scale(1.16);filter:brightness(1.56) drop-shadow(0 0 9px #fff3b5) drop-shadow(0 0 14px #ff6a57) drop-shadow(0 0 20px #ffe24f) drop-shadow(0 0 26px #56e58d) drop-shadow(0 0 32px #48a8ff) drop-shadow(0 0 38px #e08aff);text-shadow:-6px 0 10px #ff6a57,6px 0 10px #56e58d,0 -6px 11px #48a8ff,0 6px 11px #e08aff,0 0 24px #fff,0 0 38px #ffe55e}
+  97.1429%{-webkit-transform:translateY(0) rotate(-2880deg) scale(1.12);filter:brightness(1.40) drop-shadow(0 0 7px #fff0a8) drop-shadow(0 0 12px #ff6250) drop-shadow(0 0 18px #ffd83a) drop-shadow(0 0 24px #4fe07a) drop-shadow(0 0 30px #3aa1ff) drop-shadow(0 0 36px #d47aff);text-shadow:-5px 0 8px #ff6250,5px 0 8px #4fe07a,0 -5px 9px #3aa1ff,0 5px 9px #d47aff,0 0 22px #fff}
+  100%{-webkit-transform:translateY(0) rotate(-3240deg) scale(1);filter:brightness(.95) drop-shadow(0 0 3px #ffe55e);text-shadow:0 0 5px #ffe55e,0 0 10px rgba(255,229,94,.58)}
+}
+
+/* U: every 2s up/down is one strong-enough pink breath on small text;
+   after 5 cycles, 2s ornate wing burst, then back to normal breathing. */
+html body .tierMotion.U,
+html body .ctGlobalTierGlyph.U,
+html body .ctTierFxLetter.U{
+  animation:ctUBreathVisibleEverywhere 12s linear infinite!important;
+  -webkit-animation:ctUBreathVisibleEverywhere 12s linear infinite!important;
+}
+@keyframes ctUBreathVisibleEverywhere{
+  0%{transform:translate(0,0) rotate(0deg) scale(1);filter:brightness(.93) drop-shadow(0 0 3px rgba(255,0,204,.50));text-shadow:0 0 5px rgba(255,0,204,.60)}
+  4.1667%{transform:translate(2px,-6px) rotate(4deg) scale(1.045);filter:brightness(1.13) drop-shadow(0 0 6px rgba(255,80,225,.75));text-shadow:0 0 9px rgba(255,80,225,.78)}
+  8.3333%{transform:translate(0,-12px) rotate(0deg) scale(1.095);filter:brightness(1.34) drop-shadow(0 0 10px #ffa4ef) drop-shadow(0 0 16px rgba(255,0,204,.54));text-shadow:0 0 13px #ffc8f4,0 0 21px rgba(255,0,204,.62)}
+  12.5%{transform:translate(-7px,-6px) rotate(-16deg) scale(1.045);filter:brightness(1.13) drop-shadow(0 0 6px rgba(255,80,225,.75));text-shadow:0 0 9px rgba(255,80,225,.78)}
+  16.6667%{transform:translate(0,0) rotate(0deg) scale(1);filter:brightness(.93) drop-shadow(0 0 3px rgba(255,0,204,.50));text-shadow:0 0 5px rgba(255,0,204,.60)}
+
+  20.8333%{transform:translate(2px,-6px) rotate(4deg) scale(1.045);filter:brightness(1.13) drop-shadow(0 0 6px rgba(255,80,225,.75));text-shadow:0 0 9px rgba(255,80,225,.78)}
+  25%{transform:translate(0,-12px) rotate(0deg) scale(1.095);filter:brightness(1.34) drop-shadow(0 0 10px #ffa4ef) drop-shadow(0 0 16px rgba(255,0,204,.54));text-shadow:0 0 13px #ffc8f4,0 0 21px rgba(255,0,204,.62)}
+  29.1667%{transform:translate(7px,-6px) rotate(16deg) scale(1.045);filter:brightness(1.13) drop-shadow(0 0 6px rgba(255,80,225,.75));text-shadow:0 0 9px rgba(255,80,225,.78)}
+  33.3333%{transform:translate(0,0) rotate(0deg) scale(1);filter:brightness(.93) drop-shadow(0 0 3px rgba(255,0,204,.50));text-shadow:0 0 5px rgba(255,0,204,.60)}
+
+  37.5%{transform:translate(2px,-6px) rotate(4deg) scale(1.045);filter:brightness(1.13) drop-shadow(0 0 6px rgba(255,80,225,.75));text-shadow:0 0 9px rgba(255,80,225,.78)}
+  41.6667%{transform:translate(0,-12px) rotate(0deg) scale(1.095);filter:brightness(1.34) drop-shadow(0 0 10px #ffa4ef) drop-shadow(0 0 16px rgba(255,0,204,.54));text-shadow:0 0 13px #ffc8f4,0 0 21px rgba(255,0,204,.62)}
+  45.8333%{transform:translate(-7px,-6px) rotate(-16deg) scale(1.045);filter:brightness(1.13) drop-shadow(0 0 6px rgba(255,80,225,.75));text-shadow:0 0 9px rgba(255,80,225,.78)}
+  50%{transform:translate(0,0) rotate(0deg) scale(1);filter:brightness(.93) drop-shadow(0 0 3px rgba(255,0,204,.50));text-shadow:0 0 5px rgba(255,0,204,.60)}
+
+  54.1667%{transform:translate(2px,-6px) rotate(4deg) scale(1.045);filter:brightness(1.13) drop-shadow(0 0 6px rgba(255,80,225,.75));text-shadow:0 0 9px rgba(255,80,225,.78)}
+  58.3333%{transform:translate(0,-12px) rotate(0deg) scale(1.095);filter:brightness(1.34) drop-shadow(0 0 10px #ffa4ef) drop-shadow(0 0 16px rgba(255,0,204,.54));text-shadow:0 0 13px #ffc8f4,0 0 21px rgba(255,0,204,.62)}
+  62.5%{transform:translate(7px,-6px) rotate(16deg) scale(1.045);filter:brightness(1.13) drop-shadow(0 0 6px rgba(255,80,225,.75));text-shadow:0 0 9px rgba(255,80,225,.78)}
+  66.6667%{transform:translate(0,0) rotate(0deg) scale(1);filter:brightness(.93) drop-shadow(0 0 3px rgba(255,0,204,.50));text-shadow:0 0 5px rgba(255,0,204,.60)}
+
+  70.8333%{transform:translate(2px,-6px) rotate(4deg) scale(1.045);filter:brightness(1.13) drop-shadow(0 0 6px rgba(255,80,225,.75));text-shadow:0 0 9px rgba(255,80,225,.78)}
+  75%{transform:translate(0,-12px) rotate(0deg) scale(1.095);filter:brightness(1.34) drop-shadow(0 0 10px #ffa4ef) drop-shadow(0 0 16px rgba(255,0,204,.54));text-shadow:0 0 13px #ffc8f4,0 0 21px rgba(255,0,204,.62)}
+  79.1667%{transform:translate(-7px,-6px) rotate(-16deg) scale(1.045);filter:brightness(1.13) drop-shadow(0 0 6px rgba(255,80,225,.75));text-shadow:0 0 9px rgba(255,80,225,.78)}
+  83.3333%{transform:translate(0,0) rotate(0deg) scale(1);filter:brightness(.93) drop-shadow(0 0 3px rgba(255,0,204,.50));text-shadow:0 0 5px rgba(255,0,204,.60)}
+
+  87.5%{transform:translate(-2px,0) rotate(-2deg) scale(1.025,.985);filter:brightness(1.12) drop-shadow(-6px 0 7px rgba(255,80,225,.64)) drop-shadow(6px 0 7px rgba(255,80,225,.64)) drop-shadow(0 0 5px #fff);text-shadow:-6px 0 8px #ff64e3,6px 0 8px #ff64e3,0 0 8px #fff}
+  91.6667%{transform:translate(0,0) rotate(0deg) scale(1.085,.955);filter:brightness(1.38) drop-shadow(-11px 0 8px #ff4fdd) drop-shadow(11px 0 8px #ff4fdd) drop-shadow(-5px -5px 7px #d89bff) drop-shadow(5px 5px 7px #ff9be9) drop-shadow(0 0 10px #fff);text-shadow:-13px 0 10px #ff57df,13px 0 10px #ff57df,-6px -6px 8px #e5b8ff,6px 6px 8px #ffb0ec,0 0 13px #fff,0 0 20px rgba(255,75,220,.78)}
+  95.8333%{transform:translate(2px,0) rotate(2deg) scale(1.025,.985);filter:brightness(1.12) drop-shadow(-7px 0 7px rgba(255,90,225,.66)) drop-shadow(7px 0 7px rgba(255,90,225,.66)) drop-shadow(0 0 7px #e9c8ff);text-shadow:-7px 0 8px #ff72e5,7px 0 8px #ff72e5,0 0 10px #e9c8ff}
+  100%{transform:translate(0,0) rotate(0deg) scale(1);filter:brightness(.93) drop-shadow(0 0 3px rgba(255,0,204,.50));text-shadow:0 0 5px rgba(255,0,204,.60)}
+}
+@-webkit-keyframes ctUBreathVisibleEverywhere{
+  0%{-webkit-transform:translate(0,0) rotate(0deg) scale(1);filter:brightness(.93) drop-shadow(0 0 3px rgba(255,0,204,.50));text-shadow:0 0 5px rgba(255,0,204,.60)}
+  4.1667%{-webkit-transform:translate(2px,-6px) rotate(4deg) scale(1.045);filter:brightness(1.13) drop-shadow(0 0 6px rgba(255,80,225,.75));text-shadow:0 0 9px rgba(255,80,225,.78)}
+  8.3333%{-webkit-transform:translate(0,-12px) rotate(0deg) scale(1.095);filter:brightness(1.34) drop-shadow(0 0 10px #ffa4ef) drop-shadow(0 0 16px rgba(255,0,204,.54));text-shadow:0 0 13px #ffc8f4,0 0 21px rgba(255,0,204,.62)}
+  12.5%{-webkit-transform:translate(-7px,-6px) rotate(-16deg) scale(1.045);filter:brightness(1.13) drop-shadow(0 0 6px rgba(255,80,225,.75));text-shadow:0 0 9px rgba(255,80,225,.78)}
+  16.6667%{-webkit-transform:translate(0,0) rotate(0deg) scale(1);filter:brightness(.93) drop-shadow(0 0 3px rgba(255,0,204,.50));text-shadow:0 0 5px rgba(255,0,204,.60)}
+  20.8333%{-webkit-transform:translate(2px,-6px) rotate(4deg) scale(1.045);filter:brightness(1.13) drop-shadow(0 0 6px rgba(255,80,225,.75));text-shadow:0 0 9px rgba(255,80,225,.78)}
+  25%{-webkit-transform:translate(0,-12px) rotate(0deg) scale(1.095);filter:brightness(1.34) drop-shadow(0 0 10px #ffa4ef) drop-shadow(0 0 16px rgba(255,0,204,.54));text-shadow:0 0 13px #ffc8f4,0 0 21px rgba(255,0,204,.62)}
+  29.1667%{-webkit-transform:translate(7px,-6px) rotate(16deg) scale(1.045);filter:brightness(1.13) drop-shadow(0 0 6px rgba(255,80,225,.75));text-shadow:0 0 9px rgba(255,80,225,.78)}
+  33.3333%{-webkit-transform:translate(0,0) rotate(0deg) scale(1);filter:brightness(.93) drop-shadow(0 0 3px rgba(255,0,204,.50));text-shadow:0 0 5px rgba(255,0,204,.60)}
+  37.5%{-webkit-transform:translate(2px,-6px) rotate(4deg) scale(1.045);filter:brightness(1.13) drop-shadow(0 0 6px rgba(255,80,225,.75));text-shadow:0 0 9px rgba(255,80,225,.78)}
+  41.6667%{-webkit-transform:translate(0,-12px) rotate(0deg) scale(1.095);filter:brightness(1.34) drop-shadow(0 0 10px #ffa4ef) drop-shadow(0 0 16px rgba(255,0,204,.54));text-shadow:0 0 13px #ffc8f4,0 0 21px rgba(255,0,204,.62)}
+  45.8333%{-webkit-transform:translate(-7px,-6px) rotate(-16deg) scale(1.045);filter:brightness(1.13) drop-shadow(0 0 6px rgba(255,80,225,.75));text-shadow:0 0 9px rgba(255,80,225,.78)}
+  50%{-webkit-transform:translate(0,0) rotate(0deg) scale(1);filter:brightness(.93) drop-shadow(0 0 3px rgba(255,0,204,.50));text-shadow:0 0 5px rgba(255,0,204,.60)}
+  54.1667%{-webkit-transform:translate(2px,-6px) rotate(4deg) scale(1.045);filter:brightness(1.13) drop-shadow(0 0 6px rgba(255,80,225,.75));text-shadow:0 0 9px rgba(255,80,225,.78)}
+  58.3333%{-webkit-transform:translate(0,-12px) rotate(0deg) scale(1.095);filter:brightness(1.34) drop-shadow(0 0 10px #ffa4ef) drop-shadow(0 0 16px rgba(255,0,204,.54));text-shadow:0 0 13px #ffc8f4,0 0 21px rgba(255,0,204,.62)}
+  62.5%{-webkit-transform:translate(7px,-6px) rotate(16deg) scale(1.045);filter:brightness(1.13) drop-shadow(0 0 6px rgba(255,80,225,.75));text-shadow:0 0 9px rgba(255,80,225,.78)}
+  66.6667%{-webkit-transform:translate(0,0) rotate(0deg) scale(1);filter:brightness(.93) drop-shadow(0 0 3px rgba(255,0,204,.50));text-shadow:0 0 5px rgba(255,0,204,.60)}
+  70.8333%{-webkit-transform:translate(2px,-6px) rotate(4deg) scale(1.045);filter:brightness(1.13) drop-shadow(0 0 6px rgba(255,80,225,.75));text-shadow:0 0 9px rgba(255,80,225,.78)}
+  75%{-webkit-transform:translate(0,-12px) rotate(0deg) scale(1.095);filter:brightness(1.34) drop-shadow(0 0 10px #ffa4ef) drop-shadow(0 0 16px rgba(255,0,204,.54));text-shadow:0 0 13px #ffc8f4,0 0 21px rgba(255,0,204,.62)}
+  79.1667%{-webkit-transform:translate(-7px,-6px) rotate(-16deg) scale(1.045);filter:brightness(1.13) drop-shadow(0 0 6px rgba(255,80,225,.75));text-shadow:0 0 9px rgba(255,80,225,.78)}
+  83.3333%{-webkit-transform:translate(0,0) rotate(0deg) scale(1);filter:brightness(.93) drop-shadow(0 0 3px rgba(255,0,204,.50));text-shadow:0 0 5px rgba(255,0,204,.60)}
+  87.5%{-webkit-transform:translate(-2px,0) rotate(-2deg) scale(1.025,.985);filter:brightness(1.12) drop-shadow(-6px 0 7px rgba(255,80,225,.64)) drop-shadow(6px 0 7px rgba(255,80,225,.64)) drop-shadow(0 0 5px #fff);text-shadow:-6px 0 8px #ff64e3,6px 0 8px #ff64e3,0 0 8px #fff}
+  91.6667%{-webkit-transform:translate(0,0) rotate(0deg) scale(1.085,.955);filter:brightness(1.38) drop-shadow(-11px 0 8px #ff4fdd) drop-shadow(11px 0 8px #ff4fdd) drop-shadow(-5px -5px 7px #d89bff) drop-shadow(5px 5px 7px #ff9be9) drop-shadow(0 0 10px #fff);text-shadow:-13px 0 10px #ff57df,13px 0 10px #ff57df,-6px -6px 8px #e5b8ff,6px 6px 8px #ffb0ec,0 0 13px #fff,0 0 20px rgba(255,75,220,.78)}
+  95.8333%{-webkit-transform:translate(2px,0) rotate(2deg) scale(1.025,.985);filter:brightness(1.12) drop-shadow(-7px 0 7px rgba(255,90,225,.66)) drop-shadow(7px 0 7px rgba(255,90,225,.66)) drop-shadow(0 0 7px #e9c8ff);text-shadow:-7px 0 8px #ff72e5,7px 0 8px #ff72e5,0 0 10px #e9c8ff}
+  100%{-webkit-transform:translate(0,0) rotate(0deg) scale(1);filter:brightness(.93) drop-shadow(0 0 3px rgba(255,0,204,.50));text-shadow:0 0 5px rgba(255,0,204,.60)}
+}
+
+/* S: make its normal 3s breath readable on small glyphs; keep 1.5s radial red special. */
+html body .tierMotion.S,
+html body .ctGlobalTierGlyph.S,
+html body .ctTierFxLetter.S{
+  animation:ctSVisibleEverywhere 16.5s linear infinite!important;
+  -webkit-animation:ctSVisibleEverywhere 16.5s linear infinite!important;
+}
+@keyframes ctSVisibleEverywhere{
+  0%{transform:translateY(0) scale(1);filter:brightness(.94) drop-shadow(0 0 3px rgba(210,25,45,.45));text-shadow:0 0 5px rgba(220,35,55,.55)}
+  9.0909%{transform:translateY(-12px) scale(1.085);filter:brightness(1.30) drop-shadow(0 0 9px #ff5365) drop-shadow(0 0 15px rgba(190,0,25,.58));text-shadow:0 0 11px #ff7180,0 0 20px rgba(210,0,30,.68)}
+  18.1818%{transform:translateY(0) scale(1);filter:brightness(.94) drop-shadow(0 0 3px rgba(210,25,45,.45));text-shadow:0 0 5px rgba(220,35,55,.55)}
+  27.2727%{transform:translateY(-12px) scale(1.085);filter:brightness(1.30) drop-shadow(0 0 9px #ff5365) drop-shadow(0 0 15px rgba(190,0,25,.58));text-shadow:0 0 11px #ff7180,0 0 20px rgba(210,0,30,.68)}
+  36.3636%{transform:translateY(0) scale(1);filter:brightness(.94) drop-shadow(0 0 3px rgba(210,25,45,.45));text-shadow:0 0 5px rgba(220,35,55,.55)}
+  45.4545%{transform:translateY(-12px) scale(1.085);filter:brightness(1.30) drop-shadow(0 0 9px #ff5365) drop-shadow(0 0 15px rgba(190,0,25,.58));text-shadow:0 0 11px #ff7180,0 0 20px rgba(210,0,30,.68)}
+  54.5455%{transform:translateY(0) scale(1);filter:brightness(.94) drop-shadow(0 0 3px rgba(210,25,45,.45));text-shadow:0 0 5px rgba(220,35,55,.55)}
+  63.6364%{transform:translateY(-12px) scale(1.085);filter:brightness(1.30) drop-shadow(0 0 9px #ff5365) drop-shadow(0 0 15px rgba(190,0,25,.58));text-shadow:0 0 11px #ff7180,0 0 20px rgba(210,0,30,.68)}
+  72.7273%{transform:translateY(0) scale(1);filter:brightness(.94) drop-shadow(0 0 3px rgba(210,25,45,.45));text-shadow:0 0 5px rgba(220,35,55,.55)}
+  81.8182%{transform:translateY(-12px) scale(1.085);filter:brightness(1.30) drop-shadow(0 0 9px #ff5365) drop-shadow(0 0 15px rgba(190,0,25,.58));text-shadow:0 0 11px #ff7180,0 0 20px rgba(210,0,30,.68)}
+  90.9091%{transform:translateY(0) scale(1);filter:brightness(.94) drop-shadow(0 0 3px rgba(210,25,45,.45));text-shadow:0 0 5px rgba(220,35,55,.55)}
+  95.4545%{transform:translateY(0) scale(1.09);filter:brightness(1.42) drop-shadow(0 0 10px #fff) drop-shadow(0 0 18px #ff455b) drop-shadow(0 0 25px rgba(180,0,20,.72));text-shadow:0 0 10px #fff,0 0 20px #ff6979,0 0 30px rgba(205,0,30,.78)}
+  100%{transform:translateY(0) scale(1);filter:brightness(.94) drop-shadow(0 0 3px rgba(210,25,45,.45));text-shadow:0 0 5px rgba(220,35,55,.55)}
+}
+@-webkit-keyframes ctSVisibleEverywhere{
+  0%{-webkit-transform:translateY(0) scale(1);filter:brightness(.94) drop-shadow(0 0 3px rgba(210,25,45,.45));text-shadow:0 0 5px rgba(220,35,55,.55)}
+  9.0909%{-webkit-transform:translateY(-12px) scale(1.085);filter:brightness(1.30) drop-shadow(0 0 9px #ff5365) drop-shadow(0 0 15px rgba(190,0,25,.58));text-shadow:0 0 11px #ff7180,0 0 20px rgba(210,0,30,.68)}
+  18.1818%{-webkit-transform:translateY(0) scale(1);filter:brightness(.94) drop-shadow(0 0 3px rgba(210,25,45,.45));text-shadow:0 0 5px rgba(220,35,55,.55)}
+  27.2727%{-webkit-transform:translateY(-12px) scale(1.085);filter:brightness(1.30) drop-shadow(0 0 9px #ff5365) drop-shadow(0 0 15px rgba(190,0,25,.58));text-shadow:0 0 11px #ff7180,0 0 20px rgba(210,0,30,.68)}
+  36.3636%{-webkit-transform:translateY(0) scale(1);filter:brightness(.94) drop-shadow(0 0 3px rgba(210,25,45,.45));text-shadow:0 0 5px rgba(220,35,55,.55)}
+  45.4545%{-webkit-transform:translateY(-12px) scale(1.085);filter:brightness(1.30) drop-shadow(0 0 9px #ff5365) drop-shadow(0 0 15px rgba(190,0,25,.58));text-shadow:0 0 11px #ff7180,0 0 20px rgba(210,0,30,.68)}
+  54.5455%{-webkit-transform:translateY(0) scale(1);filter:brightness(.94) drop-shadow(0 0 3px rgba(210,25,45,.45));text-shadow:0 0 5px rgba(220,35,55,.55)}
+  63.6364%{-webkit-transform:translateY(-12px) scale(1.085);filter:brightness(1.30) drop-shadow(0 0 9px #ff5365) drop-shadow(0 0 15px rgba(190,0,25,.58));text-shadow:0 0 11px #ff7180,0 0 20px rgba(210,0,30,.68)}
+  72.7273%{-webkit-transform:translateY(0) scale(1);filter:brightness(.94) drop-shadow(0 0 3px rgba(210,25,45,.45));text-shadow:0 0 5px rgba(220,35,55,.55)}
+  81.8182%{-webkit-transform:translateY(-12px) scale(1.085);filter:brightness(1.30) drop-shadow(0 0 9px #ff5365) drop-shadow(0 0 15px rgba(190,0,25,.58));text-shadow:0 0 11px #ff7180,0 0 20px rgba(210,0,30,.68)}
+  90.9091%{-webkit-transform:translateY(0) scale(1);filter:brightness(.94) drop-shadow(0 0 3px rgba(210,25,45,.45));text-shadow:0 0 5px rgba(220,35,55,.55)}
+  95.4545%{-webkit-transform:translateY(0) scale(1.09);filter:brightness(1.42) drop-shadow(0 0 10px #fff) drop-shadow(0 0 18px #ff455b) drop-shadow(0 0 25px rgba(180,0,20,.72));text-shadow:0 0 10px #fff,0 0 20px #ff6979,0 0 30px rgba(205,0,30,.78)}
+  100%{-webkit-transform:translateY(0) scale(1);filter:brightness(.94) drop-shadow(0 0 3px rgba(210,25,45,.45));text-shadow:0 0 5px rgba(220,35,55,.55)}
+}
+
+/* A: 5 sec one complete orange breath, stronger brightness delta for small labels. */
+html body .tierMotion.A,
+html body .ctGlobalTierGlyph.A,
+html body .ctTierFxLetter.A{
+  animation:ctAVisibleEverywhere 5s ease-in-out infinite!important;
+  -webkit-animation:ctAVisibleEverywhere 5s ease-in-out infinite!important;
+}
+@keyframes ctAVisibleEverywhere{
+  0%,100%{transform:scale(1);filter:brightness(.92) drop-shadow(0 0 2px rgba(255,145,35,.36));text-shadow:0 0 4px rgba(255,145,35,.46)}
+  50%{transform:scale(1.085);filter:brightness(1.34) drop-shadow(0 0 8px #ff9b42) drop-shadow(0 0 14px rgba(255,115,20,.52));text-shadow:0 0 11px #ffbd7a,0 0 19px rgba(255,115,20,.60)}
+}
+@-webkit-keyframes ctAVisibleEverywhere{
+  0%,100%{-webkit-transform:scale(1);filter:brightness(.92) drop-shadow(0 0 2px rgba(255,145,35,.36));text-shadow:0 0 4px rgba(255,145,35,.46)}
+  50%{-webkit-transform:scale(1.085);filter:brightness(1.34) drop-shadow(0 0 8px #ff9b42) drop-shadow(0 0 14px rgba(255,115,20,.52));text-shadow:0 0 11px #ffbd7a,0 0 19px rgba(255,115,20,.60)}
+}
+
+/* B stays still with a visible but small purple glow. */
+html body .tierMotion.B,
+html body .ctGlobalTierGlyph.B,
+html body .ctTierFxLetter.B{
+  animation:none!important;
+  -webkit-animation:none!important;
+  transform:none!important;
+  -webkit-transform:none!important;
+  filter:brightness(1.10) drop-shadow(0 0 3px rgba(173,124,255,.62))!important;
+  text-shadow:0 0 6px rgba(173,124,255,.70)!important;
+}
+</style>
+
+<script id="ctFinalVisibleBreathEverywhereScript">
+(()=>{
+  'use strict';
+  const TIERS=new Set(['X','U','S','A','B','C','D','E','F','Z']);
+
+  function markOne(el){
+    if(!el || el.nodeType!==1)return;
+    const raw=(el.textContent||'').trim();
+    if(TIERS.has(raw)){
+      el.classList.add('tier','tierLetter','tierMotion','ctGlobalTierGlyph',raw);
+    }
+  }
+
+  function splitHost(el){
+    if(!el || el.nodeType!==1 || el.dataset.ctFinalSplit==='1')return;
+    const raw=(el.textContent||'').trim();
+    const t=raw.slice(0,1);
+    if(!TIERS.has(t) || raw.length<2)return;
+    const sep=raw.slice(1,2);
+    if(!['｜',' ','／','/'].includes(sep))return;
+
+    el.classList.add('ctTierSplitHost');
+    el.innerHTML=`<span class="tier tierLetter tierMotion ctGlobalTierGlyph ${t}">${t}</span><span class="ctTierStaticSuffix">${raw.slice(1)}</span>`;
+    el.dataset.ctFinalSplit='1';
+  }
+
+  function decorate(root=document){
+    if(!root)return;
+
+    /* Important fix: MutationObserver-added node itself must be checked, not only descendants. */
+    if(root.nodeType===1){
+      markOne(root);
+      if(root.matches?.('.tGrade.ratingText,.tRosterEquip b.ratingText'))splitHost(root);
+    }
+
+    if(!root.querySelectorAll)return;
+
+    root.querySelectorAll(
+      '.tierLetter,.tierMotion,.tierMark17428,.tierWord17434,.ctTierFxLetter,.ctGlobalTierGlyph,.ratingText'
+    ).forEach(markOne);
+
+    root.querySelectorAll('.tGrade.ratingText,.tRosterEquip b.ratingText').forEach(splitHost);
+  }
+
+  decorate(document);
+  requestAnimationFrame(()=>decorate(document));
+
+  const mo=new MutationObserver(ms=>{
+    for(const m of ms){
+      for(const n of m.addedNodes)decorate(n);
+    }
+  });
+  mo.observe(document.body,{subtree:true,childList:true});
+
+  /* Frequent lightweight pass only finds already-existing tier nodes; no DOM rebuild. */
+  let last=0;
+  function sweep(ts){
+    if(ts-last>1200){decorate(document);last=ts;}
+    requestAnimationFrame(sweep);
+  }
+  requestAnimationFrame(sweep);
+
+  window.__CT_FINAL_TIER_FX_DECORATE=decorate;
+})();
+</script>
+<!-- CT FINAL VISIBLE BREATH EVERYWHERE END -->
+
+
+<!-- CT OBSOLETE GLOBAL CLOCK DISABLED START -->
+<script id="ctDisableObsoleteTierClocks">
+(()=>{
+  'use strict';
+  window.syncTierClock109=()=>{};
+  window.syncTierClock110=()=>{};
+})();
+</script>
+<!-- CT OBSOLETE GLOBAL CLOCK DISABLED END -->
+
+
+
+
+
+
+
+
+<!-- CT S A XU STYLE BREATH FINAL START -->
+<style id="ctSAXUStyleBreathFinal">
+/*
+  S/A breathing now follows the same visual language as X/U:
+  brightness + drop-shadow + text-shadow.
+  No radial pseudo-element. No glyph scaling.
+*/
+
+/* Remove any pseudo halos left by older rules. */
+html body .tierMotion.S::before,
+html body .tierMotion.S::after,
+html body .ctGlobalTierGlyph.S::before,
+html body .ctGlobalTierGlyph.S::after,
+html body .ctTierFxLetter.S::before,
+html body .ctTierFxLetter.S::after,
+html body .tierMotion.A::before,
+html body .tierMotion.A::after,
+html body .ctGlobalTierGlyph.A::before,
+html body .ctGlobalTierGlyph.A::after,
+html body .ctTierFxLetter.A::before,
+html body .ctTierFxLetter.A::after{
+  content:none!important;
+  display:none!important;
+}
+
+/* S: 3s up/down + red breathing, five cycles, then 1.5s compact circular flare.
+   Same breathing language as X/U: bottom darkest, top brightest. Stronger than before,
+   but still slightly weaker than U. Glyph size stays fixed at scale(1). */
+html body .tierMotion.S,
+html body .ctGlobalTierGlyph.S,
+html body .ctTierFxLetter.S{
+  animation:ctSLikeXUBreath 16.5s linear infinite!important;
+  -webkit-animation:ctSLikeXUBreath 16.5s linear infinite!important;
+  transform-origin:50% 50%!important;
+  -webkit-transform-origin:50% 50%!important;
+}
+@keyframes ctSLikeXUBreath{
+  0%{
+    transform:translateY(0) scale(1);
+    filter:brightness(.82) drop-shadow(0 0 1px rgba(205,20,38,.26));
+    text-shadow:0 0 2px rgba(210,24,42,.28);
+  }
+  9.0909%{
+    transform:translateY(-12px) scale(1);
+    filter:brightness(1.31) drop-shadow(0 0 7px rgba(255,94,110,.88)) drop-shadow(0 0 13px rgba(225,0,36,.54));
+    text-shadow:0 0 9px rgba(255,120,132,.92),0 0 17px rgba(225,0,36,.58);
+  }
+  18.1818%{
+    transform:translateY(0) scale(1);
+    filter:brightness(.82) drop-shadow(0 0 1px rgba(205,20,38,.26));
+    text-shadow:0 0 2px rgba(210,24,42,.28);
+  }
+  27.2727%{
+    transform:translateY(-12px) scale(1);
+    filter:brightness(1.31) drop-shadow(0 0 7px rgba(255,94,110,.88)) drop-shadow(0 0 13px rgba(225,0,36,.54));
+    text-shadow:0 0 9px rgba(255,120,132,.92),0 0 17px rgba(225,0,36,.58);
+  }
+  36.3636%{
+    transform:translateY(0) scale(1);
+    filter:brightness(.82) drop-shadow(0 0 1px rgba(205,20,38,.26));
+    text-shadow:0 0 2px rgba(210,24,42,.28);
+  }
+  45.4545%{
+    transform:translateY(-12px) scale(1);
+    filter:brightness(1.31) drop-shadow(0 0 7px rgba(255,94,110,.88)) drop-shadow(0 0 13px rgba(225,0,36,.54));
+    text-shadow:0 0 9px rgba(255,120,132,.92),0 0 17px rgba(225,0,36,.58);
+  }
+  54.5455%{
+    transform:translateY(0) scale(1);
+    filter:brightness(.82) drop-shadow(0 0 1px rgba(205,20,38,.26));
+    text-shadow:0 0 2px rgba(210,24,42,.28);
+  }
+  63.6364%{
+    transform:translateY(-12px) scale(1);
+    filter:brightness(1.31) drop-shadow(0 0 7px rgba(255,94,110,.88)) drop-shadow(0 0 13px rgba(225,0,36,.54));
+    text-shadow:0 0 9px rgba(255,120,132,.92),0 0 17px rgba(225,0,36,.58);
+  }
+  72.7273%{
+    transform:translateY(0) scale(1);
+    filter:brightness(.82) drop-shadow(0 0 1px rgba(205,20,38,.26));
+    text-shadow:0 0 2px rgba(210,24,42,.28);
+  }
+  81.8182%{
+    transform:translateY(-12px) scale(1);
+    filter:brightness(1.31) drop-shadow(0 0 7px rgba(255,94,110,.88)) drop-shadow(0 0 13px rgba(225,0,36,.54));
+    text-shadow:0 0 9px rgba(255,120,132,.92),0 0 17px rgba(225,0,36,.58);
+  }
+  90.9091%{
+    transform:translateY(0) scale(1);
+    filter:brightness(.84) drop-shadow(0 0 1px rgba(205,20,38,.26));
+    text-shadow:0 0 2px rgba(210,24,42,.28);
+  }
+  93.0303%{
+    transform:translateY(0) scale(1);
+    filter:brightness(1.18) drop-shadow(0 0 6px rgba(255,94,110,.88)) drop-shadow(0 0 11px rgba(225,0,36,.52));
+    text-shadow:0 0 8px rgba(255,120,132,.92),0 0 16px rgba(225,0,36,.58);
+  }
+  95.4545%{
+    transform:translateY(0) scale(1);
+    filter:brightness(1.48)
+      drop-shadow(0 0 6px rgba(255,255,255,.92))
+      drop-shadow(0 0 13px rgba(255,88,104,.92))
+      drop-shadow(0 0 22px rgba(230,0,36,.78))
+      drop-shadow(0 0 30px rgba(145,0,22,.42));
+    text-shadow:
+      0 0 7px rgba(255,255,255,.95),
+      0 0 14px rgba(255,120,132,.96),
+      0 0 24px rgba(230,0,36,.82),
+      0 0 34px rgba(155,0,24,.50);
+  }
+  97.8788%{
+    transform:translateY(0) scale(1);
+    filter:brightness(1.20) drop-shadow(0 0 7px rgba(255,94,110,.88)) drop-shadow(0 0 13px rgba(225,0,36,.54));
+    text-shadow:0 0 9px rgba(255,118,130,.92),0 0 18px rgba(225,0,36,.58);
+  }
+  100%{
+    transform:translateY(0) scale(1);
+    filter:brightness(.82) drop-shadow(0 0 1px rgba(205,20,38,.26));
+    text-shadow:0 0 2px rgba(210,24,42,.28);
+  }
+}
+@-webkit-keyframes ctSLikeXUBreath{
+  0%{-webkit-transform:translateY(0) scale(1);filter:brightness(.82) drop-shadow(0 0 1px rgba(205,20,38,.26));text-shadow:0 0 2px rgba(210,24,42,.28)}
+  9.0909%{-webkit-transform:translateY(-12px) scale(1);filter:brightness(1.31) drop-shadow(0 0 7px rgba(255,94,110,.88)) drop-shadow(0 0 13px rgba(225,0,36,.54));text-shadow:0 0 10px rgba(255,120,132,.95),0 0 18px rgba(225,0,36,.62)}
+  18.1818%{-webkit-transform:translateY(0) scale(1);filter:brightness(.82) drop-shadow(0 0 1px rgba(205,20,38,.26));text-shadow:0 0 2px rgba(210,24,42,.28)}
+  27.2727%{-webkit-transform:translateY(-12px) scale(1);filter:brightness(1.31) drop-shadow(0 0 7px rgba(255,94,110,.88)) drop-shadow(0 0 13px rgba(225,0,36,.54));text-shadow:0 0 10px rgba(255,120,132,.95),0 0 18px rgba(225,0,36,.62)}
+  36.3636%{-webkit-transform:translateY(0) scale(1);filter:brightness(.82) drop-shadow(0 0 1px rgba(205,20,38,.26));text-shadow:0 0 2px rgba(210,24,42,.28)}
+  45.4545%{-webkit-transform:translateY(-12px) scale(1);filter:brightness(1.31) drop-shadow(0 0 7px rgba(255,94,110,.88)) drop-shadow(0 0 13px rgba(225,0,36,.54));text-shadow:0 0 10px rgba(255,120,132,.95),0 0 18px rgba(225,0,36,.62)}
+  54.5455%{-webkit-transform:translateY(0) scale(1);filter:brightness(.82) drop-shadow(0 0 1px rgba(205,20,38,.26));text-shadow:0 0 2px rgba(210,24,42,.28)}
+  63.6364%{-webkit-transform:translateY(-12px) scale(1);filter:brightness(1.31) drop-shadow(0 0 7px rgba(255,94,110,.88)) drop-shadow(0 0 13px rgba(225,0,36,.54));text-shadow:0 0 10px rgba(255,120,132,.95),0 0 18px rgba(225,0,36,.62)}
+  72.7273%{-webkit-transform:translateY(0) scale(1);filter:brightness(.82) drop-shadow(0 0 1px rgba(205,20,38,.26));text-shadow:0 0 2px rgba(210,24,42,.28)}
+  81.8182%{-webkit-transform:translateY(-12px) scale(1);filter:brightness(1.31) drop-shadow(0 0 7px rgba(255,94,110,.88)) drop-shadow(0 0 13px rgba(225,0,36,.54));text-shadow:0 0 10px rgba(255,120,132,.95),0 0 18px rgba(225,0,36,.62)}
+  90.9091%{-webkit-transform:translateY(0) scale(1);filter:brightness(.84) drop-shadow(0 0 1px rgba(205,20,38,.26));text-shadow:0 0 2px rgba(210,24,42,.28)}
+  93.0303%{-webkit-transform:translateY(0) scale(1);filter:brightness(1.18) drop-shadow(0 0 6px rgba(255,94,110,.88)) drop-shadow(0 0 11px rgba(225,0,36,.52));text-shadow:0 0 8px rgba(255,120,132,.92),0 0 16px rgba(225,0,36,.58)}
+  95.4545%{-webkit-transform:translateY(0) scale(1);filter:brightness(1.48) drop-shadow(0 0 6px rgba(255,255,255,.92)) drop-shadow(0 0 13px rgba(255,88,104,.92)) drop-shadow(0 0 22px rgba(230,0,36,.78)) drop-shadow(0 0 30px rgba(145,0,22,.42));text-shadow:0 0 7px rgba(255,255,255,.95),0 0 14px rgba(255,120,132,.96),0 0 24px rgba(230,0,36,.82),0 0 34px rgba(155,0,24,.50)}
+  97.8788%{-webkit-transform:translateY(0) scale(1);filter:brightness(1.20) drop-shadow(0 0 7px rgba(255,94,110,.88)) drop-shadow(0 0 13px rgba(225,0,36,.54));text-shadow:0 0 9px rgba(255,118,130,.92),0 0 18px rgba(225,0,36,.58)}
+  100%{-webkit-transform:translateY(0) scale(1);filter:brightness(.82) drop-shadow(0 0 1px rgba(205,20,38,.26));text-shadow:0 0 2px rgba(210,24,42,.28)}
+}
+
+/* A: same language as X/U, but slower. Make breathing clearly visible. */
+html body .tierMotion.A,
+html body .ctGlobalTierGlyph.A,
+html body .ctTierFxLetter.A{
+  animation:ctALikeXUBreath 5s ease-in-out infinite!important;
+  -webkit-animation:ctALikeXUBreath 5s ease-in-out infinite!important;
+  transform-origin:50% 50%!important;
+  -webkit-transform-origin:50% 50%!important;
+}
+@keyframes ctALikeXUBreath{
+  0%,100%{
+    transform:scale(1);
+    filter:brightness(.86) drop-shadow(0 0 1px rgba(255,145,35,.22));
+    text-shadow:0 0 2px rgba(255,145,35,.26);
+  }
+  50%{
+    transform:scale(1);
+    filter:brightness(1.26) drop-shadow(0 0 6px rgba(255,176,86,.78)) drop-shadow(0 0 11px rgba(255,118,22,.42));
+    text-shadow:0 0 7px rgba(255,200,118,.84),0 0 14px rgba(255,118,22,.48);
+  }
+}
+@-webkit-keyframes ctALikeXUBreath{
+  0%,100%{-webkit-transform:scale(1);filter:brightness(.86) drop-shadow(0 0 1px rgba(255,145,35,.22));text-shadow:0 0 2px rgba(255,145,35,.26)}
+  50%{-webkit-transform:scale(1);filter:brightness(1.26) drop-shadow(0 0 6px rgba(255,176,86,.78)) drop-shadow(0 0 11px rgba(255,118,22,.42));text-shadow:0 0 8px rgba(255,200,118,.88),0 0 15px rgba(255,118,22,.52)}
+}
+</style>
+<!-- CT S A XU STYLE BREATH FINAL END -->
+
+<!-- CT U S BURST HIERARCHY FINAL START -->
+<style id="ctUSBurstHierarchyFinal">
+/*
+  Special-burst hierarchy only:
+  U = stronger, wider, horizontally stretched pink/purple wing burst.
+  S = weaker, smaller, compact circular red/white burst.
+  Normal breathing timings remain unchanged.
+*/
+
+/* U special: horizontal wing-like light, stronger than S. */
+html body .tierMotion.U::after,
+html body .ctGlobalTierGlyph.U::after,
+html body .ctTierFxLetter.U::after{
+  content:""!important;
+  display:block!important;
+  position:absolute!important;
+  left:50%!important;
+  top:50%!important;
+  width:1em!important;
+  height:.52em!important;
+  border-radius:999px!important;
+  pointer-events:none!important;
+  z-index:-1!important;
+  transform-origin:50% 50%!important;
+  -webkit-transform-origin:50% 50%!important;
+  background:radial-gradient(ellipse at center,
+    rgba(255,255,255,.96) 0 8%,
+    rgba(255,210,247,.90) 12%,
+    rgba(255,95,225,.74) 30%,
+    rgba(223,70,255,.56) 48%,
+    rgba(150,55,255,.24) 66%,
+    rgba(120,35,220,0) 78%)!important;
+  box-shadow:
+    -1.1em 0 .55em rgba(255,70,220,.72),
+     1.1em 0 .55em rgba(255,70,220,.72),
+    -1.9em 0 .90em rgba(205,85,255,.46),
+     1.9em 0 .90em rgba(205,85,255,.46),
+     0 0 .75em rgba(255,255,255,.70)!important;
+  opacity:0!important;
+  animation:ctUSpecialWideBurst 12s linear infinite!important;
+  -webkit-animation:ctUSpecialWideBurst 12s linear infinite!important;
+}
+@keyframes ctUSpecialWideBurst{
+  0%,83.25%{
+    transform:translate(-50%,-50%) scaleX(.35) scaleY(.45);
+    opacity:0;
+  }
+  86%{
+    transform:translate(-50%,-50%) scaleX(1.2) scaleY(.85);
+    opacity:.55;
+  }
+  90%{
+    transform:translate(-50%,-50%) scaleX(2.65) scaleY(1.15);
+    opacity:.92;
+  }
+  93.5%{
+    transform:translate(-50%,-50%) scaleX(4.2) scaleY(1.45);
+    opacity:1;
+  }
+  96.5%{
+    transform:translate(-50%,-50%) scaleX(5.0) scaleY(1.62);
+    opacity:.90;
+  }
+  99%{
+    transform:translate(-50%,-50%) scaleX(5.6) scaleY(1.72);
+    opacity:.42;
+  }
+  100%{
+    transform:translate(-50%,-50%) scaleX(6.0) scaleY(1.80);
+    opacity:0;
+  }
+}
+@-webkit-keyframes ctUSpecialWideBurst{
+  0%,83.25%{
+    -webkit-transform:translate(-50%,-50%) scaleX(.35) scaleY(.45);
+    opacity:0;
+  }
+  86%{
+    -webkit-transform:translate(-50%,-50%) scaleX(1.2) scaleY(.85);
+    opacity:.55;
+  }
+  90%{
+    -webkit-transform:translate(-50%,-50%) scaleX(2.65) scaleY(1.15);
+    opacity:.92;
+  }
+  93.5%{
+    -webkit-transform:translate(-50%,-50%) scaleX(4.2) scaleY(1.45);
+    opacity:1;
+  }
+  96.5%{
+    -webkit-transform:translate(-50%,-50%) scaleX(5.0) scaleY(1.62);
+    opacity:.90;
+  }
+  99%{
+    -webkit-transform:translate(-50%,-50%) scaleX(5.6) scaleY(1.72);
+    opacity:.42;
+  }
+  100%{
+    -webkit-transform:translate(-50%,-50%) scaleX(6.0) scaleY(1.80);
+    opacity:0;
+  }
+}
+
+/* S special: smaller compact circular burst, clearly below U in scale/brightness. */
+html body .tierMotion.S::after,
+html body .ctGlobalTierGlyph.S::after,
+html body .ctTierFxLetter.S::after{
+  content:""!important;
+  display:block!important;
+  position:absolute!important;
+  left:50%!important;
+  top:50%!important;
+  width:.82em!important;
+  height:.82em!important;
+  border-radius:50%!important;
+  pointer-events:none!important;
+  z-index:-1!important;
+  transform-origin:50% 50%!important;
+  -webkit-transform-origin:50% 50%!important;
+  background:radial-gradient(circle,
+    rgba(255,255,255,.80) 0 10%,
+    rgba(255,195,202,.70) 15%,
+    rgba(255,82,98,.60) 32%,
+    rgba(220,0,32,.42) 53%,
+    rgba(145,0,22,.14) 70%,
+    rgba(110,0,18,0) 82%)!important;
+  box-shadow:
+    0 0 .34em rgba(255,112,126,.58),
+    0 0 .68em rgba(230,0,34,.40),
+    0 0 .98em rgba(140,0,22,.20)!important;
+  opacity:0!important;
+  animation:ctSSpecialCompactBurst 16.5s linear infinite!important;
+  -webkit-animation:ctSSpecialCompactBurst 16.5s linear infinite!important;
+}
+@keyframes ctSSpecialCompactBurst{
+  0%,90.85%{
+    transform:translate(-50%,-50%) scale(.42);
+    opacity:0;
+  }
+  92.6%{
+    transform:translate(-50%,-50%) scale(.78);
+    opacity:.38;
+  }
+  94.8%{
+    transform:translate(-50%,-50%) scale(1.10);
+    opacity:.68;
+  }
+  96.2%{
+    transform:translate(-50%,-50%) scale(1.46);
+    opacity:.80;
+  }
+  98.2%{
+    transform:translate(-50%,-50%) scale(1.72);
+    opacity:.48;
+  }
+  100%{
+    transform:translate(-50%,-50%) scale(1.92);
+    opacity:0;
+  }
+}
+@-webkit-keyframes ctSSpecialCompactBurst{
+  0%,90.85%{-webkit-transform:translate(-50%,-50%) scale(.42);opacity:0}
+  92.6%{-webkit-transform:translate(-50%,-50%) scale(.78);opacity:.38}
+  94.8%{-webkit-transform:translate(-50%,-50%) scale(1.10);opacity:.68}
+  96.2%{-webkit-transform:translate(-50%,-50%) scale(1.46);opacity:.80}
+  98.2%{-webkit-transform:translate(-50%,-50%) scale(1.72);opacity:.48}
+  100%{-webkit-transform:translate(-50%,-50%) scale(1.92);opacity:0}
+}
+</style>
+<!-- CT U S BURST HIERARCHY FINAL END -->
+
+<!-- CT SA REAL BREATH UNLOCKED -->
+
+<!-- CT U PULSE WAVE UPGRADE START -->
+<style id="ctUPulseWaveUpgrade">
+/* U special upgrade: keep the wide wing burst, add a pulse-wave ring and
+   slightly enrich the main burst. */
+
+html body .tierMotion.U,
+html body .ctGlobalTierGlyph.U,
+html body .ctTierFxLetter.U{
+  position:relative!important;
+  overflow:visible!important;
+}
+
+/* Main U burst: a touch larger / richer than before */
+html body .tierMotion.U::after,
+html body .ctGlobalTierGlyph.U::after,
+html body .ctTierFxLetter.U::after{
+  width:1.08em!important;
+  height:.58em!important;
+  background:radial-gradient(ellipse at center,
+    rgba(255,255,255,.98) 0 8%,
+    rgba(255,220,250,.94) 12%,
+    rgba(255,112,230,.80) 30%,
+    rgba(226,82,255,.62) 48%,
+    rgba(154,60,255,.28) 66%,
+    rgba(120,35,220,0) 80%)!important;
+  box-shadow:
+    -1.2em 0 .60em rgba(255,82,228,.78),
+     1.2em 0 .60em rgba(255,82,228,.78),
+    -2.1em 0 1.00em rgba(212,92,255,.52),
+     2.1em 0 1.00em rgba(212,92,255,.52),
+     0 0 .90em rgba(255,255,255,.78),
+     0 0 1.35em rgba(255,160,245,.34)!important;
+}
+
+/* Pulse-wave ring */
+html body .tierMotion.U::before,
+html body .ctGlobalTierGlyph.U::before,
+html body .ctTierFxLetter.U::before{
+  content:""!important;
+  display:block!important;
+  position:absolute!important;
+  left:50%!important;
+  top:50%!important;
+  width:.92em!important;
+  height:.92em!important;
+  border-radius:999px!important;
+  pointer-events:none!important;
+  z-index:-2!important;
+  transform-origin:50% 50%!important;
+  -webkit-transform-origin:50% 50%!important;
+  background:radial-gradient(circle,
+    rgba(255,255,255,.00) 0 50%,
+    rgba(255,245,255,.92) 58%,
+    rgba(255,128,235,.72) 66%,
+    rgba(208,96,255,.46) 76%,
+    rgba(155,66,255,.18) 86%,
+    rgba(120,35,220,0) 100%)!important;
+  box-shadow:
+    0 0 .50em rgba(255,150,240,.55),
+    0 0 1.00em rgba(214,95,255,.34)!important;
+  opacity:0!important;
+  animation:ctUPulseWaveBurst 12s linear infinite!important;
+  -webkit-animation:ctUPulseWaveBurst 12s linear infinite!important;
+}
+
+@keyframes ctUPulseWaveBurst{
+  0%,84%{
+    transform:translate(-50%,-50%) scale(.22);
+    opacity:0;
+  }
+  /* pulse 1 */
+  86%{
+    transform:translate(-50%,-50%) scale(.52);
+    opacity:.26;
+  }
+  89%{
+    transform:translate(-50%,-50%) scale(1.65);
+    opacity:.72;
+  }
+  91.2%{
+    transform:translate(-50%,-50%) scale(2.75);
+    opacity:.22;
+  }
+  /* pulse 2 */
+  92.6%{
+    transform:translate(-50%,-50%) scale(.78);
+    opacity:.32;
+  }
+  95.4%{
+    transform:translate(-50%,-50%) scale(2.35);
+    opacity:.82;
+  }
+  98.0%{
+    transform:translate(-50%,-50%) scale(4.05);
+    opacity:.30;
+  }
+  100%{
+    transform:translate(-50%,-50%) scale(5.10);
+    opacity:0;
+  }
+}
+@-webkit-keyframes ctUPulseWaveBurst{
+  0%,84%{
+    -webkit-transform:translate(-50%,-50%) scale(.22);
+    opacity:0;
+  }
+  86%{
+    -webkit-transform:translate(-50%,-50%) scale(.52);
+    opacity:.26;
+  }
+  89%{
+    -webkit-transform:translate(-50%,-50%) scale(1.65);
+    opacity:.72;
+  }
+  91.2%{
+    -webkit-transform:translate(-50%,-50%) scale(2.75);
+    opacity:.22;
+  }
+  92.6%{
+    -webkit-transform:translate(-50%,-50%) scale(.78);
+    opacity:.32;
+  }
+  95.4%{
+    -webkit-transform:translate(-50%,-50%) scale(2.35);
+    opacity:.82;
+  }
+  98.0%{
+    -webkit-transform:translate(-50%,-50%) scale(4.05);
+    opacity:.30;
+  }
+  100%{
+    -webkit-transform:translate(-50%,-50%) scale(5.10);
+    opacity:0;
+  }
+}
+</style>
+<!-- CT U PULSE WAVE UPGRADE END -->
 
 </body></html>
