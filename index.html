@@ -116,6 +116,7 @@ html,body,.app,.modal,button,select,input,textarea{
 <!-- CT17482 END -->
 
 <!-- CT WORLD BOSS SAFETY FIX -->
+<meta name="ct-app-build" content="ct-1787331858">
 </head><body>
 <div class="app">
 <div class="top">
@@ -7510,5 +7511,50 @@ html body .ctUQueenStage{width:3.55em!important;height:3.00em!important;filter:b
 }
 </style>
 <!-- CT U F Z PREVIEW TRUE CENTER END -->
+
+
+<!-- CT APP AUTO UPDATE START -->
+<script id="ctAppAutoUpdate">
+(function(){
+  const BUILD = document.querySelector('meta[name="ct-app-build"]')?.content || '';
+  const isStandalone =
+    (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+    window.navigator.standalone === true;
+
+  if(!isStandalone) return;
+
+  async function checkUpdate(){
+    try{
+      const base = location.origin + location.pathname;
+      const res = await fetch(base + '?ct_update_check=' + Date.now(), {
+        cache:'no-store',
+        credentials:'same-origin',
+        headers:{'Cache-Control':'no-cache'}
+      });
+      if(!res.ok) return;
+
+      const html = await res.text();
+      const m = html.match(/<meta\s+name=["']ct-app-build["']\s+content=["']([^"']+)["']/i);
+      const remoteBuild = m && m[1] ? m[1] : '';
+
+      if(!remoteBuild || remoteBuild === BUILD) return;
+      if(sessionStorage.getItem('CT_LAST_RELOAD_BUILD') === remoteBuild) return;
+
+      sessionStorage.setItem('CT_LAST_RELOAD_BUILD', remoteBuild);
+      location.replace(
+        base + '?ctv=' + encodeURIComponent(remoteBuild) + '&t=' + Date.now()
+      );
+    }catch(e){
+      console.warn('CT app update check failed', e);
+    }
+  }
+
+  setTimeout(checkUpdate, 700);
+  document.addEventListener('visibilitychange', function(){
+    if(!document.hidden) setTimeout(checkUpdate, 250);
+  });
+})();
+</script>
+<!-- CT APP AUTO UPDATE END -->
 
 </body></html>
