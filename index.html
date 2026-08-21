@@ -5081,4 +5081,104 @@ html body .ctGlobalTierGlyph.Z{
 </script>
 <!-- CT GLOBAL ALL-TIER-LOCATION FX FIX END -->
 
+
+<!-- CT TEAM PR RATING SYSTEM START -->
+<script id="ctTeamPRRatingSystem">
+(()=>{
+  'use strict';
+
+  /*
+    Team rating:
+    - X: max 1 team, only current #1 by team power, absolute power >= 50,
+         and >= 25% above #2.
+    - U: max 1 team, only the strongest non-X team, absolute power >= 20,
+         and >= 12% above the next non-X team.
+    - Everyone else uses power percentile rank (PR) among all 22 teams:
+      S >= 85, A >= 70, B >= 55, C >= 40,
+      D >= 25, E >= 15, F >= 5, Z < 5.
+    PR formula: (N-rank)/(N-1)*100, so #1=100 and last=0.
+    Tower/floor ranking can still use the game's normal progress order;
+    this block changes team rating only.
+  */
+
+  function ctPRRawPowerMap(){
+    const out={};
+    for(const city of Object.keys(R||{})){
+      out[city]=10*teamRaw(city)/Math.max(1e-9,Number(initialTop)||1);
+    }
+    return out;
+  }
+
+  function ctPRTwo(n){return Math.round((Number(n)||0)*100)/100;}
+
+  function ctPRTier(pr){
+    if(pr>=85)return 'S';
+    if(pr>=70)return 'A';
+    if(pr>=55)return 'B';
+    if(pr>=40)return 'C';
+    if(pr>=25)return 'D';
+    if(pr>=15)return 'E';
+    if(pr>=5)return 'F';
+    return 'Z';
+  }
+
+  window.meta = meta = function(){
+    const raw=ctPRRawPowerMap();
+
+    // Rating rank is pure current team power, not floor/progress.
+    const byPower=Object.keys(raw).sort((a,b)=>{
+      const d=(Number(raw[b])||0)-(Number(raw[a])||0);
+      return Math.abs(d)>1e-12?d:String(a).localeCompare(String(b),'zh-Hant');
+    });
+
+    const n=byPower.length;
+    const data=byPower.map((city,i)=>{
+      const rank=i+1;
+      const pr=n<=1?100:((n-rank)/(n-1))*100;
+      return {
+        city,
+        rawPower:ctPRTwo(raw[city]),
+        power:ctPRTwo(raw[city]),
+        powerRank:rank,
+        pr:Math.round(pr*10)/10,
+        tier:ctPRTier(pr)
+      };
+    });
+
+    // X: unique and optional.
+    if(data[0] && data[1] &&
+       data[0].power>=50 &&
+       data[0].power>=data[1].power*1.25){
+      data[0].tier='X';
+    }
+
+    // U: unique and optional; test only the strongest non-X team.
+    const nonX=data.filter(x=>x.tier!=='X');
+    if(nonX[0] && nonX[1] &&
+       nonX[0].power>=20 &&
+       nonX[0].power>=nonX[1].power*1.12){
+      nonX[0].tier='U';
+    }
+
+    return Object.fromEntries(data.map(x=>[x.city,x]));
+  };
+
+  // Expose thresholds for team-data / future UI descriptions.
+  window.CT_TEAM_PR_RATING={
+    x:{maxTeams:1,minPower:50,gap:1.25},
+    u:{maxTeams:1,minPower:20,gap:1.12},
+    prBands:[
+      {tier:'S',min:85},{tier:'A',min:70},{tier:'B',min:55},
+      {tier:'C',min:40},{tier:'D',min:25},{tier:'E',min:15},
+      {tier:'F',min:5},{tier:'Z',min:0}
+    ]
+  };
+
+  try{
+    if(typeof render==='function')render();
+  }catch(e){console.warn('CT team PR rating render',e)}
+})();
+</script>
+<!-- CT TEAM PR RATING SYSTEM END -->
+
 </body></html>
