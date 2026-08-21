@@ -122,7 +122,7 @@ html,body,.app,.modal,button,select,input,textarea{
 <h1>⚔️ Taiwan City Tower</h1><div class="sub">人物修復基底｜22隊×12人｜寶物掉落／合成／配裝｜iPad主畫面App</div>
 <div class="controls">
 <select id="speed"><option value="1">1×｜1秒1回合</option><option value="5">5×</option><option value="10">10×</option><option value="25">25×</option></select>
-<button id="step">戰鬥1回合</button><button id="auto" class="primary">▶ 自動</button><button id="teams">📚 隊伍資料</button><button id="treasures">🎁 寶物</button><button id="manualWB">🌐 手動世界Boss</button><button id="manualBrawl">⚔️ 手動22隊大混鬥</button><button id="manualLeague">🏆 手動城市聯賽</button>
+<button id="step">戰鬥1回合</button><button id="auto" class="primary">▶ 自動</button><button id="teams">📚 隊伍資料</button><button id="tierFxPreview">✨ 評級特效</button><button id="treasures">🎁 寶物</button><button id="manualWB">🌐 手動世界Boss</button><button id="manualBrawl">⚔️ 手動22隊大混鬥</button><button id="manualLeague">🏆 手動城市聯賽</button>
 <button id="install">📲 加入主畫面</button><button id="save">💾 儲存</button><button id="reset" class="danger">🎲 新遊戲</button>
 </div>
 <div class="kpis">
@@ -2673,7 +2673,7 @@ html body .ratingText.A{
 <script id="ct174110HardGlobalClockScript">
 (()=>{
   'use strict';
-  const CYCLE=3000;
+  const CYCLE=42000;
   const SEL='.tierMotion.X,.tierMotion.U,.tierMotion.S,.tierMotion.A,.ratingText.X,.ratingText.U,.ratingText.S,.ratingText.A,.teamTint.X .city,.teamTint.X .sub,.teamTint.U .city,.teamTint.U .sub,.teamTint.S .city,.teamTint.S .sub,.teamTint.A .city,.teamTint.A .sub,.powerTint.X,.powerTint.U,.powerTint.S,.powerTint.A,.tierWord17434.X,.tierWord17434.U,.tierWord17434.S,.tierWord17434.A,.tGrade.X,.tGrade.U,.tGrade.S,.tGrade.A,.tItem.tX .tName,.tItem.tU .tName,.tItem.tS .tName,.tItem.tA .tName,.tRosterEquip.X b,.tRosterEquip.U b,.tRosterEquip.S b,.tRosterEquip.A b';
 
   function tier110(el){return ['X','U','S','A'].find(t=>el.classList&&el.classList.contains(t))||'';}
@@ -3706,4 +3706,466 @@ html,body{padding-top:0!important}
 #arena .cards .card .xp173>i{display:block!important;height:100%!important;min-height:7px!important;background:#b878ff!important;box-shadow:0 0 7px #b878ff88!important;border-radius:999px!important}
 </style>
 <!-- CT stability/performance/fuse-all/EXP-row fix END -->
+
+<!-- CT U-after-X + monotonic leaderboard power fix -->
+<script>
+(()=>{
+  'use strict';
+
+  function ctRawTeamPowerMap(){
+    const out={};
+    for(const city of Object.keys(R||{})){
+      out[city]=10*teamRaw(city)/Math.max(1e-9,Number(initialTop)||1);
+    }
+    return out;
+  }
+
+  function ctProgressRank(raw){
+    return [...(states||[])].sort((a,b)=>{
+      const af=Number(a?.floor)||0, bf=Number(b?.floor)||0;
+      if(bf!==af)return bf-af;
+      const ar=(Number(a?.enemy?.hp)||0)/Math.max(1,Number(a?.enemy?.max)||1);
+      const br=(Number(b?.enemy?.hp)||0)/Math.max(1,Number(b?.enemy?.max)||1);
+      if(Math.abs(ar-br)>1e-12)return ar-br;
+      const ap=Number(raw[a?.city])||0, bp=Number(raw[b?.city])||0;
+      if(Math.abs(bp-ap)>1e-12)return bp-ap;
+      return String(a?.city||'').localeCompare(String(b?.city||''),'zh-Hant');
+    });
+  }
+
+  function ctTwo(x){ return Math.round((Number(x)||0)*100)/100; }
+
+  // 排名仍以樓層/當層進度為主；戰力指數則保證由上往下嚴格不增加。
+  window.meta = meta = function(){
+    const raw=ctRawTeamPowerMap();
+    const rr=ctProgressRank(raw);
+    const a=[];
+    let prev=Infinity;
+
+    rr.forEach((s,i)=>{
+      const rawPower=ctTwo(raw[s.city]);
+      let power;
+      if(i===0){
+        power=rawPower;
+      }else{
+        const ceiling=ctTwo(prev-0.01);
+        power=Math.min(rawPower,ceiling);
+      }
+      power=Math.max(0,power);
+      prev=power;
+      a.push({city:s.city,power,rawPower,rank:i+1,tier:'F'});
+    });
+
+    // 基礎評級先依「排名後的戰力指數」判定。
+    for(const x of a){
+      const v=x.power,r=x.rank;
+      x.tier=v>=9&&r<=3?'S':v>=8&&r<=7?'A':v>=7&&r<=11?'B':v>=6&&r<=15?'C':v>=4.5&&r<=18?'D':v>=4?'E':'F';
+    }
+
+    // 先決定唯一 X。
+    if(a[0] && a[1] && a[0].power>=50 && a[0].power>=a[1].power*1.25){
+      a[0].tier='X';
+    }
+
+    // 再從「非 X」隊伍往下找一個 U；因此 X 不會再把 U 名額吃掉。
+    const nonX=a.filter(x=>x.tier!=='X');
+    for(let i=0;i<nonX.length-1;i++){
+      const cur=nonX[i], next=nonX[i+1];
+      if(cur.rank>3)break;
+      if(cur.power>=20 && cur.power>=next.power*1.12){
+        cur.tier='U';
+        break;
+      }
+    }
+
+    const z=a[a.length-1], p=a[a.length-2];
+    if(z&&p&&z.power<3.3&&z.power<=p.power*.92)z.tier='Z';
+    return Object.fromEntries(a.map(x=>[x.city,x]));
+  };
+
+  // 排名規則保持原本的爬塔進度邏輯，不用 meta() 反過來排序，避免循環與跳動。
+  window.rank = rank = function(){
+    return ctProgressRank(ctRawTeamPowerMap());
+  };
+})();
+</script>
+<!-- CT U-after-X + monotonic leaderboard power fix END -->
+
+<!-- CT X/U vertical speed tuning START -->
+<style id="ctXUVerticalSpeedFinal">
+/* X 上下/旋轉整體動作 x2；U 上下/搖擺整體動作 x1.5。光暈與其餘評級節奏不變。 */
+html body .tierMotion.X{
+  animation-duration:1.5s!important;
+  -webkit-animation-duration:1.5s!important;
+}
+html body .tierMotion.U{
+  animation-duration:2s!important;
+  -webkit-animation-duration:2s!important;
+}
+</style>
+<!-- CT X/U vertical speed tuning END -->
+
+
+<!-- CT X/U alternate rotation cadence START -->
+<style id="ctXUAlternateCadenceFinal">
+/* X：每 1.5 秒完成一次完整上下；奇數次逆時針 1 圈，偶數次反向順時針 2 圈。
+   因此整個交替週期為 3 秒，但上下速度仍是原本 x2。 */
+html body .tierMotion.X{
+  animation:ctXAltFinal 3s linear infinite!important;
+  -webkit-animation:ctXAltFinal 3s linear infinite!important;
+}
+@keyframes ctXAltFinal{
+  /* 第一次完整上下：0~50%，逆時針 1 圈 */
+  0%   {transform:translateY(0)     rotate(0deg)    scale(1)}
+  12.5%{transform:translateY(-6px)  rotate(-90deg)  scale(1.05)}
+  25%  {transform:translateY(-12px) rotate(-180deg) scale(1.10)}
+  37.5%{transform:translateY(-6px)  rotate(-270deg) scale(1.05)}
+  50%  {transform:translateY(0)     rotate(-360deg) scale(1)}
+  /* 第二次完整上下：50~100%，反向順時針 2 圈 */
+  62.5%{transform:translateY(-6px)  rotate(-180deg) scale(1.05)}
+  75%  {transform:translateY(-12px) rotate(0deg)    scale(1.10)}
+  87.5%{transform:translateY(-6px)  rotate(180deg)  scale(1.05)}
+  100% {transform:translateY(0)     rotate(360deg)  scale(1)}
+}
+@-webkit-keyframes ctXAltFinal{
+  0%   {-webkit-transform:translateY(0)     rotate(0deg)    scale(1)}
+  12.5%{-webkit-transform:translateY(-6px)  rotate(-90deg)  scale(1.05)}
+  25%  {-webkit-transform:translateY(-12px) rotate(-180deg) scale(1.10)}
+  37.5%{-webkit-transform:translateY(-6px)  rotate(-270deg) scale(1.05)}
+  50%  {-webkit-transform:translateY(0)     rotate(-360deg) scale(1)}
+  62.5%{-webkit-transform:translateY(-6px)  rotate(-180deg) scale(1.05)}
+  75%  {-webkit-transform:translateY(-12px) rotate(0deg)    scale(1.10)}
+  87.5%{-webkit-transform:translateY(-6px)  rotate(180deg)  scale(1.05)}
+  100% {-webkit-transform:translateY(0)     rotate(360deg)  scale(1)}
+}
+
+/* U：搖動完全綁定同一個 2 秒上下週期；上升小搖、下降大搖。 */
+html body .tierMotion.U{
+  animation:ctUFollowVerticalFinal 2s linear infinite!important;
+  -webkit-animation:ctUFollowVerticalFinal 2s linear infinite!important;
+}
+@keyframes ctUFollowVerticalFinal{
+  0%   {transform:translate(0,0)     rotate(0deg)   scale(1)}
+  12.5%{transform:translate(-2px,-3px) rotate(-4deg) scale(1.02)}
+  25%  {transform:translate(2px,-6px)  rotate(4deg)  scale(1.04)}
+  37.5%{transform:translate(-2px,-9px) rotate(-5deg) scale(1.06)}
+  50%  {transform:translate(0,-12px)   rotate(0deg)  scale(1.08)}
+  62.5%{transform:translate(7px,-9px)  rotate(14deg) scale(1.06)}
+  75%  {transform:translate(-8px,-6px) rotate(-18deg) scale(1.04)}
+  87.5%{transform:translate(7px,-3px)  rotate(15deg) scale(1.02)}
+  100% {transform:translate(0,0)       rotate(0deg)  scale(1)}
+}
+@-webkit-keyframes ctUFollowVerticalFinal{
+  0%   {-webkit-transform:translate(0,0)     rotate(0deg)   scale(1)}
+  12.5%{-webkit-transform:translate(-2px,-3px) rotate(-4deg) scale(1.02)}
+  25%  {-webkit-transform:translate(2px,-6px)  rotate(4deg)  scale(1.04)}
+  37.5%{-webkit-transform:translate(-2px,-9px) rotate(-5deg) scale(1.06)}
+  50%  {-webkit-transform:translate(0,-12px)   rotate(0deg)  scale(1.08)}
+  62.5%{-webkit-transform:translate(7px,-9px)  rotate(14deg) scale(1.06)}
+  75%  {-webkit-transform:translate(-8px,-6px) rotate(-18deg) scale(1.04)}
+  87.5%{-webkit-transform:translate(7px,-3px)  rotate(15deg) scale(1.02)}
+  100% {-webkit-transform:translate(0,0)       rotate(0deg)  scale(1)}
+}
+</style>
+<!-- CT X/U alternate rotation cadence END -->
+
+
+<!-- CT X five-cycle rainbow burst START -->
+<style id="ctXFiveCycleRainbowBurst">
+/* X：5 次完整上下後，原地彩光爆發 3 秒，逆時針 10 圈；彩光同步呼吸明暗與縮放。
+   正常 5 次仍維持：逆 1 圈 → 順 2 圈 → 逆 1 圈 → 順 2 圈 → 逆 1 圈。 */
+html body .tierMotion.X{
+  animation:ctXFiveCycleBurst 10.5s linear infinite!important;
+  -webkit-animation:ctXFiveCycleBurst 10.5s linear infinite!important;
+  transform-origin:50% 50%!important;
+  -webkit-transform-origin:50% 50%!important;
+}
+@keyframes ctXFiveCycleBurst{
+  0%      {transform:translateY(0) rotate(0deg) scale(1)}
+  7.1429% {transform:translateY(-12px) rotate(-180deg) scale(1.10)}
+  14.2857%{transform:translateY(0) rotate(-360deg) scale(1)}
+
+  21.4286%{transform:translateY(-12px) rotate(0deg) scale(1.10)}
+  28.5714%{transform:translateY(0) rotate(360deg) scale(1)}
+
+  35.7143%{transform:translateY(-12px) rotate(180deg) scale(1.10)}
+  42.8571%{transform:translateY(0) rotate(0deg) scale(1)}
+
+  50%     {transform:translateY(-12px) rotate(360deg) scale(1.10)}
+  57.1429%{transform:translateY(0) rotate(720deg) scale(1)}
+
+  64.2857%{transform:translateY(-12px) rotate(540deg) scale(1.10)}
+  71.4286%{
+    transform:translateY(0) rotate(360deg) scale(1);
+    filter:drop-shadow(0 0 4px #ffe55e);
+    text-shadow:0 0 7px #ffe55e,0 0 14px rgba(255,229,94,.8);
+  }
+
+  /* 3 秒原地爆發：只做一次完整呼吸，同時總共逆時針 10 圈。 */
+  85.7143%{
+    transform:translateY(0) rotate(-1440deg) scale(1.22);
+    filter:drop-shadow(0 0 12px #ff3b30) drop-shadow(0 0 18px #ffcc00) drop-shadow(0 0 24px #34c759) drop-shadow(0 0 30px #0a84ff) drop-shadow(0 0 36px #bf5af2) drop-shadow(0 0 42px #fff);
+    text-shadow:-8px 0 12px #ff3b30,8px 0 12px #34c759,0 -8px 14px #0a84ff,0 8px 14px #bf5af2,0 0 38px #fff;
+  }
+  100%{
+    transform:translateY(0) rotate(-3240deg) scale(1);
+    filter:drop-shadow(0 0 4px #ffe55e);
+    text-shadow:0 0 7px #ffe55e,0 0 14px rgba(255,229,94,.8);
+  }
+}
+@-webkit-keyframes ctXFiveCycleBurst{
+  0%      {-webkit-transform:translateY(0) rotate(0deg) scale(1)}
+  7.1429% {-webkit-transform:translateY(-12px) rotate(-180deg) scale(1.10)}
+  14.2857%{-webkit-transform:translateY(0) rotate(-360deg) scale(1)}
+  21.4286%{-webkit-transform:translateY(-12px) rotate(0deg) scale(1.10)}
+  28.5714%{-webkit-transform:translateY(0) rotate(360deg) scale(1)}
+  35.7143%{-webkit-transform:translateY(-12px) rotate(180deg) scale(1.10)}
+  42.8571%{-webkit-transform:translateY(0) rotate(0deg) scale(1)}
+  50%     {-webkit-transform:translateY(-12px) rotate(360deg) scale(1.10)}
+  57.1429%{-webkit-transform:translateY(0) rotate(720deg) scale(1)}
+  64.2857%{-webkit-transform:translateY(-12px) rotate(540deg) scale(1.10)}
+  71.4286%{
+    -webkit-transform:translateY(0) rotate(360deg) scale(1);
+    filter:drop-shadow(0 0 4px #ffe55e);
+    text-shadow:0 0 7px #ffe55e,0 0 14px rgba(255,229,94,.8);
+  }
+  85.7143%{
+    -webkit-transform:translateY(0) rotate(-1440deg) scale(1.22);
+    filter:drop-shadow(0 0 12px #ff3b30) drop-shadow(0 0 18px #ffcc00) drop-shadow(0 0 24px #34c759) drop-shadow(0 0 30px #0a84ff) drop-shadow(0 0 36px #bf5af2) drop-shadow(0 0 42px #fff);
+    text-shadow:-8px 0 12px #ff3b30,8px 0 12px #34c759,0 -8px 14px #0a84ff,0 8px 14px #bf5af2,0 0 38px #fff;
+  }
+  100%{
+    -webkit-transform:translateY(0) rotate(-3240deg) scale(1);
+    filter:drop-shadow(0 0 4px #ffe55e);
+    text-shadow:0 0 7px #ffe55e,0 0 14px rgba(255,229,94,.8);
+  }
+}
+</style>
+<!-- CT X five-cycle rainbow burst END -->
+
+<!-- CT U five-cycle bottom flash START -->
+<style id="ctUFiveCycleBottomFlash">
+/* U：5 次完整 2 秒上下循環後回到底部，原地大閃光 3 秒；之後重新開始。 */
+html body .tierMotion.U{
+  animation:ctUFiveCycleFlash 13s linear infinite!important;
+  -webkit-animation:ctUFiveCycleFlash 13s linear infinite!important;
+  transform-origin:50% 50%!important;
+  -webkit-transform-origin:50% 50%!important;
+}
+@keyframes ctUFiveCycleFlash{
+  0.0000%{transform:translate(0,0) rotate(0deg) scale(1);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  1.9231%{transform:translate(-2px,-3px) rotate(-4deg) scale(1.02);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  3.8462%{transform:translate(2px,-6px) rotate(4deg) scale(1.04);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  5.7692%{transform:translate(-2px,-9px) rotate(-5deg) scale(1.06);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  7.6923%{transform:translate(0,-12px) rotate(0deg) scale(1.08);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  9.6154%{transform:translate(7px,-9px) rotate(14deg) scale(1.06);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  11.5385%{transform:translate(-8px,-6px) rotate(-18deg) scale(1.04);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  13.4615%{transform:translate(7px,-3px) rotate(15deg) scale(1.02);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  15.3846%{transform:translate(0,0) rotate(0deg) scale(1);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  17.3077%{transform:translate(-2px,-3px) rotate(-4deg) scale(1.02);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  19.2308%{transform:translate(2px,-6px) rotate(4deg) scale(1.04);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  21.1538%{transform:translate(-2px,-9px) rotate(-5deg) scale(1.06);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  23.0769%{transform:translate(0,-12px) rotate(0deg) scale(1.08);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  25.0000%{transform:translate(7px,-9px) rotate(14deg) scale(1.06);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  26.9231%{transform:translate(-8px,-6px) rotate(-18deg) scale(1.04);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  28.8462%{transform:translate(7px,-3px) rotate(15deg) scale(1.02);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  30.7692%{transform:translate(0,0) rotate(0deg) scale(1);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  32.6923%{transform:translate(-2px,-3px) rotate(-4deg) scale(1.02);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  34.6154%{transform:translate(2px,-6px) rotate(4deg) scale(1.04);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  36.5385%{transform:translate(-2px,-9px) rotate(-5deg) scale(1.06);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  38.4615%{transform:translate(0,-12px) rotate(0deg) scale(1.08);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  40.3846%{transform:translate(7px,-9px) rotate(14deg) scale(1.06);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  42.3077%{transform:translate(-8px,-6px) rotate(-18deg) scale(1.04);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  44.2308%{transform:translate(7px,-3px) rotate(15deg) scale(1.02);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  46.1538%{transform:translate(0,0) rotate(0deg) scale(1);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  48.0769%{transform:translate(-2px,-3px) rotate(-4deg) scale(1.02);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  50.0000%{transform:translate(2px,-6px) rotate(4deg) scale(1.04);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  51.9231%{transform:translate(-2px,-9px) rotate(-5deg) scale(1.06);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  53.8462%{transform:translate(0,-12px) rotate(0deg) scale(1.08);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  55.7692%{transform:translate(7px,-9px) rotate(14deg) scale(1.06);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  57.6923%{transform:translate(-8px,-6px) rotate(-18deg) scale(1.04);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  59.6154%{transform:translate(7px,-3px) rotate(15deg) scale(1.02);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  61.5385%{transform:translate(0,0) rotate(0deg) scale(1);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  63.4615%{transform:translate(-2px,-3px) rotate(-4deg) scale(1.02);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  65.3846%{transform:translate(2px,-6px) rotate(4deg) scale(1.04);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  67.3077%{transform:translate(-2px,-9px) rotate(-5deg) scale(1.06);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  69.2308%{transform:translate(0,-12px) rotate(0deg) scale(1.08);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  71.1538%{transform:translate(7px,-9px) rotate(14deg) scale(1.06);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  73.0769%{transform:translate(-8px,-6px) rotate(-18deg) scale(1.04);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  75.0000%{transform:translate(7px,-3px) rotate(15deg) scale(1.02);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  76.9231%{transform:translate(0,0) rotate(0deg) scale(1);filter:drop-shadow(0 0 6px #ff00cc);text-shadow:0 0 8px #ff00cc,0 0 16px rgba(255,0,204,.65)}
+  88.4615%{transform:translate(0,0) rotate(0deg) scale(1.20);filter:drop-shadow(0 0 24px #fff) drop-shadow(0 0 42px #ff4fdd) drop-shadow(0 0 64px #ff00cc);text-shadow:0 0 22px #fff,0 0 46px #ff8bea,0 0 76px #ff00cc,0 0 108px rgba(255,0,204,.95)}
+  100.0000%{transform:translate(0,0) rotate(0deg) scale(1);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+}
+@-webkit-keyframes ctUFiveCycleFlash{
+  0.0000%{-webkit-transform:translate(0,0) rotate(0deg) scale(1);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  1.9231%{-webkit-transform:translate(-2px,-3px) rotate(-4deg) scale(1.02);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  3.8462%{-webkit-transform:translate(2px,-6px) rotate(4deg) scale(1.04);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  5.7692%{-webkit-transform:translate(-2px,-9px) rotate(-5deg) scale(1.06);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  7.6923%{-webkit-transform:translate(0,-12px) rotate(0deg) scale(1.08);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  9.6154%{-webkit-transform:translate(7px,-9px) rotate(14deg) scale(1.06);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  11.5385%{-webkit-transform:translate(-8px,-6px) rotate(-18deg) scale(1.04);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  13.4615%{-webkit-transform:translate(7px,-3px) rotate(15deg) scale(1.02);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  15.3846%{-webkit-transform:translate(0,0) rotate(0deg) scale(1);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  17.3077%{-webkit-transform:translate(-2px,-3px) rotate(-4deg) scale(1.02);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  19.2308%{-webkit-transform:translate(2px,-6px) rotate(4deg) scale(1.04);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  21.1538%{-webkit-transform:translate(-2px,-9px) rotate(-5deg) scale(1.06);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  23.0769%{-webkit-transform:translate(0,-12px) rotate(0deg) scale(1.08);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  25.0000%{-webkit-transform:translate(7px,-9px) rotate(14deg) scale(1.06);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  26.9231%{-webkit-transform:translate(-8px,-6px) rotate(-18deg) scale(1.04);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  28.8462%{-webkit-transform:translate(7px,-3px) rotate(15deg) scale(1.02);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  30.7692%{-webkit-transform:translate(0,0) rotate(0deg) scale(1);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  32.6923%{-webkit-transform:translate(-2px,-3px) rotate(-4deg) scale(1.02);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  34.6154%{-webkit-transform:translate(2px,-6px) rotate(4deg) scale(1.04);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  36.5385%{-webkit-transform:translate(-2px,-9px) rotate(-5deg) scale(1.06);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  38.4615%{-webkit-transform:translate(0,-12px) rotate(0deg) scale(1.08);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  40.3846%{-webkit-transform:translate(7px,-9px) rotate(14deg) scale(1.06);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  42.3077%{-webkit-transform:translate(-8px,-6px) rotate(-18deg) scale(1.04);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  44.2308%{-webkit-transform:translate(7px,-3px) rotate(15deg) scale(1.02);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  46.1538%{-webkit-transform:translate(0,0) rotate(0deg) scale(1);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  48.0769%{-webkit-transform:translate(-2px,-3px) rotate(-4deg) scale(1.02);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  50.0000%{-webkit-transform:translate(2px,-6px) rotate(4deg) scale(1.04);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  51.9231%{-webkit-transform:translate(-2px,-9px) rotate(-5deg) scale(1.06);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  53.8462%{-webkit-transform:translate(0,-12px) rotate(0deg) scale(1.08);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  55.7692%{-webkit-transform:translate(7px,-9px) rotate(14deg) scale(1.06);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  57.6923%{-webkit-transform:translate(-8px,-6px) rotate(-18deg) scale(1.04);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  59.6154%{-webkit-transform:translate(7px,-3px) rotate(15deg) scale(1.02);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  61.5385%{-webkit-transform:translate(0,0) rotate(0deg) scale(1);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  63.4615%{-webkit-transform:translate(-2px,-3px) rotate(-4deg) scale(1.02);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  65.3846%{-webkit-transform:translate(2px,-6px) rotate(4deg) scale(1.04);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  67.3077%{-webkit-transform:translate(-2px,-9px) rotate(-5deg) scale(1.06);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  69.2308%{-webkit-transform:translate(0,-12px) rotate(0deg) scale(1.08);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  71.1538%{-webkit-transform:translate(7px,-9px) rotate(14deg) scale(1.06);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  73.0769%{-webkit-transform:translate(-8px,-6px) rotate(-18deg) scale(1.04);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  75.0000%{-webkit-transform:translate(7px,-3px) rotate(15deg) scale(1.02);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+  76.9231%{-webkit-transform:translate(0,0) rotate(0deg) scale(1);filter:drop-shadow(0 0 6px #ff00cc);text-shadow:0 0 8px #ff00cc,0 0 16px rgba(255,0,204,.65)}
+  88.4615%{-webkit-transform:translate(0,0) rotate(0deg) scale(1.20);filter:drop-shadow(0 0 24px #fff) drop-shadow(0 0 42px #ff4fdd) drop-shadow(0 0 64px #ff00cc);text-shadow:0 0 22px #fff,0 0 46px #ff8bea,0 0 76px #ff00cc,0 0 108px rgba(255,0,204,.95)}
+  100.0000%{-webkit-transform:translate(0,0) rotate(0deg) scale(1);filter:drop-shadow(0 0 4px rgba(255,0,204,.55));text-shadow:0 0 7px rgba(255,0,204,.72)}
+}
+</style>
+<!-- CT U five-cycle bottom flash END -->
+
+
+<!-- CT TIER FX PREVIEW START -->
+<style id="ctTierFxPreviewStyle">
+#ctTierFxBack{display:none;position:fixed;inset:0;z-index:2600;background:rgba(0,0,0,.78);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:18px}
+#ctTierFxBack.open{display:flex}
+.ctTierFxModal{width:min(920px,96vw);max-height:92vh;overflow:auto;background:#0f1929;border:1px solid #425c83;border-radius:18px;box-shadow:0 20px 70px #000c;padding:14px}
+.ctTierFxHead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;position:sticky;top:-14px;z-index:2;background:#0f1929;padding:10px 0}
+.ctTierFxHead b{font-size:18px}.ctTierFxBtns{display:flex;gap:7px;flex-wrap:wrap}
+#ctTierFxGrid{display:grid;grid-template-columns:repeat(5,minmax(110px,1fr));gap:10px;padding:6px 2px 12px}
+.ctTierFxCard{min-height:150px;border:1px solid #2d4264;border-radius:14px;background:#142138;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;overflow:visible;padding:16px 8px}
+.ctTierFxCard .ctTierFxName{font-size:10px;color:#93a4bf;min-height:15px;text-align:center}
+.ctTierFxLetter{display:inline-flex;align-items:center;justify-content:center;width:1.35em;height:1.35em;line-height:1;font-size:52px;font-weight:1000;transform-origin:50% 50%;-webkit-transform-origin:50% 50%;overflow:visible;will-change:transform,filter,text-shadow,opacity}
+/* Use the actual current game motions, but keep this preview on its own clock so opening/replaying always starts at cycle 1. */
+.ctTierFxLetter.X{animation:ctXFiveCycleBurst 10.5s linear infinite!important;-webkit-animation:ctXFiveCycleBurst 10.5s linear infinite!important}
+.ctTierFxLetter.U{animation:ctUFiveCycleFlash 13s linear infinite!important;-webkit-animation:ctUFiveCycleFlash 13s linear infinite!important}
+.ctTierFxLetter.S{animation:v108S 3s linear infinite!important;-webkit-animation:v108S 3s linear infinite!important}
+.ctTierFxLetter.A{animation:v108A 3s linear infinite!important;-webkit-animation:v108A 3s linear infinite!important}
+.ctTierFxLetter.B,.ctTierFxLetter.C,.ctTierFxLetter.D,.ctTierFxLetter.E,.ctTierFxLetter.F,.ctTierFxLetter.Z{animation:none!important;-webkit-animation:none!important}
+.ctTierFxCard.X{box-shadow:0 0 18px rgba(255,229,94,.14)}.ctTierFxCard.U{box-shadow:0 0 18px rgba(255,114,212,.12)}
+@media(max-width:760px){#ctTierFxGrid{grid-template-columns:repeat(2,minmax(120px,1fr))}.ctTierFxLetter{font-size:46px}}
+</style>
+<div id="ctTierFxBack" aria-hidden="true">
+  <div class="ctTierFxModal" role="dialog" aria-modal="true" aria-label="評級特效預覽">
+    <div class="ctTierFxHead">
+      <div><b>✨ 評級特效預覽</b><div class="sub">X／U 會從第 1 次循環開始完整播放；其餘評級依目前遊戲實際效果顯示。</div></div>
+      <div class="ctTierFxBtns"><button id="ctTierFxReplay">↻ 重播特效</button><button id="ctTierFxClose">✕ 關閉</button></div>
+    </div>
+    <div id="ctTierFxGrid"></div>
+  </div>
+</div>
+<script id="ctTierFxPreviewScript">
+(()=>{
+  'use strict';
+  const tiers=['X','U','S','A','B','C','D','E','F','Z'];
+  const desc={X:'5次後彩光＋3秒逆轉10圈',U:'5次後底部大閃光3秒',S:'目前 S 動態',A:'目前 A 動態',B:'靜態評級',C:'靜態評級',D:'靜態評級',E:'靜態評級',F:'靜態評級',Z:'靜態評級'};
+  const back=document.getElementById('ctTierFxBack');
+  const grid=document.getElementById('ctTierFxGrid');
+  let focusedTier=null;
+  function build(){
+    if(!grid)return;
+    grid.innerHTML=tiers.map(t=>`<div class="ctTierFxCard ${t}${focusedTier===t?' ctTierFxFocused':''}" data-tier="${t}"><span class="ctTierFxLetter ${t}">${t}</span><div class="ctTierFxName">${desc[t]}</div></div>`).join('');
+    if(focusedTier){
+      requestAnimationFrame(()=>grid.querySelector(`.ctTierFxCard[data-tier="${focusedTier}"]`)?.scrollIntoView({block:'center',behavior:'smooth'}));
+    }
+  }
+  function open(tier=null){focusedTier=tiers.includes(tier)?tier:null;build();back?.classList.add('open');back?.setAttribute('aria-hidden','false');}
+  function close(){back?.classList.remove('open');back?.setAttribute('aria-hidden','true');focusedTier=null;}
+  document.getElementById('tierFxPreview')?.addEventListener('click',()=>open(null));
+  document.getElementById('ctTierFxReplay')?.addEventListener('click',()=>{grid.innerHTML='';requestAnimationFrame(build);});
+  document.getElementById('ctTierFxClose')?.addEventListener('click',close);
+  back?.addEventListener('click',e=>{if(e.target===back)close();});
+  window.openTierFxPreview=open;
+})();
+</script>
+<!-- CT TIER FX PREVIEW END -->
+
+
+<!-- CT INDEX TIER CLICK PREVIEW START -->
+<style id="ctIndexTierClickPreviewStyle">
+/* Main index: rating letters can be tapped to open the real effect preview. */
+#kr .tierMotion, #rank .rankTierCell .tierMotion{cursor:pointer;touch-action:manipulation}
+#kr .tierMotion:active, #rank .rankTierCell .tierMotion:active{filter:brightness(1.35)}
+.ctTierFxCard.ctTierFxFocused{outline:2px solid rgba(255,255,255,.88);outline-offset:3px;box-shadow:0 0 28px currentColor,0 0 50px rgba(255,255,255,.18)}
+</style>
+<script id="ctIndexTierClickPreviewScript">
+(()=>{
+  'use strict';
+  function openFocusedTier(tier){
+    if(typeof window.openTierFxPreview==='function') window.openTierFxPreview(tier);
+  }
+  document.getElementById('kr')?.addEventListener('click',e=>{
+    const el=e.target.closest?.('.tierMotion');
+    if(!el)return;
+    e.preventDefault();
+    e.stopPropagation();
+    const tier=(el.textContent||'').trim();
+    if(tier)openFocusedTier(tier);
+  });
+  document.getElementById('rank')?.addEventListener('click',e=>{
+    const el=e.target.closest?.('.rankTierCell .tierMotion');
+    if(!el)return;
+    e.preventDefault();
+    e.stopPropagation();
+    const tier=(el.textContent||'').trim();
+    if(tier)openFocusedTier(tier);
+  },true);
+})();
+</script>
+<!-- CT INDEX TIER CLICK PREVIEW END -->
+
+<!-- CT INDEX TIER LARGE TAP TARGET START -->
+<style id="ctIndexTierLargeTapTargetStyle">
+#kr{cursor:pointer!important;touch-action:manipulation!important;position:relative!important;z-index:5!important;}
+#rank td.rankTierCell{cursor:pointer!important;touch-action:manipulation!important;position:relative!important;z-index:4!important;}
+#kr .tierMotion,#rank td.rankTierCell .tierMotion{pointer-events:none!important;}
+#rank td.rankTierCell::after,#kr::after{content:"";position:absolute;inset:0;z-index:20;background:transparent;}
+</style>
+<script id="ctIndexTierLargeTapTargetScript">
+(()=>{
+  'use strict';
+  const openTier=t=>{if(t&&typeof window.openTierFxPreview==='function')window.openTierFxPreview(t)};
+  const kr=document.getElementById('kr');
+  if(kr){
+    kr.addEventListener('click',e=>{
+      e.preventDefault();e.stopPropagation();
+      const t=(kr.querySelector('.tierMotion')?.textContent||kr.textContent||'').trim().slice(0,1);
+      openTier(t);
+    },true);
+  }
+  const rank=document.getElementById('rank');
+  if(rank){
+    rank.addEventListener('click',e=>{
+      const cell=e.target.closest?.('td.rankTierCell');
+      if(!cell)return;
+      e.preventDefault();e.stopImmediatePropagation();
+      const t=(cell.querySelector('.tierMotion')?.textContent||'').trim();
+      openTier(t);
+    },true);
+  }
+})();
+</script>
+<!-- CT INDEX TIER LARGE TAP TARGET END -->
+
 </body></html>
