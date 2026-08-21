@@ -206,14 +206,34 @@ function render(){
  let m=meta(),rr=rank(),lead=rr[0],sel=states.find(x=>x.city===selected)||rr[0];$('kt').textContent=turn;$('kl').textContent=lead.city.replace(/[縣市]$/,'');$('kf').textContent=lead.floor+'F';$('kr').innerHTML='<span class="tier tierLetter tierMotion '+m[sel.city].tier+'">'+m[sel.city].tier+'</span>';$('kp').textContent=m[sel.city].power.toFixed(2);$('kp').className='ratingText '+m[sel.city].tier;
  $('rank').innerHTML=rr.map((s,i)=>`<tr class="team ${s.city===selected?'sel':''}" data-city="${s.city}"><td>${i+1}</td><td class="teamTint ${m[s.city].tier}"><div class="city">${s.city}</div><div class="sub">${TEAMN[s.city]||''}</div></td><td class="rankTierCell"><span class="rankTierAnchor"><span class="tier tierLetter tierMotion ${m[s.city].tier}">${m[s.city].tier}</span></span></td><td class="powerTint ${m[s.city].tier}">${m[s.city].power.toFixed(2)}</td><td><b>${s.floor}F</b><div class="sub">${s.ft}T｜敵剩${Math.round(s.enemy.hp/s.enemy.max*100)}%</div></td><td><div class="partyMini">${s.party.map(p=>`<div><div class="miniName">${p.name} Lv.${R[s.city].find(c=>c.id===p.id).lv}</div><div class="bar"><i style="width:${100*p.hp/p.max}%"></i></div><div class="sub">${Math.round(p.hp)}/${p.max}</div></div>`).join('')}</div></td><td>${Math.round(s.enemy.hp)} / ${s.enemy.max}</td></tr>`).join('');
  document.querySelectorAll('tr.team').forEach(x=>x.onclick=()=>{selected=x.dataset.city;render()});
- let e=sel.enemy;$('arena').innerHTML=`<div class="enemy"><div class="cardTop"><div><b>${e.name}</b><div class="sub">ATK ${e.atk.toFixed(0)}｜DEF ${e.def.toFixed(0)}｜攻速 ${e.speed.toFixed(1)}</div></div><b>${Math.round(e.hp)} / ${e.max}</b></div><div class="monsterHp174"><div class="mh174top"><span>❤️ 怪物 HP</span><span class="mh174num">${Math.round(e.hp)} / ${e.max}</span></div><div class="mh174track"><div class="mh174fill" style="width:${Math.max(0,Math.min(100,100*e.hp/e.max))}%"></div></div><div class="mh174pct">剩餘 ${Math.round(Math.max(0,Math.min(100,100*e.hp/e.max)))}%</div></div><div class="gbar" style="margin-top:5px"><i style="width:${e.g}%"></i></div></div><div class="cards">${sel.party.map(p=>{let c=R[sel.city].find(x=>x.id===p.id);return `<div class="card ${p.alive?'':'dead'}"><div class="cardTop"><div><div class="name">${p.name}</div><div class="sub">Lv.${c.lv}｜EXP ${c.xp}/${xpNeed(c.lv)}</div></div><b>${Math.round(p.hp)}/${p.max}</b></div><div class="bar"><i style="width:${100*p.hp/p.max}%"></i></div><div class="gbar" style="margin-top:5px"><i style="width:${p.g}%"></i></div>${window.ctBattleTreasureInline126(c)}<div class="stats"><div class="stat">ATK<b>${p.atk}</b></div><div class="stat">DEF<b>${p.def}</b></div><div class="stat">攻速<b>${p.speed.toFixed(1)}</b></div><div class="stat">爆擊<b>${Math.round(p.crit*100)}%</b></div><div class="stat">閃避<b>${Math.round((p.dodge||0)*100)}%</b></div><div class="stat">爆傷<b>+${Math.round((p.critDmg||.50)*100)}%</b></div></div></div>`}).join('')}</div>`;
+ let e=sel.enemy;$('arena').innerHTML=`<div class="enemy"><div class="cardTop"><div><b>${e.name}</b><div class="sub">ATK ${e.atk.toFixed(0)}｜DEF ${e.def.toFixed(0)}｜攻速 ${e.speed.toFixed(1)}</div></div><b>${Math.round(e.hp)} / ${e.max}</b></div><div class="monsterHp174"><div class="mh174top"><span>❤️ 怪物 HP</span><span class="mh174num">${Math.round(e.hp)} / ${e.max}</span></div><div class="mh174track"><div class="mh174fill" style="width:${Math.max(0,Math.min(100,100*e.hp/e.max))}%"></div></div><div class="mh174pct">剩餘 ${Math.round(Math.max(0,Math.min(100,100*e.hp/e.max)))}%</div></div><div class="gbar" style="margin-top:5px"><i style="width:${e.g}%"></i></div></div><div class="cards">${sel.party.map(p=>{let c=R[sel.city].find(x=>x.id===p.id);return `<div class="card ${p.alive?'':'dead'}"><div class="cardTop"><div><div class="name">${p.name}</div></div><b>${Math.round(p.hp)}/${p.max}</b></div><div class="ctExpRowFinal"><span class="ctLvFinal">Lv.${c.lv}</span><span class="ctExpValueFinal">EXP ${c.xp}/${xpNeed(c.lv)}</span></div><div class="xp173" aria-label="EXP進度"><i style="width:${Math.max(0,Math.min(100,100*c.xp/xpNeed(c.lv)))}%"></i></div><div class="bar"><i style="width:${100*p.hp/p.max}%"></i></div><div class="gbar" style="margin-top:5px"><i style="width:${p.g}%"></i></div>${window.ctBattleTreasureInline126(c)}<div class="stats"><div class="stat">ATK<b>${p.atk}</b></div><div class="stat">DEF<b>${p.def}</b></div><div class="stat">攻速<b>${p.speed.toFixed(1)}</b></div><div class="stat">爆擊<b>${Math.round(p.crit*100)}%</b></div><div class="stat">閃避<b>${Math.round((p.dodge||0)*100)}%</b></div><div class="stat">爆傷<b>+${Math.round((p.critDmg||.50)*100)}%</b></div></div></div>`}).join('')}</div>`;
  $('log').innerHTML=sel.log.map(x=>'<div>'+x+'</div>').join('')||'<span class="sub">尚無戰鬥紀錄</span>';
  $('event').innerHTML=lastEvent?'<b>'+lastEvent.type+'</b><br>'+lastEvent.top.map((x,i)=>(i+1)+'. '+x.city+'｜'+x.score.toFixed(0)).join('<br>'):'尚未觸發。';
 }
 function loop(ts){if(!running)return;let sp=+$('speed').value,ms=1000/sp,dt=Math.min(250,ts-last);last=ts;acc+=dt;let n=Math.min(8,Math.floor(acc/ms));for(let i=0;i<n&&running;i++){tick(false);acc-=ms}if(n>0&&ts-lastPaint>(sp>=25?240:sp>=10?190:sp>=5?180:850)){render();lastPaint=ts}raf=requestAnimationFrame(loop)}
 function start(){if(running){stop();return}running=true;$('auto').textContent='⏸ 暫停';last=performance.now();acc=0;lastPaint=0;raf=requestAnimationFrame(loop)}
 function stop(){running=false;if(raf)cancelAnimationFrame(raf);raf=0;render();save(true);$('auto').textContent='▶ 自動'}
-function dump(){return {v:17,turn,selected,nextEvent,lastEvent,R,states,initialTop,savedAt:Date.now()}}
+function dump(){
+ const compactR={};
+ for(const city of Object.keys(R||{}))compactR[city]=(R[city]||[]).map(c=>({
+  id:c.id,lv:c.lv,xp:c.xp,bonus:c.bonus,kills:c.kills,attacks:c.attacks,crits:c.crits,deploys:c.deploys,
+  ctAtkGrowth:Number(c.ctAtkGrowth)||0,ctHpGrowth:Number(c.ctHpGrowth)||0,ctRatingXp:Number(c.ctRatingXp)||0
+ }));
+ const compactStates=(states||[]).map(st=>({
+  city:st.city,floor:st.floor,ft:st.ft,failsAtFloor:Number(st.failsAtFloor)||0,
+  party:(st.party||[]).map(x=>({id:x.id,max:x.max,hp:x.hp,g:x.g,alive:x.alive!==false})),
+  enemy:st.enemy?{key:st.enemy.key,name:st.enemy.name,max:st.enemy.max,hp:st.enemy.hp,atk:st.enemy.atk,def:st.enemy.def,speed:st.enemy.speed,g:st.enemy.g}:null,
+  log:Array.isArray(st.log)?st.log.slice(0,80):[]
+ }));
+ let compactEvent=null;
+ if(lastEvent&&typeof lastEvent==='object'){
+  const src=Array.isArray(lastEvent.top)?lastEvent.top:(Array.isArray(lastEvent.rows)?lastEvent.rows:[]);
+  compactEvent={type:lastEvent.type||'特殊事件',turn:Number(lastEvent.turn)||turn,official:!!lastEvent.official,lastHit:lastEvent.lastHit||null,
+   treasureRewards:Array.isArray(lastEvent.treasureRewards)?lastEvent.treasureRewards.slice(0,22):undefined,
+   top:src.slice(0,5).map(x=>({city:x&&x.city||'',score:Number.isFinite(Number(x&&x.score))?Number(x.score):(Number.isFinite(Number(x&&x.damage))?Number(x.damage):0),pct:Number.isFinite(Number(x&&x.pct))?Number(x.pct):undefined}))};
+ }
+ return {v:17,turn,selected,nextEvent,lastEvent:compactEvent,R:compactR,states:compactStates,initialTop,savedAt:Date.now()}
+}
 function save(silent=false){try{
  const cur=JSON.parse(localStorage.getItem(SAVE)||'null');
  const curTurn=Number(cur&&cur.turn);
@@ -264,7 +284,7 @@ function showRoster(city){let s=states.find(x=>x.city===city),active=new Set(s.p
 $('step').onclick=()=>tick();$('auto').onclick=start;$('teams').onclick=()=>{$('mb').classList.add('open');showCities()};$('close').onclick=()=>$('mb').classList.remove('open');$('back').onclick=showCities;$('save').onclick=()=>save(false);
 $('reset').onclick=()=>{if(confirm('確定要清除目前進度並開新遊戲？')){localStorage.removeItem(SAVE);localStorage.removeItem('CITY_TOWER_POWER_BASELINE_131');init()}};
 $('install').onclick=()=>alert('iPad：請用 Safari 開啟本頁 → 點「分享」→「加入主畫面」→ 名稱 Taiwan City Tower → 加入。之後請從桌面 Taiwan City Tower 圖示開啟。');
-document.addEventListener('visibilitychange',()=>{if(document.hidden)save(true)});window.addEventListener('pagehide',()=>{if(!document.hidden)save(true)});setInterval(()=>{if(turn&&!document.hidden)save(true)},5000);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)save(true)});window.addEventListener('pagehide',()=>{save(true)});window.addEventListener('freeze',()=>{save(true)});setInterval(()=>{if(turn&&!document.hidden)save(true)},1000);
 if(!load())init();
 </script><script>
 (()=>{
@@ -643,6 +663,29 @@ function tAutoEquip(city,quiet=false){
 }
 function tAward(city,tier,origin,floor,show=true){const it=tNew(city,tier,origin,floor);if(TAUTO)tAutoEquip(city,true);tSyncCity(city);tSave();if(show)tToast(it);return it}
 function tFuse(city,tier){const next=TNEXT[tier];if(!next)return;const pool=TINV.filter(x=>x.city===city&&x.tier===tier&&!x.equippedTo);if(pool.length<5){alert(`${city} 的 ${tier} 未裝備寶物不足5件`);return}const used=pool.slice(0,5),ids=new Set(used.map(x=>x.id));TINV=TINV.filter(x=>!ids.has(x.id));const ok=Math.random()<TFUSE[tier];let it=null;if(ok){it=tNew(city,next,'5合1合成',0);if(TAUTO)tAutoEquip(city,true);tToast(it,`合成成功 ${tier}→${next}`)}else{const fake={type:'core',tier,name:`${tier} 合成失敗`,city,origin:'5件素材已消耗',floor:0};tToast(fake,'💥 合成失敗')}tSyncCity(city);tSave();tRenderModal()}
+function tFuseAll(city){
+ let attempts=0,success=0,failed=0,highest=null,safety=0;
+ const made=[];
+ for(const tier of TASC.slice(0,-1)){
+  const next=TNEXT[tier];if(!next)continue;
+  while(safety++<5000){
+   const pool=TINV.filter(x=>x.city===city&&x.tier===tier&&!x.equippedTo);
+   if(pool.length<5)break;
+   attempts++;
+   const used=pool.slice(0,5),ids=new Set(used.map(x=>x.id));
+   TINV=TINV.filter(x=>!ids.has(x.id));
+   if(Math.random()<TFUSE[tier]){
+    const it=tNew(city,next,'一鍵5合1合成',0);made.push(it);success++;highest=!highest||TASC.indexOf(next)>TASC.indexOf(highest)?next:highest;
+   }else failed++;
+  }
+ }
+ if(!attempts){tToast({type:'core',tier:'Z',name:'目前沒有可5合1的未裝備寶物',city,origin:'一鍵合成',floor:0},'⚡ 一鍵合成');return}
+ if(TAUTO)tAutoEquip(city,true);else tSyncCity(city);
+ tSave();
+ const tier=highest||'Z';
+ tToast({type:'core',tier,name:`完成 ${attempts} 次｜成功 ${success}｜失敗 ${failed}`,city,origin:'一鍵合成全部可合素材',floor:0},'⚡ 一鍵合成完成');
+ tRenderModal();
+}
 function tRankLabel(type,r){if((type||'').includes('Boss'))return r===1?'MVP討伐王':r===2?'次席戰功':r===3?'第三戰功':r<=8?'核心討伐隊':r<=16?'主力討伐隊':'支援討伐隊';return r===1?'總冠軍':r===2?'亞軍':r===3?'季軍':r<=8?'八強菁英':r<=16?'晉級組':'聯賽席位'}
 
 // Apply treasure stats on top of the repaired character system.
@@ -720,11 +763,11 @@ const PREV_RENDER_T=window.render;window.render=function(){PREV_RENDER_T();tRend
 const PREV_ROSTER_T=window.showRoster;window.showRoster=function(city){PREV_ROSTER_T(city);requestAnimationFrame(()=>{const cs=[...R[city]].sort((a,b)=>craw(b)-craw(a));document.querySelectorAll('#mbo .rosterCard').forEach((card,i)=>{card.querySelectorAll('.tRosterEquip,.tRosterEmpty,.tRosterEquipMulti').forEach(x=>x.remove());const c=cs[i],items=tForCharAll(c);if(items.length){card.insertAdjacentHTML('beforeend',`<div class="tRosterEquipMulti">${items.map(it=>`<div class="tRosterEquip ${it.tier}" style="color:${TCOL[it.tier]}"><img src="${tSvg(it.type,it.tier)}"><div><b class="ratingText ${it.tier}">${it.tier}｜${tTierName(it.tier)}｜${it.name}</b><div class="sub ratingText ${it.tier}">${TTYPE_NAME[it.type]}</div><div class="tEffect ratingText ${it.tier}">${tEffect(it.tier,it.type)}</div></div></div>`).join('')}</div>`)}else card.insertAdjacentHTML('beforeend','<div class="tRosterEmpty">◇ 目前未裝備寶物｜最多5件｜同種類最多1件</div>')})})};
 
 function tCounts(city){const o=Object.fromEntries(TORDER.map(x=>[x,0]));for(const it of TINV)if(it.city===city)o[it.tier]++;return o}
-function tModalShell(){const cities=Object.keys(R),cnt=tCounts(TCITY);return `<div class="tToolbar"><select id="tCity">${cities.map(c=>`<option ${c===TCITY?'selected':''}>${c}</option>`).join('')}</select><button id="tInvBtn" class="${TVIEW==='inv'?'primary':''}">🎒 我的寶物</button><button id="tCatBtn" class="${TVIEW==='cat'?'primary':''}">📖 完整圖鑑</button><button id="tAutoBtn">🤖 自動配裝：${TAUTO?'ON':'OFF'}</button><button id="tBestBtn">⚙️ 一鍵最佳配裝</button></div><div class="tSummary">${TORDER.map(g=>`<div class="tCount ${g}"><span class="tierLetter tierMotion ${g}">${g}</span><b class="ratingText ${g}">${cnt[g]}</b></div>`).join('')}</div>`}
+function tModalShell(){const cities=Object.keys(R),cnt=tCounts(TCITY);return `<div class="tToolbar"><select id="tCity">${cities.map(c=>`<option ${c===TCITY?'selected':''}>${c}</option>`).join('')}</select><button id="tInvBtn" class="${TVIEW==='inv'?'primary':''}">🎒 我的寶物</button><button id="tCatBtn" class="${TVIEW==='cat'?'primary':''}">📖 完整圖鑑</button><button id="tAutoBtn">🤖 自動配裝：${TAUTO?'ON':'OFF'}</button><button id="tBestBtn">⚙️ 一鍵最佳配裝</button><button id="tFuseAllBtn">⚡ 一鍵合成</button></div><div class="tSummary">${TORDER.map(g=>`<div class="tCount ${g}"><span class="tierLetter tierMotion ${g}">${g}</span><b class="ratingText ${g}">${cnt[g]}</b></div>`).join('')}</div>`}
 function tInvHtml(){const inv=TINV.filter(x=>x.city===TCITY).sort((a,b)=>TASC.indexOf(b.tier)-TASC.indexOf(a.tier)||b.turn-a.turn),cnt=tCounts(TCITY);let fusion=`<div class="tRule"><b>掉落規則</b>｜一般怪只會 <span class="tierWord17434 Z">Z</span>/<span class="tierWord17434 F">F</span>/<span class="tierWord17434 E">E</span> 且不一定掉；精英最高 <span class="tierWord17434 E">E</span>、小Boss最高 <span class="tierWord17434 D">D</span>、大Boss／章節Boss最高 <span class="tierWord17434 C">C</span>，而且所有Boss必掉。大型競賽才可直接出高階：世界Boss與22隊大混鬥最高<span class="tierWord17434 B">B</span>，城市聯賽最高<span class="tierWord17434 A">A</span>；聯賽只有前3名有<span class="tierWord17434 A">A</span>機會、前10名有<span class="tierWord17434 B">B</span>機會且名次越後<span class="tierWord17434 B">B</span>率越低；<span class="tierWord17434 S">S</span>/<span class="tierWord17434 U">U</span>/<span class="tierWord17434 X">X</span> 永遠只能合成。每名角色最多裝5件寶物，且同一種類最多只能裝1件。樓層越高，在各自上限內越容易出高階。<br><b>強度斷層：</b><span class="tierWord17434 X">X</span> ≫≫≫ <span class="tierWord17434 U">U</span> ≫≫ <span class="tierWord17434 S">S</span> ≫ <span class="tierWord17434 A">A</span> ＞ <span class="tierWord17434 B">B</span> ＞ <span class="tierWord17434 C">C</span> ＞ <span class="tierWord17434 D">D</span> ＞ <span class="tierWord17434 E">E</span> ＞ <span class="tierWord17434 F">F</span> ＞ <span class="tierWord17434 Z">Z</span>。</div><div class="tFusion">${TASC.slice(0,-1).map(g=>`<div class="tFuse"><b class="fuseTitle17428"><span class="tierMark17428 tierLetter tierMotion ${g}">${g}</span><span class="fuseArrow17428">×5 →</span><span class="tierMark17428 tierLetter tierMotion ${TNEXT[g]}">${TNEXT[g]}</span></b><div>未裝備：${TINV.filter(x=>x.city===TCITY&&x.tier===g&&!x.equippedTo).length}｜成功率 ${Math.round(TFUSE[g]*100)}%</div><button class="tFuseBtn" data-tier="${g}" ${TINV.filter(x=>x.city===TCITY&&x.tier===g&&!x.equippedTo).length<5?'disabled':''}>5合1</button></div>`).join('')}</div>`;if(!inv.length)return fusion+'<div class="tRule">目前還沒有寶物。繼續爬塔：Boss 必掉寶物；一般怪則有機率掉落。</div>';
  return fusion+`<div class="tInvGrid">${inv.map(it=>`<div class="tItem t${it.tier}" style="--tg:${TCOL[it.tier]}"><img class="tPic" src="${tSvg(it.type,it.tier)}"><div class="tItemHead"><span class="tGrade ratingText ${it.tier}">${it.tier}｜${tTierName(it.tier)}</span><span class="sub">${it.equippedTo?'已裝備':'背包'}</span></div><div class="tName ratingText ${it.tier}">${it.name}</div><div class="tEffect ratingText ${it.tier}">${TTYPE_NAME[it.type]}<br>${tEffect(it.tier,it.type)}</div><div class="tOrigin ratingText ${it.tier}">${it.origin}${it.floor?'｜'+it.floor+'F':''}</div><select class="tAssign" data-id="${it.id}"><option value="">— 背包／卸下 —</option>${R[TCITY].map(c=>{const eq=tForCharAll(c),n=eq.length,own=it.equippedTo===c.id,same=!own&&eq.some(x=>x.type===it.type),full=!own&&n>=5,disabled=same||full;return `<option value="${c.id}" ${own?'selected':''} ${disabled?'disabled':''}>${c.name}（${n}/5）${full?' 已滿':same?' 同類已裝':''}</option>`}).join('')}</select></div>`).join('')}</div>`}
 function tCatalogHtml(){return `<div class="tRule"><b>完整寶物圖鑑｜由強到弱 <span class="tierWord17434 X">X</span> → <span class="tierWord17434 Z">Z</span></b><br>${TORDER.map(g=>`<span class="tierWord17434 ${g}">${g} ${tTierName(g)}</span>`).join('｜')}。<span class="tierWord17434 X">X</span> 為正黃色創世特效、<span class="tierWord17434 U">U</span> 為正粉色、<span class="tierWord17434 S">S</span> 為正紅色；<span class="tierWord17434 A">A</span> 以下依正色評級顯示。每階都有 5 種不同定位。<br><b>新屬性：</b>🪽速度型＝攻速＋爆率＋閃避；🔮技巧型＝爆率＋攻速＋爆傷。爆傷採「額外傷害」表示，例如 <b>爆傷 +50%</b> 代表爆擊總傷害 1.5 倍。<br><b>屬性上限：</b>自然閃避 50%＋寶物突破最高 70%｜自然爆率 60%＋寶物可突破至 100%｜自然爆傷 +500%＋命運天書可再 +200%｜攻速無上限；自然閃避溢出→HP／DEF；自然爆率超過 60% 與寶物把總爆率推過 100% 的部分→ATK／攻速；自然爆傷超過 +500% 的部分→ATK／攻速。</div>`+TORDER.map(g=>`<h3 class="catalogTierTitle ratingText ${g}" style="margin:14px 0 7px">${g}｜${tTierName(g)}</h3><div class="tCatalogGrid">${TTYPES.map(type=>`<div class="tItem t${g}" style="--tg:${TCOL[g]}"><img class="tPic" src="${tSvg(type,g)}"><div class="tItemHead"><span class="tGrade ratingText ${g}">${g}｜${tTierName(g)}</span><span class="sub ratingText ${g}">${TTYPE_NAME[type]}</span></div><div class="tName ratingText ${g}">${TNAMES[g][type]}</div><div class="tEffect ratingText ${g}">${tEffect(g,type)}</div></div>`).join('')}</div>`).join('')}
-function tRenderModal(){if(!tq('mb').classList.contains('open')||!tq('mbo'))return;tq('mt').textContent='🎁 寶物庫｜'+TCITY;tq('back').style.display='none';tq('mbo').innerHTML=tModalShell()+(TVIEW==='inv'?tInvHtml():tCatalogHtml());tq('tCity').onchange=e=>{TCITY=e.target.value;tRenderModal()};tq('tInvBtn').onclick=()=>{TVIEW='inv';tRenderModal()};tq('tCatBtn').onclick=()=>{TVIEW='cat';tRenderModal()};tq('tAutoBtn').onclick=()=>{TAUTO=!TAUTO;tSave();if(TAUTO)tAutoEquip(TCITY,true);tSyncAll();render();tRenderModal()};tq('tBestBtn').onclick=()=>{tAutoEquip(TCITY);tRenderModal()};document.querySelectorAll('.tAssign').forEach(x=>x.onchange=e=>{tEquip(tItem(e.target.dataset.id),e.target.value||null);tRenderModal()});document.querySelectorAll('.tFuseBtn').forEach(x=>x.onclick=()=>tFuse(TCITY,x.dataset.tier))}
+function tRenderModal(){if(!tq('mb').classList.contains('open')||!tq('mbo'))return;tq('mt').textContent='🎁 寶物庫｜'+TCITY;tq('back').style.display='none';tq('mbo').innerHTML=tModalShell()+(TVIEW==='inv'?tInvHtml():tCatalogHtml());tq('tCity').onchange=e=>{TCITY=e.target.value;tRenderModal()};tq('tInvBtn').onclick=()=>{TVIEW='inv';tRenderModal()};tq('tCatBtn').onclick=()=>{TVIEW='cat';tRenderModal()};tq('tAutoBtn').onclick=()=>{TAUTO=!TAUTO;tSave();if(TAUTO)tAutoEquip(TCITY,true);tSyncAll();render();tRenderModal()};tq('tBestBtn').onclick=()=>{tAutoEquip(TCITY);tRenderModal()};const fuseAllBtn=tq('tFuseAllBtn');if(fuseAllBtn){const canFuse=TASC.slice(0,-1).some(g=>TINV.filter(x=>x.city===TCITY&&x.tier===g&&!x.equippedTo).length>=5);fuseAllBtn.disabled=!canFuse;fuseAllBtn.onclick=()=>tFuseAll(TCITY)}document.querySelectorAll('.tAssign').forEach(x=>x.onchange=e=>{tEquip(tItem(e.target.dataset.id),e.target.value||null);tRenderModal()});document.querySelectorAll('.tFuseBtn').forEach(x=>x.onclick=()=>tFuse(TCITY,x.dataset.tier))}
 function tOpen(){TCITY=R[selected]?selected:Object.keys(R)[0];TVIEW='inv';tq('mb').classList.add('open');tRenderModal()}
 const tbtn=tq('treasures');if(tbtn)tbtn.onclick=tOpen;
 
@@ -732,7 +775,7 @@ const tbtn=tq('treasures');if(tbtn)tbtn.onclick=tOpen;
 const resetBtn=tq('reset');if(resetBtn)resetBtn.onclick=()=>{if(confirm('確定要清除目前進度、寶物並開新遊戲？')){localStorage.removeItem(SAVE);localStorage.removeItem(TSAVE);TINV=[];TSEQ=1;TAUTO=true;init();tSave();render()}};
 
 window.__CT_TREASURE={compTier:tCompTier,award:tAward,save:tSave,itemsForChar:tForCharAll,svg:tSvg,colors:TCOL,effect:tEffect,typeName:TTYPE_NAME,rankLabel:tRankLabel};
-tLoad();tSyncAll();if(TAUTO){for(const city of Object.keys(R))tAutoEquip(city,true)}tSyncAll();if(nextEvent-turn<600)nextEvent=turn+900+Math.floor(Math.random()*601);tSave();render();
+tLoad();tSyncAll();/* Preserve the exact equippedTo layout from treasure save on reload. Auto-equip only reacts to new drops or an explicit user action. */if(nextEvent-turn<600)nextEvent=turn+900+Math.floor(Math.random()*601);tSave();render();
 if(location.hash==='#treasure')setTimeout(tOpen,80);
 })();
 </script>
@@ -1608,7 +1651,7 @@ const wb=q('manualWB'),br=q('manualBrawl');if(wb)wb.onclick=()=>open('boss',fals
         const hb=card.querySelector('.bar>i');if(hb)hb.style.width=Math.max(0,Math.min(100,100*p.hp/p.max))+'%';
         const c=R[sel.city].find(x=>x.id===p.id);
         paintCharGauge17424(card,p,c,false);
-        const xp=card.querySelector('.xp173>i');if(xp&&c)xp.style.width=(100*c.xp/xpNeed(c.lv))+'%';
+        const xp=card.querySelector('.xp173>i');if(xp&&c)xp.style.width=(100*c.xp/xpNeed(c.lv))+'%';const lvTxt=card.querySelector('.ctLvFinal');if(lvTxt&&c)lvTxt.textContent='Lv.'+c.lv;const expTxt=card.querySelector('.ctExpValueFinal');if(expTxt&&c)expTxt.textContent='EXP '+c.xp+'/'+xpNeed(c.lv);
       });
       const lg=q('log');if(lg)lg.innerHTML=sel.log.map(x=>'<div>'+x+'</div>').join('')||'<span class="sub">尚無戰鬥紀錄</span>';
       return true;
@@ -1638,13 +1681,14 @@ const wb=q('manualWB'),br=q('manualBrawl');if(wb)wb.onclick=()=>open('boss',fals
       }
       if(n>0&&running&&token===towerToken17422){
         const sigChanged=selectedSig17423()!==lastSelectedSig17423;
-        const fullEvery=sp<=1?4000:sp<=5?1600:sp<=10?1100:850;
+        // Gameplay still calculates at the selected speed; only DOM painting is throttled on iPad.
+        const fullEvery=sp<=1?4000:sp<=5?1800:sp<=10?1500:1600;
+        const lightEvery=sp>=25?100:sp>=10?85:sp>=5?70:45;
         if(sigChanged||ts-lastFullPaint17423>=fullEvery){
-          fullPaint17423(ts);
-        }else{
-          lightPaint17423();
+          fullPaint17423(ts);lastPaint=ts;
+        }else if(ts-lastPaint>=lightEvery){
+          lightPaint17423();lastPaint=ts;
         }
-        lastPaint=ts;
       }
     }catch(e){console.error('tower loop recovered V17.4.23',e)}
     finally{
@@ -2281,7 +2325,7 @@ html body .tierMotion.A{
     }
 
     let e=sel.enemy;
-    $('arena').innerHTML=`<div class="enemy"><div class="cardTop"><div><b>${e.name}</b><div class="sub">ATK ${e.atk.toFixed(0)}｜DEF ${e.def.toFixed(0)}｜攻速 ${e.speed.toFixed(1)}</div></div><b>${Math.round(e.hp)} / ${e.max}</b></div><div class="monsterHp174"><div class="mh174top"><span>❤️ 怪物 HP</span><span class="mh174num">${Math.round(e.hp)} / ${e.max}</span></div><div class="mh174track"><div class="mh174fill" style="width:${Math.max(0,Math.min(100,100*e.hp/e.max))}%"></div></div><div class="mh174pct">剩餘 ${Math.round(Math.max(0,Math.min(100,100*e.hp/e.max)))}%</div></div><div class="gbar" style="margin-top:5px"><i style="width:${e.g}%"></i></div></div><div class="cards">${sel.party.map(p=>{let c=R[sel.city].find(x=>x.id===p.id);return `<div class="card ${p.alive?'':'dead'}"><div class="cardTop"><div><div class="name">${p.name}</div><div class="sub">Lv.${c.lv}｜EXP ${c.xp}/${xpNeed(c.lv)}</div></div><b>${Math.round(p.hp)}/${p.max}</b></div><div class="bar"><i style="width:${100*p.hp/p.max}%"></i></div><div class="gbar" style="margin-top:5px"><i style="width:${p.g}%"></i></div>${window.ctBattleTreasureInline126(c)}<div class="stats"><div class="stat">ATK<b>${p.atk}</b></div><div class="stat">DEF<b>${p.def}</b></div><div class="stat">攻速<b>${p.speed.toFixed(1)}</b></div><div class="stat">爆擊<b>${Math.round(p.crit*100)}%</b></div><div class="stat">閃避<b>${Math.round((p.dodge||0)*100)}%</b></div><div class="stat">爆傷<b>+${Math.round((p.critDmg||.50)*100)}%</b></div></div></div>`}).join('')}</div>`;
+    $('arena').innerHTML=`<div class="enemy"><div class="cardTop"><div><b>${e.name}</b><div class="sub">ATK ${e.atk.toFixed(0)}｜DEF ${e.def.toFixed(0)}｜攻速 ${e.speed.toFixed(1)}</div></div><b>${Math.round(e.hp)} / ${e.max}</b></div><div class="monsterHp174"><div class="mh174top"><span>❤️ 怪物 HP</span><span class="mh174num">${Math.round(e.hp)} / ${e.max}</span></div><div class="mh174track"><div class="mh174fill" style="width:${Math.max(0,Math.min(100,100*e.hp/e.max))}%"></div></div><div class="mh174pct">剩餘 ${Math.round(Math.max(0,Math.min(100,100*e.hp/e.max)))}%</div></div><div class="gbar" style="margin-top:5px"><i style="width:${e.g}%"></i></div></div><div class="cards">${sel.party.map(p=>{let c=R[sel.city].find(x=>x.id===p.id);return `<div class="card ${p.alive?'':'dead'}"><div class="cardTop"><div><div class="name">${p.name}</div></div><b>${Math.round(p.hp)}/${p.max}</b></div><div class="ctExpRowFinal"><span class="ctLvFinal">Lv.${c.lv}</span><span class="ctExpValueFinal">EXP ${c.xp}/${xpNeed(c.lv)}</span></div><div class="xp173" aria-label="EXP進度"><i style="width:${Math.max(0,Math.min(100,100*c.xp/xpNeed(c.lv)))}%"></i></div><div class="bar"><i style="width:${100*p.hp/p.max}%"></i></div><div class="gbar" style="margin-top:5px"><i style="width:${p.g}%"></i></div>${window.ctBattleTreasureInline126(c)}<div class="stats"><div class="stat">ATK<b>${p.atk}</b></div><div class="stat">DEF<b>${p.def}</b></div><div class="stat">攻速<b>${p.speed.toFixed(1)}</b></div><div class="stat">爆擊<b>${Math.round(p.crit*100)}%</b></div><div class="stat">閃避<b>${Math.round((p.dodge||0)*100)}%</b></div><div class="stat">爆傷<b>+${Math.round((p.critDmg||.50)*100)}%</b></div></div></div>`}).join('')}</div>`;
     const battleLogEl=$('log')||$('battlelog');
     if(battleLogEl) battleLogEl.innerHTML='<div class="sub">'+sel.city+'｜'+(TEAMN[sel.city]||'')+'</div>'+sel.log.slice(0,18).map(x=>'<div>'+x+'</div>').join('');
   };
@@ -3649,4 +3693,17 @@ html,body{padding-top:0!important}
 <!-- CT battle-card layout repair END -->
 
 <!-- CT official world boss isolated-settlement fix -->
+<!-- CT stability/performance/fuse-all/EXP-row fix START -->
+<style id="ctFinalExpRowAndPerfFix">
+#arena .cards .card .ctExpRowFinal{
+  display:flex!important;align-items:center!important;justify-content:space-between!important;gap:8px!important;
+  width:100%!important;margin:4px 0 2px!important;min-height:15px!important;line-height:1.2!important;
+  font-size:10px!important;color:#c8d5e8!important;white-space:nowrap!important;
+}
+#arena .cards .card .ctExpRowFinal .ctLvFinal{font-weight:900!important;color:#eef5ff!important;flex:0 0 auto!important}
+#arena .cards .card .ctExpRowFinal .ctExpValueFinal{font-weight:800!important;color:#c6b3ff!important;flex:0 0 auto!important;text-align:right!important}
+#arena .cards .card .xp173{display:block!important;width:100%!important;height:7px!important;min-height:7px!important;margin:2px 0 6px!important;background:#2a203d!important;border:1px solid #4b3868!important;border-radius:999px!important;overflow:hidden!important}
+#arena .cards .card .xp173>i{display:block!important;height:100%!important;min-height:7px!important;background:#b878ff!important;box-shadow:0 0 7px #b878ff88!important;border-radius:999px!important}
+</style>
+<!-- CT stability/performance/fuse-all/EXP-row fix END -->
 </body></html>
