@@ -4079,7 +4079,7 @@ html body .tierMotion.U{
 (()=>{
   'use strict';
   const tiers=['X','U','S','A','B','C','D','E','F','Z'];
-  const desc={X:'5次後彩光＋3秒逆轉10圈',U:'5次後底部大閃光3秒',S:'5次後紅色特殊爆發1.5秒',A:'5秒橘色呼吸',B:'小亮光',C:'靜態評級',D:'靜態評級',E:'靜態評級',F:'靜態評級',Z:'靜態評級'};
+  const desc={X:'5次後彩光＋3秒逆轉10圈',U:'5次後2秒粉色翼光爆發',S:'5次後紅色特殊爆發1.5秒',A:'5秒橘色呼吸',B:'小亮光',C:'靜態評級',D:'靜態評級',E:'靜態評級',F:'靜態評級',Z:'靜態評級'};
   const back=document.getElementById('ctTierFxBack');
   const grid=document.getElementById('ctTierFxGrid');
   let focusedTier=null;
@@ -4817,5 +4817,268 @@ html body .ctTierFxLetter.U{
 }
 </style>
 <!-- CT GLOBAL X SMALL RAINBOW + U DISTINCT BURST END -->
+
+
+<!-- CT GLOBAL ALL-TIER-LOCATION FX FIX START -->
+<style id="ctGlobalAllTierLocationFxFix">
+/*
+  Final global tier-glyph policy:
+  - Only the actual tier glyph animates.
+  - Chinese names, treasure names, power values, stats remain static.
+  - Works in leaderboard, selected-team KPI, team/character data, treasure pages,
+    fusion/rules, and the FX preview.
+*/
+.ctGlobalTierGlyph{
+  display:inline-grid!important;
+  place-items:center!important;
+  width:1em!important;
+  min-width:1em!important;
+  height:1em!important;
+  min-height:1em!important;
+  line-height:1!important;
+  position:relative!important;
+  vertical-align:middle!important;
+  overflow:visible!important;
+  transform-origin:50% 50%!important;
+  -webkit-transform-origin:50% 50%!important;
+  transform-box:border-box!important;
+  font-weight:1000!important;
+}
+
+/* Hosts with Chinese/treasure text must stay still; only their child glyph moves. */
+.ctTierSplitHost,
+.ctTierSplitHost.ratingText,
+.tGrade.ctTierSplitHost,
+.tRosterEquip b.ctTierSplitHost{
+  animation:none!important;
+  -webkit-animation:none!important;
+  transform:none!important;
+  -webkit-transform:none!important;
+  filter:none!important;
+  text-shadow:none!important;
+}
+.ctTierStaticSuffix{
+  display:inline!important;
+  animation:none!important;
+  -webkit-animation:none!important;
+  transform:none!important;
+  -webkit-transform:none!important;
+  filter:none!important;
+}
+
+/* Stop old catalog-wide text breathing. The wrapped grade glyph below still animates. */
+#mbo .tCatalogGrid .ratingText:not(.ctGlobalTierGlyph),
+#mbo .tInvGrid .ratingText:not(.ctGlobalTierGlyph),
+.tRosterEquip .ratingText:not(.ctGlobalTierGlyph){
+  animation:none!important;
+  -webkit-animation:none!important;
+  transform:none!important;
+  -webkit-transform:none!important;
+}
+
+/* X remains the current smaller-rainbow version everywhere. */
+html body .ctGlobalTierGlyph.X{
+  animation:ctXGlobalSmallRainbow 10.5s linear infinite!important;
+  -webkit-animation:ctXGlobalSmallRainbow 10.5s linear infinite!important;
+}
+
+/* U: 5 x 2s normal up/down+breath, then a 2s ornate pink wing burst.
+   It is deliberately horizontal / jewel-like, unlike S's red radial flare. */
+html body .ctGlobalTierGlyph.U{
+  animation:ctUGlobalOrnateWing 12s linear infinite!important;
+  -webkit-animation:ctUGlobalOrnateWing 12s linear infinite!important;
+}
+@keyframes ctUGlobalOrnateWing{
+  0%{transform:translate(0,0) rotate(0deg) scale(1);filter:drop-shadow(0 0 4px rgba(255,0,204,.50));text-shadow:0 0 7px rgba(255,0,204,.66)}
+  4.1667%{transform:translate(2px,-6px) rotate(4deg) scale(1.035);filter:drop-shadow(0 0 7px rgba(255,70,220,.72));text-shadow:0 0 10px rgba(255,70,220,.82)}
+  8.3333%{transform:translate(0,-12px) rotate(0deg) scale(1.07);filter:drop-shadow(0 0 10px #ff9bed) drop-shadow(0 0 16px rgba(255,0,204,.50));text-shadow:0 0 13px #ffc2f2,0 0 21px rgba(255,0,204,.60)}
+  12.5%{transform:translate(-7px,-6px) rotate(-16deg) scale(1.035);filter:drop-shadow(0 0 7px rgba(255,70,220,.72));text-shadow:0 0 10px rgba(255,70,220,.82)}
+  16.6667%{transform:translate(0,0) rotate(0deg) scale(1);filter:drop-shadow(0 0 4px rgba(255,0,204,.50));text-shadow:0 0 7px rgba(255,0,204,.66)}
+
+  20.8333%{transform:translate(2px,-6px) rotate(4deg) scale(1.035);filter:drop-shadow(0 0 7px rgba(255,70,220,.72));text-shadow:0 0 10px rgba(255,70,220,.82)}
+  25%{transform:translate(0,-12px) rotate(0deg) scale(1.07);filter:drop-shadow(0 0 10px #ff9bed) drop-shadow(0 0 16px rgba(255,0,204,.50));text-shadow:0 0 13px #ffc2f2,0 0 21px rgba(255,0,204,.60)}
+  29.1667%{transform:translate(7px,-6px) rotate(16deg) scale(1.035);filter:drop-shadow(0 0 7px rgba(255,70,220,.72));text-shadow:0 0 10px rgba(255,70,220,.82)}
+  33.3333%{transform:translate(0,0) rotate(0deg) scale(1);filter:drop-shadow(0 0 4px rgba(255,0,204,.50));text-shadow:0 0 7px rgba(255,0,204,.66)}
+
+  37.5%{transform:translate(2px,-6px) rotate(4deg) scale(1.035);filter:drop-shadow(0 0 7px rgba(255,70,220,.72));text-shadow:0 0 10px rgba(255,70,220,.82)}
+  41.6667%{transform:translate(0,-12px) rotate(0deg) scale(1.07);filter:drop-shadow(0 0 10px #ff9bed) drop-shadow(0 0 16px rgba(255,0,204,.50));text-shadow:0 0 13px #ffc2f2,0 0 21px rgba(255,0,204,.60)}
+  45.8333%{transform:translate(-7px,-6px) rotate(-16deg) scale(1.035);filter:drop-shadow(0 0 7px rgba(255,70,220,.72));text-shadow:0 0 10px rgba(255,70,220,.82)}
+  50%{transform:translate(0,0) rotate(0deg) scale(1);filter:drop-shadow(0 0 4px rgba(255,0,204,.50));text-shadow:0 0 7px rgba(255,0,204,.66)}
+
+  54.1667%{transform:translate(2px,-6px) rotate(4deg) scale(1.035);filter:drop-shadow(0 0 7px rgba(255,70,220,.72));text-shadow:0 0 10px rgba(255,70,220,.82)}
+  58.3333%{transform:translate(0,-12px) rotate(0deg) scale(1.07);filter:drop-shadow(0 0 10px #ff9bed) drop-shadow(0 0 16px rgba(255,0,204,.50));text-shadow:0 0 13px #ffc2f2,0 0 21px rgba(255,0,204,.60)}
+  62.5%{transform:translate(7px,-6px) rotate(16deg) scale(1.035);filter:drop-shadow(0 0 7px rgba(255,70,220,.72));text-shadow:0 0 10px rgba(255,70,220,.82)}
+  66.6667%{transform:translate(0,0) rotate(0deg) scale(1);filter:drop-shadow(0 0 4px rgba(255,0,204,.50));text-shadow:0 0 7px rgba(255,0,204,.66)}
+
+  70.8333%{transform:translate(2px,-6px) rotate(4deg) scale(1.035);filter:drop-shadow(0 0 7px rgba(255,70,220,.72));text-shadow:0 0 10px rgba(255,70,220,.82)}
+  75%{transform:translate(0,-12px) rotate(0deg) scale(1.07);filter:drop-shadow(0 0 10px #ff9bed) drop-shadow(0 0 16px rgba(255,0,204,.50));text-shadow:0 0 13px #ffc2f2,0 0 21px rgba(255,0,204,.60)}
+  79.1667%{transform:translate(-7px,-6px) rotate(-16deg) scale(1.035);filter:drop-shadow(0 0 7px rgba(255,70,220,.72));text-shadow:0 0 10px rgba(255,70,220,.82)}
+  83.3333%{transform:translate(0,0) rotate(0deg) scale(1);filter:drop-shadow(0 0 4px rgba(255,0,204,.50));text-shadow:0 0 7px rgba(255,0,204,.66)}
+
+  /* Ornate 2-second special: horizontal wings + white jewel core + violet glints. */
+  87.5%{
+    transform:translate(-2px,0) rotate(-2deg) scale(1.025,.985);
+    filter:drop-shadow(-6px 0 7px rgba(255,80,225,.62)) drop-shadow(6px 0 7px rgba(255,80,225,.62)) drop-shadow(0 0 5px rgba(255,255,255,.62));
+    text-shadow:-6px 0 8px #ff64e3,6px 0 8px #ff64e3,0 0 8px #fff;
+  }
+  91.6667%{
+    transform:translate(0,0) rotate(0deg) scale(1.085,.955);
+    filter:drop-shadow(-11px 0 8px #ff4fdd) drop-shadow(11px 0 8px #ff4fdd) drop-shadow(-5px -5px 7px #d89bff) drop-shadow(5px 5px 7px #ff9be9) drop-shadow(0 0 10px #fff);
+    text-shadow:-13px 0 10px #ff57df,13px 0 10px #ff57df,-6px -6px 8px #e5b8ff,6px 6px 8px #ffb0ec,0 0 13px #fff,0 0 20px rgba(255,75,220,.78);
+  }
+  95.8333%{
+    transform:translate(2px,0) rotate(2deg) scale(1.025,.985);
+    filter:drop-shadow(-7px 0 7px rgba(255,90,225,.66)) drop-shadow(7px 0 7px rgba(255,90,225,.66)) drop-shadow(0 0 7px rgba(225,180,255,.72));
+    text-shadow:-7px 0 8px #ff72e5,7px 0 8px #ff72e5,0 0 10px #e9c8ff;
+  }
+  100%{transform:translate(0,0) rotate(0deg) scale(1);filter:drop-shadow(0 0 4px rgba(255,0,204,.50));text-shadow:0 0 7px rgba(255,0,204,.66)}
+}
+@-webkit-keyframes ctUGlobalOrnateWing{
+  0%{-webkit-transform:translate(0,0) rotate(0deg) scale(1);filter:drop-shadow(0 0 4px rgba(255,0,204,.50));text-shadow:0 0 7px rgba(255,0,204,.66)}
+  4.1667%{-webkit-transform:translate(2px,-6px) rotate(4deg) scale(1.035);filter:drop-shadow(0 0 7px rgba(255,70,220,.72));text-shadow:0 0 10px rgba(255,70,220,.82)}
+  8.3333%{-webkit-transform:translate(0,-12px) rotate(0deg) scale(1.07);filter:drop-shadow(0 0 10px #ff9bed) drop-shadow(0 0 16px rgba(255,0,204,.50));text-shadow:0 0 13px #ffc2f2,0 0 21px rgba(255,0,204,.60)}
+  12.5%{-webkit-transform:translate(-7px,-6px) rotate(-16deg) scale(1.035);filter:drop-shadow(0 0 7px rgba(255,70,220,.72));text-shadow:0 0 10px rgba(255,70,220,.82)}
+  16.6667%{-webkit-transform:translate(0,0) rotate(0deg) scale(1);filter:drop-shadow(0 0 4px rgba(255,0,204,.50));text-shadow:0 0 7px rgba(255,0,204,.66)}
+  20.8333%{-webkit-transform:translate(2px,-6px) rotate(4deg) scale(1.035);filter:drop-shadow(0 0 7px rgba(255,70,220,.72));text-shadow:0 0 10px rgba(255,70,220,.82)}
+  25%{-webkit-transform:translate(0,-12px) rotate(0deg) scale(1.07);filter:drop-shadow(0 0 10px #ff9bed) drop-shadow(0 0 16px rgba(255,0,204,.50));text-shadow:0 0 13px #ffc2f2,0 0 21px rgba(255,0,204,.60)}
+  29.1667%{-webkit-transform:translate(7px,-6px) rotate(16deg) scale(1.035);filter:drop-shadow(0 0 7px rgba(255,70,220,.72));text-shadow:0 0 10px rgba(255,70,220,.82)}
+  33.3333%{-webkit-transform:translate(0,0) rotate(0deg) scale(1);filter:drop-shadow(0 0 4px rgba(255,0,204,.50));text-shadow:0 0 7px rgba(255,0,204,.66)}
+  37.5%{-webkit-transform:translate(2px,-6px) rotate(4deg) scale(1.035);filter:drop-shadow(0 0 7px rgba(255,70,220,.72));text-shadow:0 0 10px rgba(255,70,220,.82)}
+  41.6667%{-webkit-transform:translate(0,-12px) rotate(0deg) scale(1.07);filter:drop-shadow(0 0 10px #ff9bed) drop-shadow(0 0 16px rgba(255,0,204,.50));text-shadow:0 0 13px #ffc2f2,0 0 21px rgba(255,0,204,.60)}
+  45.8333%{-webkit-transform:translate(-7px,-6px) rotate(-16deg) scale(1.035);filter:drop-shadow(0 0 7px rgba(255,70,220,.72));text-shadow:0 0 10px rgba(255,70,220,.82)}
+  50%{-webkit-transform:translate(0,0) rotate(0deg) scale(1);filter:drop-shadow(0 0 4px rgba(255,0,204,.50));text-shadow:0 0 7px rgba(255,0,204,.66)}
+  54.1667%{-webkit-transform:translate(2px,-6px) rotate(4deg) scale(1.035);filter:drop-shadow(0 0 7px rgba(255,70,220,.72));text-shadow:0 0 10px rgba(255,70,220,.82)}
+  58.3333%{-webkit-transform:translate(0,-12px) rotate(0deg) scale(1.07);filter:drop-shadow(0 0 10px #ff9bed) drop-shadow(0 0 16px rgba(255,0,204,.50));text-shadow:0 0 13px #ffc2f2,0 0 21px rgba(255,0,204,.60)}
+  62.5%{-webkit-transform:translate(7px,-6px) rotate(16deg) scale(1.035);filter:drop-shadow(0 0 7px rgba(255,70,220,.72));text-shadow:0 0 10px rgba(255,70,220,.82)}
+  66.6667%{-webkit-transform:translate(0,0) rotate(0deg) scale(1);filter:drop-shadow(0 0 4px rgba(255,0,204,.50));text-shadow:0 0 7px rgba(255,0,204,.66)}
+  70.8333%{-webkit-transform:translate(2px,-6px) rotate(4deg) scale(1.035);filter:drop-shadow(0 0 7px rgba(255,70,220,.72));text-shadow:0 0 10px rgba(255,70,220,.82)}
+  75%{-webkit-transform:translate(0,-12px) rotate(0deg) scale(1.07);filter:drop-shadow(0 0 10px #ff9bed) drop-shadow(0 0 16px rgba(255,0,204,.50));text-shadow:0 0 13px #ffc2f2,0 0 21px rgba(255,0,204,.60)}
+  79.1667%{-webkit-transform:translate(-7px,-6px) rotate(-16deg) scale(1.035);filter:drop-shadow(0 0 7px rgba(255,70,220,.72));text-shadow:0 0 10px rgba(255,70,220,.82)}
+  83.3333%{-webkit-transform:translate(0,0) rotate(0deg) scale(1);filter:drop-shadow(0 0 4px rgba(255,0,204,.50));text-shadow:0 0 7px rgba(255,0,204,.66)}
+  87.5%{-webkit-transform:translate(-2px,0) rotate(-2deg) scale(1.025,.985);filter:drop-shadow(-6px 0 7px rgba(255,80,225,.62)) drop-shadow(6px 0 7px rgba(255,80,225,.62)) drop-shadow(0 0 5px rgba(255,255,255,.62));text-shadow:-6px 0 8px #ff64e3,6px 0 8px #ff64e3,0 0 8px #fff}
+  91.6667%{-webkit-transform:translate(0,0) rotate(0deg) scale(1.085,.955);filter:drop-shadow(-11px 0 8px #ff4fdd) drop-shadow(11px 0 8px #ff4fdd) drop-shadow(-5px -5px 7px #d89bff) drop-shadow(5px 5px 7px #ff9be9) drop-shadow(0 0 10px #fff);text-shadow:-13px 0 10px #ff57df,13px 0 10px #ff57df,-6px -6px 8px #e5b8ff,6px 6px 8px #ffb0ec,0 0 13px #fff,0 0 20px rgba(255,75,220,.78)}
+  95.8333%{-webkit-transform:translate(2px,0) rotate(2deg) scale(1.025,.985);filter:drop-shadow(-7px 0 7px rgba(255,90,225,.66)) drop-shadow(7px 0 7px rgba(255,90,225,.66)) drop-shadow(0 0 7px rgba(225,180,255,.72));text-shadow:-7px 0 8px #ff72e5,7px 0 8px #ff72e5,0 0 10px #e9c8ff}
+  100%{-webkit-transform:translate(0,0) rotate(0deg) scale(1);filter:drop-shadow(0 0 4px rgba(255,0,204,.50));text-shadow:0 0 7px rgba(255,0,204,.66)}
+}
+
+/* S: exact same 3s normal breathing/up-down x5 + 1.5s radial red special, globally. */
+html body .ctGlobalTierGlyph.S{
+  animation:ctSNormal5ThenFlare 16.5s linear infinite!important;
+  -webkit-animation:ctSNormal5ThenFlare 16.5s linear infinite!important;
+}
+
+/* A: exact 5-second orange breath everywhere. */
+html body .ctGlobalTierGlyph.A{
+  animation:ctAOrangeBreathFinal 5s ease-in-out infinite!important;
+  -webkit-animation:ctAOrangeBreathFinal 5s ease-in-out infinite!important;
+}
+
+/* B: no motion, only a small steady purple glow everywhere. */
+html body .ctGlobalTierGlyph.B{
+  animation:none!important;
+  -webkit-animation:none!important;
+  transform:none!important;
+  -webkit-transform:none!important;
+  filter:drop-shadow(0 0 3px rgba(173,124,255,.55))!important;
+  text-shadow:0 0 5px rgba(173,124,255,.66)!important;
+}
+
+/* C-Z remain static by design. */
+html body .ctGlobalTierGlyph.C,
+html body .ctGlobalTierGlyph.D,
+html body .ctGlobalTierGlyph.E,
+html body .ctGlobalTierGlyph.F,
+html body .ctGlobalTierGlyph.Z{
+  animation:none!important;
+  -webkit-animation:none!important;
+}
+</style>
+
+<script id="ctGlobalAllTierLocationFxScript">
+(()=>{
+  'use strict';
+  const TIERS=new Set(['X','U','S','A','B','C','D','E','F','Z']);
+  let decorating=false;
+
+  function markGlyph(el,tier){
+    if(!el||!TIERS.has(tier))return;
+    el.classList.add('tier','tierLetter','tierMotion','ctGlobalTierGlyph',tier);
+  }
+
+  function splitLeadingTier(host){
+    if(!host || host.dataset.ctTierSplit==='1')return;
+    const raw=(host.textContent||'').trim();
+    const tier=raw.slice(0,1);
+    if(!TIERS.has(tier))return;
+    if(raw.length===1){
+      markGlyph(host,tier);
+      host.dataset.ctTierSplit='1';
+      return;
+    }
+    /* Only split labels that actually begin with "T｜..." or "T ..." so Chinese text itself stays static. */
+    const next=raw.slice(1,2);
+    if(next!=='｜' && next!==' ' && next!=='／' && next!=='/'){return;}
+    host.classList.add('ctTierSplitHost');
+    host.innerHTML=`<span class="tier tierLetter tierMotion ctGlobalTierGlyph ${tier}">${tier}</span><span class="ctTierStaticSuffix">${raw.slice(1)}</span>`;
+    host.dataset.ctTierSplit='1';
+  }
+
+  function decorate(root=document){
+    if(decorating||!root?.querySelectorAll)return;
+    decorating=true;
+    try{
+      /* Existing real tier glyphs. */
+      root.querySelectorAll('.tierLetter,.tierMotion,.tierMark17428,.tierWord17434,.ctTierFxLetter').forEach(el=>{
+        const t=(el.textContent||'').trim();
+        if(TIERS.has(t))markGlyph(el,t);
+      });
+
+      /* Raw one-letter grades in character/team data. */
+      root.querySelectorAll('.ratingText').forEach(el=>{
+        const t=(el.textContent||'').trim();
+        if(TIERS.has(t))markGlyph(el,t);
+      });
+
+      /* Treasure inventory/catalog grade labels: animate only the letter, not "｜菁英" etc. */
+      root.querySelectorAll('.tGrade.ratingText').forEach(splitLeadingTier);
+
+      /* Equipped treasure rows: same rule, only the tier letter moves. */
+      root.querySelectorAll('.tRosterEquip b.ratingText').forEach(splitLeadingTier);
+    }finally{
+      decorating=false;
+    }
+  }
+
+  decorate(document);
+  requestAnimationFrame(()=>decorate(document));
+
+  const mo=new MutationObserver(ms=>{
+    for(const m of ms){
+      for(const n of m.addedNodes){
+        if(n.nodeType===1)decorate(n);
+      }
+    }
+  });
+  mo.observe(document.body,{subtree:true,childList:true});
+
+  /* Re-run after views that rebuild DOM. */
+  for(const name of ['render','showCities','showRoster','showTreasures','tRender','tRenderCatalog','tRenderModal']){
+    const old=window[name];
+    if(typeof old!=='function'||old.__ctGlobalTierFxWrapped)continue;
+    const wrapped=function(){
+      const r=old.apply(this,arguments);
+      requestAnimationFrame(()=>decorate(document));
+      return r;
+    };
+    wrapped.__ctGlobalTierFxWrapped=true;
+    window[name]=wrapped;
+    if(name==='render')window.render=render=wrapped;
+    else if(name==='showRoster')window.showRoster=showRoster=wrapped;
+  }
+
+  window.__CT_DECORATE_ALL_TIER_GLYPHS=()=>decorate(document);
+})();
+</script>
+<!-- CT GLOBAL ALL-TIER-LOCATION FX FIX END -->
 
 </body></html>
