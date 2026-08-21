@@ -4168,4 +4168,39 @@ html body .tierMotion.U{
 </script>
 <!-- CT INDEX TIER LARGE TAP TARGET END -->
 
+
+<!-- CT FINAL S/A FX RESTORE START -->
+<style id="ctFinalSAFxRestore">
+/* Final guard: keep S/A motions alive after all later X/U cadence overrides. */
+html body .tierMotion.S{
+  animation:v108S 3s linear infinite!important;
+  -webkit-animation:v108S 3s linear infinite!important;
+  transform-origin:50% 50%!important;
+  -webkit-transform-origin:50% 50%!important;
+  filter:drop-shadow(0 0 4px rgba(255,0,0,.85))!important;
+  text-shadow:0 0 7px rgba(255,0,0,.95),0 0 14px rgba(255,0,0,.62)!important;
+}
+html body .tierMotion.A{
+  animation:v108A 3s ease-in-out infinite!important;
+  -webkit-animation:v108A 3s ease-in-out infinite!important;
+  transform-origin:50% 50%!important;
+  -webkit-transform-origin:50% 50%!important;
+  filter:drop-shadow(0 0 3px rgba(255,128,0,.72))!important;
+  text-shadow:0 0 6px rgba(255,128,0,.88),0 0 12px rgba(255,128,0,.48)!important;
+}
+/* Restore the non-moving rating/name/power glow cadence too. */
+:is(.ratingText.S,.teamTint.S .city,.teamTint.S .sub,.powerTint.S,.tierWord17434.S,.tGrade.S,.tItem.tS .tName,.tRosterEquip.S b){
+  animation:v97TextS 3s ease-in-out infinite!important;
+  -webkit-animation:v97TextS 3s ease-in-out infinite!important;
+}
+:is(.ratingText.A,.teamTint.A .city,.teamTint.A .sub,.powerTint.A,.tierWord17434.A,.tGrade.A,.tItem.tA .tName,.tRosterEquip.A b){
+  animation:v97TextA 3s ease-in-out infinite!important;
+  -webkit-animation:v97TextA 3s ease-in-out infinite!important;
+}
+/* Preview must use the same restored S/A motion. */
+.ctTierFxLetter.S{animation:v108S 3s linear infinite!important;-webkit-animation:v108S 3s linear infinite!important}
+.ctTierFxLetter.A{animation:v108A 3s ease-in-out infinite!important;-webkit-animation:v108A 3s ease-in-out infinite!important}
+</style>
+<!-- CT FINAL S/A FX RESTORE END -->
+
 </body></html>
