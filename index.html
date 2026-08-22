@@ -301,7 +301,42 @@ const atkMul=k=>k==='chapter'?1.42:k==='big'?1.28:k==='small'?1.16:k==='elite'?1
 const speedAdd=k=>k==='chapter'?2.5:k==='big'?1.8:k==='small'?1.2:k==='elite'?.7:0;
 window.enemy=(f,fails=0)=>{let [key,name,m]=etype(f),fat=key==='normal'?1:Math.max(.75,1-(fails||0)*.035),hp=Math.round((1500+f*125)*m*fat*rnd(.94,1.06));return{key,name:name+' '+f+'F',max:hp,hp,atk:(42+f*2.1)*atkMul(key)*Math.sqrt(fat),def:55+f*1.8,speed:clamp2(10+f*.13+speedAdd(key),10,27),g:0,fatigue:fat}};
 window.nb=s=>{s.failsAtFloor=s.failsAtFloor||0;s.party=pick4(s.city);s.enemy=enemy(s.floor,s.failsAtFloor);s.ft=0};
-window.round=s=>{s.ft++;for(const p of s.party){if(!p.alive||s.enemy.hp<=0)continue;p.g+=p.speed;while(p.g>=100&&s.enemy.hp>0){p.g-=100;if(hit(s,p))break}}if(s.enemy.hp>0){s.enemy.g+=s.enemy.speed;while(s.enemy.g>=100&&s.party.some(p=>p.alive)){s.enemy.g-=100;ehit(s)}}if(s.enemy.hp<=0){for(const p of s.party)gain(R[s.city].find(c=>c.id===p.id),6+(p.alive?2:0));s.floor++;s.failsAtFloor=0;nb(s)}else if(!s.party.some(p=>p.alive)){s.failsAtFloor=(s.failsAtFloor||0)+1;let boss=s.enemy.key!=='normal',xp=boss?Math.min(30,8+s.failsAtFloor*2):4;for(const p of s.party){let c=R[s.city].find(x=>x.id===p.id);gain(c,xp);if(boss)c.bonus=(c.bonus||0)+.0015}log(s,`❌ 全滅｜攻略熟練 +${xp} EXP${boss?'＋永久成長':''}｜Boss疲勞 ${Math.round((1-Math.max(.75,1-s.failsAtFloor*.035))*100)}%`);nb(s)}};
+window.round=s=>{
+  // V17.4.133: a KO must be painted with the attacking character still lit before
+  // the selected battle may advance. The next game turn then enters the next floor.
+  if(s.ctClearPending174133){
+    if(s.city===selected&&!s.ctKoFlashPainted174133)return;
+    for(const p of s.party)gain(R[s.city].find(c=>c.id===p.id),6+(p.alive?2:0));
+    s.floor++;s.failsAtFloor=0;
+    delete s.ctClearPending174133;delete s.ctKoFlashPainted174133;delete s.ctKoAttacker174133;
+    nb(s);return;
+  }
+  // Recovery-safe: a save made on a KO frame still gets one visible KO frame.
+  if(s.enemy&&s.enemy.hp<=0){
+    s.ctClearPending174133=true;
+    s.ctKoFlashPainted174133=s.city!==selected||!s.ctKoAttacker174133;
+    return;
+  }
+  s.ft++;
+  for(const p of s.party){
+    if(!p.alive||s.enemy.hp<=0)continue;
+    p.g+=p.speed;
+    while(p.g>=100&&s.enemy.hp>0){p.g-=100;if(hit(s,p))break}
+  }
+  if(s.enemy.hp>0){
+    s.enemy.g+=s.enemy.speed;
+    while(s.enemy.g>=100&&s.party.some(p=>p.alive)){s.enemy.g-=100;ehit(s)}
+  }
+  if(s.enemy.hp<=0){
+    s.ctClearPending174133=true;
+    s.ctKoFlashPainted174133=s.city!==selected;
+  }else if(!s.party.some(p=>p.alive)){
+    s.failsAtFloor=(s.failsAtFloor||0)+1;
+    let boss=s.enemy.key!=='normal',xp=boss?Math.min(30,8+s.failsAtFloor*2):4;
+    for(const p of s.party){let c=R[s.city].find(x=>x.id===p.id);gain(c,xp);if(boss)c.bonus=(c.bonus||0)+.0015}
+    log(s,`❌ 全滅｜攻略熟練 +${xp} EXP${boss?'＋永久成長':''}｜Boss疲勞 ${Math.round((1-Math.max(.75,1-s.failsAtFloor*.035))*100)}%`);nb(s)
+  }
+};
 // Normalize already-active old bosses without losing progress percentage.
 for(const s of states){s.failsAtFloor=s.failsAtFloor||0;if(s.enemy&&s.enemy.key!=='normal'){let pct=s.enemy.max?clamp2(s.enemy.hp/s.enemy.max,0,1):1,g=s.enemy.g||0,n=enemy(s.floor,s.failsAtFloor);n.hp=Math.round(n.max*pct);n.g=g;s.enemy=n}}
 
@@ -1453,7 +1488,14 @@ const wb=q('manualWB'),br=q('manualBrawl');if(wb)wb.onclick=()=>open('boss',fals
   const renderBefore17422=window.render;
   window.render=function(){
     normalizeLastEvent17422();
-    try{return renderBefore17422()}
+    try{
+      const out=renderBefore17422();
+      // Canonical full-render gauge sync. Keep attack flash detection active here too,
+      // so manual-step and KO frames behave exactly like the lightweight painter.
+      syncVisibleGauges17424(false);
+      const sel=fastStateByCity174OPT(selected)||states[0];
+      return out;
+    }
     catch(e){
       console.error('render recovered V17.4.22',e);
       const ks=q('ks');if(ks)ks.innerHTML='<span class="saveDot"></span>畫面已自動修復';
@@ -1466,7 +1508,7 @@ const wb=q('manualWB'),br=q('manualBrawl');if(wb)wb.onclick=()=>open('boss',fals
   // V17.4.24: keep combat math unchanged, but make the four attack bars visually
   // show an attack reset instead of appearing to "count backwards".
   const gaugeSeen17424=new Map();
-  function paintCharGauge17424(card,p,c,forceSync=false){
+  function paintCharGauge17424(card,p,c,forceSync=false,forceFired=false){
     if(!card||!p||!c)return false;
     const bar=card.querySelector('.gbar>i');
     const gn=card.querySelector('.gnum173');
@@ -1474,22 +1516,23 @@ const wb=q('manualWB'),br=q('manualBrawl');if(wb)wb.onclick=()=>open('boss',fals
     const now=Math.max(0,Math.min(100,Number(p.g)||0));
     const attacks=Number(c.attacks)||0;
     const prev=gaugeSeen17424.get(p.id);
-    const fired=!forceSync&&Number.isFinite(prev)&&attacks>prev;
+    const fired=!!forceFired||(!forceSync&&Number.isFinite(prev)&&attacks>prev);
     gaugeSeen17424.set(p.id,attacks);
 
-    // V17.4.96: never fake 100% then reset later.  Gauge and Boss HP now paint
-    // from the same game-state snapshot, so they cannot visually drift apart.
-    card.classList.toggle('gaugeFired17424',!!fired);
+    // V17.4.133: once an attack flash starts, later paints must not cancel it.
+    // Only its own timer removes the lit state, so a killing hit cannot disappear
+    // between the HP=0 paint and the next floor.
     bar.style.width=now+'%';
     if(gn)gn.textContent=fired
       ?('⚔️ 攻擊｜攻擊條 '+Math.round(now)+'/100')
       :('⚡ 攻擊條 '+Math.round(now)+'/100');
     if(fired){
+      card.classList.add('gaugeFired17424');
       const seq=String((Number(card.dataset.gaugeSeq17424)||0)+1);
       card.dataset.gaugeSeq17424=seq;
       setTimeout(()=>{
         if(card.dataset.gaugeSeq17424===seq)card.classList.remove('gaugeFired17424');
-      },140);
+      },220);
     }
     return fired;
   }
@@ -1498,11 +1541,15 @@ const wb=q('manualWB'),br=q('manualBrawl');if(wb)wb.onclick=()=>open('boss',fals
     try{
       const sel=fastStateByCity174OPT(selected)||states[0];
       if(!sel)return;
+      const koNeedsPaint=!!(sel.ctClearPending174133&&!sel.ctKoFlashPainted174133&&sel.ctKoAttacker174133);
+      let koPainted=false;
       const cards=document.querySelectorAll('#arena .cards .card');
       sel.party.forEach((p,i)=>{
         const c=fastCharById174OPT(sel.city,p.id);
-        paintCharGauge17424(cards[i],p,c,forceSync);
+        const forced=koNeedsPaint&&p.id===sel.ctKoAttacker174133;
+        if(paintCharGauge17424(cards[i],p,c,forceSync,forced)&&forced)koPainted=true;
       });
+      if(koPainted)sel.ctKoFlashPainted174133=true;
     }catch(e){console.warn('gauge paint recovered V17.4.24',e)}
   }
 
@@ -1621,6 +1668,8 @@ const wb=q('manualWB'),br=q('manualBrawl');if(wb)wb.onclick=()=>open('boss',fals
         const pt=mh.querySelector('.mh174pct');if(pt)pt.textContent='剩餘 '+Math.round(pct)+'%';
       }
 
+      const koNeedsPaint=!!(sel.ctClearPending174133&&!sel.ctKoFlashPainted174133&&sel.ctKoAttacker174133);
+      let koPainted=false;
       const cards=document.querySelectorAll('#arena .cards .card');
       sel.party.forEach((p,i)=>{
         const card=cards[i];if(!card)return;
@@ -1628,16 +1677,18 @@ const wb=q('manualWB'),br=q('manualBrawl');if(wb)wb.onclick=()=>open('boss',fals
         const hp=card.querySelector('.cardTop>b');if(hp)hp.textContent=Math.round(p.hp)+'/'+p.max;
         const hb=card.querySelector('.bar>i');if(hb)hb.style.width=Math.max(0,Math.min(100,100*p.hp/p.max))+'%';
         const c=fastCharById174OPT(sel.city,p.id);
-        paintCharGauge17424(card,p,c,false);
+        const forced=koNeedsPaint&&p.id===sel.ctKoAttacker174133;
+        if(paintCharGauge17424(card,p,c,false,forced)&&forced)koPainted=true;
         const xp=card.querySelector('.xp173>i');if(xp&&c)xp.style.width=(100*c.xp/xpNeed(c.lv))+'%';const lvTxt=card.querySelector('.ctLvFinal');if(lvTxt&&c)lvTxt.textContent='Lv.'+c.lv;const expTxt=card.querySelector('.ctExpValueFinal');if(expTxt&&c)expTxt.textContent='EXP '+c.xp+'/'+xpNeed(c.lv);
       });
+      if(koPainted)sel.ctKoFlashPainted174133=true;
       const lg=q('log');if(lg)lg.innerHTML=sel.log.map(x=>'<div>'+x+'</div>').join('')||'<span class="sub">尚無戰鬥紀錄</span>';
       return true;
     }catch(e){console.warn('light paint recovered V17.4.23',e);return false}
   }
 
   function fullPaint17423(ts){
-    try{window.render();syncVisibleGauges17424(true);lightRankGauges17425(true)}catch(e){console.error('tower full paint recovered V17.4.25',e)}
+    try{window.render();lightRankGauges17425(true)}catch(e){console.error('tower full paint recovered V17.4.25',e)}
     rememberFull17423(ts);
   }
 
@@ -1688,7 +1739,7 @@ const wb=q('manualWB'),br=q('manualBrawl');if(wb)wb.onclick=()=>open('boss',fals
     window.__CT_RESUME_WANTED=false;
     last=performance.now();acc=0;lastPaint=0;heartbeat17422=Date.now();
     const b=q('auto');if(b)b.textContent='⏸ 暫停';
-    try{window.render();syncVisibleGauges17424(true);lightRankGauges17425(true)}catch(e){console.error('resume render',e)}
+    try{window.render();lightRankGauges17425(true)}catch(e){console.error('resume render',e)}
     rememberFull17423(performance.now());
     raf=requestAnimationFrame(towerLoop17422);
     console.log('tower started V17.4.23',reason);
@@ -1721,7 +1772,7 @@ const wb=q('manualWB'),br=q('manualBrawl');if(wb)wb.onclick=()=>open('boss',fals
     },1200);
   }
   normalizeLastEvent17422();
-  try{window.render();syncVisibleGauges17424(true);lightRankGauges17425(true);rememberFull17423(performance.now())}catch(e){}
+  try{window.render();lightRankGauges17425(true);rememberFull17423(performance.now())}catch(e){}
 })();
 </script>
 <script>
@@ -2317,6 +2368,10 @@ td,th,.ev173row,.rankMega,.rewardMega>div,.bf .nm,.compChar b,.compChar .sub{
           log(s,`🌌 創世威壓追趕 ×${mul.toFixed(2)}｜追加 -${extra}｜擊殺 EXP +${k}`);
         }
       }
+    }
+    if(killed){
+      s.ctKoAttacker174133=p.id;
+      s.ctKoFlashPainted174133=false;
     }
     return killed;
   };
