@@ -134,11 +134,16 @@ window.ctBattleTreasureInline126=function(c){
 </script>
 <script>
 const SAVE='CITY_TOWER_V17_SAVE';
-const CT_BUILD_VERSION='V17.4.136';
+const CT_BUILD_VERSION='V17.4.138';
 const CT_SAVE_PREUPDATE='CITY_TOWER_V17_PREUPDATE_BACKUP';
 const CT_TREASURE_SAVE_KEY='CITY_TOWER_V1743_TREASURE';
 const CT_TREASURE_PREUPDATE='CITY_TOWER_V1743_TREASURE_PREUPDATE_BACKUP';
 const CT_SAVE_LAST_BUILD='CITY_TOWER_LAST_BUILD';
+function ctClearAllProgressStorage(){
+ try{
+  [SAVE,CT_SAVE_PREUPDATE,CT_TREASURE_SAVE_KEY,CT_TREASURE_PREUPDATE,'CITY_TOWER_POWER_BASELINE_131'].forEach(k=>localStorage.removeItem(k));
+ }catch(e){console.warn('CT clear progress',e)}
+}
 function ctPrepareUpdateSave(){
  try{
   const prevBuild=localStorage.getItem(CT_SAVE_LAST_BUILD);
@@ -273,7 +278,7 @@ function load(){
 function showCities(){let m=meta();$('mt').textContent='📚 隊伍資料｜22縣市';$('back').style.display='none';$('mbo').innerHTML='<div class="cityGrid">'+Object.values(m).sort((a,b)=>(a.rank??a.powerRank??999)-(b.rank??b.powerRank??999)).map(x=>{const teamRank=x.rank??x.powerRank;return `<button class="cityBtn" data-city="${x.city}"><b class="ratingText ${x.tier}">${x.city}</b><div class="sub">${TEAMN[x.city]}</div><div>評級 <span class="tier tierLetter tierMotion ${x.tier}">${x.tier}</span>｜戰力 <span class="ratingText ${x.tier}">${x.power.toFixed(2)}</span>｜#${Number.isFinite(teamRank)?teamRank:'—'}</div></button>`}).join('')+'</div>';document.querySelectorAll('.cityBtn').forEach(b=>b.onclick=()=>showRoster(b.dataset.city))}
 function showRoster(city){let s=states.find(x=>x.city===city),active=new Set(s.party.map(p=>p.id));$('mt').textContent='👥 '+city+'｜12人完整資料';$('back').style.display='';$('mbo').innerHTML='<div class="roster">'+[...R[city]].sort((a,b)=>craw(b)-craw(a)).map((c,i)=>{let st=cstats(c),pct=100*c.xp/xpNeed(c.lv);return `<div class="rosterCard ${active.has(c.id)?'active':''}"><div class="cardTop"><div><b>#${i+1} ${c.name}</b><div class="sub">原始階級 ${c.grade}｜原始總分 ${c.total}</div></div><b>Lv.${c.lv}</b></div><div class="xp"><i style="width:${pct}%"></i></div><div class="sub">EXP ${c.xp}/${xpNeed(c.lv)}｜個人戰力 ${(10*craw(c)/initialTop).toFixed(2)}</div><div class="stats"><div class="stat">HP<b>${st.hp}</b></div><div class="stat">ATK<b>${st.atk}</b></div><div class="stat">DEF<b>${st.def}</b></div><div class="stat">攻速<b>${st.speed.toFixed(1)}</b></div><div class="stat">暴擊<b>${(st.crit*100).toFixed(1)}%</b></div><div class="stat">擊殺<b>${c.kills}</b></div></div><div class="sub">出場 ${c.deploys}｜攻擊 ${c.attacks}｜暴擊 ${c.crits}</div></div>`}).join('')+'</div>'}
 $('step').onclick=()=>tick();$('auto').onclick=start;$('teams').onclick=()=>{$('mb').classList.add('open');showCities()};$('close').onclick=()=>$('mb').classList.remove('open');$('back').onclick=showCities;$('save').onclick=()=>save(false);
-$('reset').onclick=()=>{if(confirm('確定要清除目前進度並開新遊戲？')){localStorage.removeItem(SAVE);localStorage.removeItem('CITY_TOWER_POWER_BASELINE_131');init()}};
+
 $('install').onclick=()=>alert('iPad：請用 Safari 開啟本頁 → 點「分享」→「加入主畫面」→ 名稱 Taiwan City Tower → 加入。之後請從桌面 Taiwan City Tower 圖示開啟。');
 document.addEventListener('visibilitychange',()=>{if(document.hidden)save(true)});window.addEventListener('pagehide',()=>{save(true)});window.addEventListener('freeze',()=>{save(true)});setInterval(()=>{if(turn&&!document.hidden)save(true)},1000);
 if(!load())init();
@@ -825,9 +830,6 @@ function tRenderModal(){if(!tq('mb').classList.contains('open')||!tq('mbo'))retu
 function tOpen(){TCITY=R[selected]?selected:Object.keys(R)[0];TVIEW='inv';tq('mb').classList.add('open');tRenderModal()}
 const tbtn=tq('treasures');if(tbtn)tbtn.onclick=tOpen;
 
-// Reset must also reset treasure data; existing game save behavior stays intact.
-const resetBtn=tq('reset');if(resetBtn)resetBtn.onclick=()=>{if(confirm('確定要清除目前進度、寶物並開新遊戲？')){localStorage.removeItem(SAVE);localStorage.removeItem(TSAVE);TINV=[];TSEQ=1;TAUTO=true;init();tSave();render()}};
-
 window.__CT_TREASURE={compTier:tCompTier,award:tAward,save:tSave,itemsForChar:tForCharAll,svg:tSvg,colors:TCOL,effect:tEffect,typeName:TTYPE_NAME,rankLabel:tRankLabel};
 tLoad();tSyncAll();/* Preserve the exact equippedTo layout from treasure save on reload. Auto-equip only reacts to new drops or an explicit user action. */if(nextEvent-turn<600)nextEvent=turn+900+Math.floor(Math.random()*601);tSave();render();
 if(location.hash==='#treasure')setTimeout(tOpen,80);
@@ -966,7 +968,7 @@ if(location.hash==='#treasure')setTimeout(tOpen,80);
   `;
   document.head.appendChild(style);
 
-  document.body.insertAdjacentHTML('beforeend',`<div class="reset1747Back" id="reset1747Back"><div class="reset1747Box"><h3>🎲 開始新遊戲？</h3><p>會重新建立22隊爬塔進度，並重新開始寶物收集。</p><div class="reset1747Warn">目前的爬塔進度、角色成長與寶物存檔都會清除。這個動作無法復原。</div><div class="reset1747Actions"><button id="reset1747No">取消</button><button id="reset1747Yes" class="reset1747Yes">確定開新遊戲</button></div></div></div>`);
+  document.body.insertAdjacentHTML('beforeend',`<div class="reset1747Back" id="reset1747Back"><div class="reset1747Box"><h3>🎲 開始新遊戲？</h3><p>會重新建立22隊爬塔進度，並重新開始寶物收集。</p><div class="reset1747Warn">目前的爬塔進度、角色成長、寶物、裝備與更新前備份都會清除。這個動作無法復原。</div><div class="reset1747Actions"><button id="reset1747No">取消</button><button id="reset1747Yes" class="reset1747Yes">確定開新遊戲</button></div></div></div>`);
 
   const back=document.getElementById('reset1747Back');
   const no=document.getElementById('reset1747No');
@@ -995,9 +997,7 @@ if(location.hash==='#treasure')setTimeout(tOpen,80);
     hardStop();
     yes.disabled=true; yes.textContent='重新建立中…';
     try{
-      localStorage.removeItem(SAVE);
-      localStorage.removeItem('CITY_TOWER_POWER_BASELINE_131');
-      if(typeof TSAVE!=='undefined')localStorage.removeItem(TSAVE);
+      ctClearAllProgressStorage();
       if(typeof TINV!=='undefined')TINV=[];
       if(typeof TSEQ!=='undefined')TSEQ=1;
       if(typeof TAUTO!=='undefined')TAUTO=true;
