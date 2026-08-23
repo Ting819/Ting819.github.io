@@ -43,7 +43,7 @@ table{border-collapse:collapse;width:100%;min-width:1050px;font-size:11px}th,td{
 @media(max-width:650px){.cards,.roster{grid-template-columns:1fr}.cityGrid{grid-template-columns:repeat(2,1fr)}}
 .tEquipMini{display:inline-flex;align-items:center;gap:2px;margin-left:3px;vertical-align:middle}.tEquipMini img{width:17px;height:17px;border-radius:4px;object-fit:cover;border:1px solid currentColor;background:#08101d}.tEquipEmpty{display:inline-flex;width:17px;height:17px;border:1px dashed #536783;border-radius:4px;align-items:center;justify-content:center;color:#667b99;font-size:9px;margin-left:3px}
 .tBattleEquip{position:absolute;right:8px;top:8px;width:48px;height:48px;border-radius:10px;padding:3px;background:#0b1423;border:1px solid #405878;box-shadow:0 5px 18px #0008;z-index:3}.tBattleEquip img{width:100%;height:100%;object-fit:contain;border-radius:7px}.tBattleEquip .tRank{position:absolute;right:-4px;bottom:-4px;font-weight:1000;font-size:12px;background:#08101d;border:1px solid currentColor;border-radius:7px;padding:1px 4px}.card{position:relative}.tBattleEmpty{position:absolute;right:8px;top:8px;width:48px;height:48px;border:1px dashed #405878;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#667b99;font-size:9px;z-index:3}
-.tRosterEquip{margin-top:7px;border:1px solid #2f4568;border-radius:9px;padding:7px;background:#101b2d;display:grid;grid-template-columns:54px 1fr;gap:7px;align-items:center}.tRosterEquip img{width:54px;height:54px;object-fit:contain;border-radius:9px;background:#08101d;border:1px solid currentColor}.tRosterEquip b{font-size:12px}.tRosterEmpty{margin-top:7px;border:1px dashed #3d5272;border-radius:9px;padding:10px;text-align:center;color:#7287a5;font-size:10px}
+.tRosterEquipMulti{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;margin-top:7px}.tRosterEquip{min-width:0;height:62px;border:1px solid #2f4568;border-radius:9px;padding:5px;background:#101b2d;display:flex;align-items:center;justify-content:center;gap:3px;position:relative;overflow:hidden}.tRosterEquip img{width:48px;height:48px;object-fit:contain;border-radius:7px;background:#08101d}.tRosterEquip b{position:absolute;right:4px;bottom:2px;font-size:11px;line-height:1}.tRosterEquip.empty{border-style:dashed;color:#61738e;background:#101a2a}.tRosterEquip.empty span{font-size:22px;opacity:.65}.tRosterEquip.empty b{color:#61738e!important;text-shadow:none!important;animation:none!important;-webkit-animation:none!important}
 .tToolbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px;position:sticky;top:-10px;background:#0f1929;padding:8px 0;z-index:4}.tToolbar select{max-width:180px}.tSummary{display:grid;grid-template-columns:repeat(10,minmax(50px,1fr));gap:5px;margin:8px 0 12px}.tCount{border:1px solid #2f4568;background:#142138;border-radius:9px;padding:7px;text-align:center}.tCount b{font-size:16px;display:block}.tSummaryTier{display:block!important;position:static!important;font-size:15px;font-weight:1000;line-height:1.15;transform:none!important;-webkit-transform:none!important;animation:none!important;-webkit-animation:none!important;filter:none!important;text-shadow:none!important}.tSummaryTier::before,.tSummaryTier::after{content:none!important;display:none!important;animation:none!important;-webkit-animation:none!important}.tSummaryNum{display:block!important;position:static!important;margin-top:6px;font-size:16px;font-weight:1000;line-height:1.1;transform:none!important;-webkit-transform:none!important;animation:none!important;-webkit-animation:none!important;filter:none!important;text-shadow:none!important}.tSummaryNum::before,.tSummaryNum::after{content:none!important;display:none!important}.tRule{background:#142138;border:1px solid #2f4568;border-radius:11px;padding:10px;line-height:1.6;font-size:11px;margin-bottom:10px}.tFusion{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px}.tFuse{background:#152238;border:1px solid #304563;border-radius:9px;padding:8px;font-size:10px}.tFuse button{width:100%;margin-top:5px;padding:6px}.tInvGrid,.tCatalogGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.tItem{position:relative;overflow:hidden;background:#142138;border:1px solid #304563;border-radius:12px;padding:8px;min-height:210px}.tItem::before{content:'';position:absolute;inset:-40%;background:radial-gradient(circle at 50% 40%,var(--tg) 0,transparent 42%);opacity:.16;pointer-events:none}.tItem>*{position:relative;z-index:1}.tPic{width:100%;height:105px;object-fit:contain;border-radius:9px;background:#091321;border:1px solid #263c5c}.tItemHead{display:flex;align-items:center;justify-content:space-between;gap:5px;margin-top:6px}.tGrade{font-size:15px;font-weight:1000}.tName{font-size:12px;font-weight:900;margin:4px 0}.tEffect{font-size:9px;color:#b9c7db;line-height:1.45;min-height:27px}.tOrigin{font-size:8px;color:#7f93af;margin-top:4px}.tAssign{width:100%;margin-top:6px;padding:5px;font-size:9px}.tX{border-color:#d9b934;box-shadow:0 0 24px #ffd95c44,inset 0 0 30px #ffd95c12;background:linear-gradient(180deg,#241e06,#142138 55%)}.tU{border-color:#c64cae;box-shadow:0 0 18px #ff72d43a;background:linear-gradient(180deg,#2d1028,#142138 55%)}.tS{border-color:#b94747;box-shadow:0 0 12px #ff67672d;background:linear-gradient(180deg,#281013,#142138 55%)}
 .tX .tPic{box-shadow:0 0 18px #ffd95c55}.tU .tPic{box-shadow:0 0 14px #ff72d444}.tS .tPic{box-shadow:0 0 10px #ff676733}
 .tToast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);z-index:2000;background:#101b2df2;border:1px solid #536a91;border-radius:14px;padding:9px 12px;display:flex;align-items:center;gap:9px;box-shadow:0 12px 45px #000b;opacity:0;pointer-events:none;transition:.2s;max-width:90vw}.tToast.show{opacity:1;transform:translateX(-50%) translateY(0)}.tToast img{width:50px;height:50px;border-radius:9px;background:#08101d}.tToast b{font-size:13px}.tToast .sub{font-size:9px}
@@ -134,7 +134,7 @@ window.ctBattleTreasureInline126=function(c){
 </script>
 <script>
 const SAVE='CITY_TOWER_V17_SAVE';
-const CT_BUILD_VERSION='V17.4.145';
+const CT_BUILD_VERSION='V17.4.147';
 const CT_SAVE_PREUPDATE='CITY_TOWER_V17_PREUPDATE_BACKUP';
 const CT_TREASURE_SAVE_KEY='CITY_TOWER_V1743_TREASURE';
 const CT_TREASURE_PREUPDATE='CITY_TOWER_V1743_TREASURE_PREUPDATE_BACKUP';
@@ -858,7 +858,8 @@ function tRenderEquipped(){const sel=states.find(x=>x.city===selected)||states[0
  document.querySelectorAll('#arena .cards .card').forEach((card,i)=>{card.querySelectorAll('.tBattleEquip,.tBattleEmpty,.tBattleTreasureStrip').forEach(x=>x.remove());const p=sel.party[i],c=p&&R[sel.city].find(x=>x.id===p.id),items=tForCharAll(c);const slots=[0,1,2,3,4].map(j=>{const it=items[j];return it?`<span class="tBattleSlot ${it.tier}" title="${it.tier} ${tTierName(it.tier)}｜${it.name}｜${tEffect(it.tier,it.type)}"><img src="${tSvg(it.type,it.tier)}"><i><span class="tierLetter tierMotion ${it.tier}">${it.tier}</span></i></span>`:'<span class="tBattleSlot empty" title="空寶物槽">◇</span>'}).join('');const html=`<div class="tBattleTreasureStrip"><span class="tBattleTreasureLabel">寶物</span>${slots}</div>`;const stats=card.querySelector('.stats');if(stats)stats.insertAdjacentHTML('beforebegin',html);else card.insertAdjacentHTML('beforeend',html)});
 }
 const PREV_RENDER_T=window.render;window.render=function(){PREV_RENDER_T();tRenderEquipped()};
-const PREV_ROSTER_T=window.showRoster;window.showRoster=function(city){PREV_ROSTER_T(city);requestAnimationFrame(()=>{const cs=[...R[city]].sort((a,b)=>craw(b)-craw(a));document.querySelectorAll('#mbo .rosterCard').forEach((card,i)=>{card.querySelectorAll('.tRosterEquip,.tRosterEmpty,.tRosterEquipMulti').forEach(x=>x.remove());const c=cs[i],items=tForCharAll(c);if(items.length){card.insertAdjacentHTML('beforeend',`<div class="tRosterEquipMulti">${items.map(it=>`<div class="tRosterEquip ${it.tier}" style="color:${TCOL[it.tier]}"><img src="${tSvg(it.type,it.tier)}"><div><b class="ratingText ${it.tier}">${it.tier}｜${tTierName(it.tier)}｜${it.name}</b><div class="sub ratingText ${it.tier}">${TTYPE_NAME[it.type]}</div><div class="tEffect ratingText ${it.tier}">${tEffect(it.tier,it.type)}</div></div></div>`).join('')}</div>`)}else card.insertAdjacentHTML('beforeend','<div class="tRosterEmpty">◇ 目前未裝備寶物｜最多5件｜同種類最多1件</div>')})})};
+function tRosterSlotsHtml(c){const its=tForCharAll(c),slots=[];for(let i=0;i<5;i++){const it=its[i];if(it){const title=`${it.tier} ${tTierName(it.tier)}｜${it.name}｜${TTYPE_NAME[it.type]}｜${tEffect(it.tier,it.type)}`;slots.push(`<div class="tRosterEquip ${it.tier}" style="color:${TCOL[it.tier]}" title="${title.replace(/"/g,'&quot;')}"><img src="${tSvg(it.type,it.tier)}" alt="${it.tier}"><b class="ratingText ${it.tier}">${it.tier}</b></div>`)}else slots.push('<div class="tRosterEquip empty" title="空寶物槽"><span>◇</span><b>空</b></div>')}return `<div class="tRosterEquipMulti" data-treasure-sig="${its.map(x=>x.id).join(',')}">${slots.join('')}</div>`}
+const PREV_ROSTER_T=window.showRoster;window.showRoster=function(city){PREV_ROSTER_T(city);requestAnimationFrame(()=>{const cs=[...R[city]].sort((a,b)=>craw(b)-craw(a));document.querySelectorAll('#mbo .rosterCard').forEach((card,i)=>{card.querySelectorAll('.tRosterEquipMulti').forEach(x=>x.remove());const c=cs[i];if(c)card.insertAdjacentHTML('beforeend',tRosterSlotsHtml(c))})})};
 
 function tCounts(city){const o=Object.fromEntries(TORDER.map(x=>[x,0]));for(const it of TINV)if(it.city===city)o[it.tier]++;return o}
 function tModalShell(){const cities=Object.keys(R),cnt=tCounts(TCITY);return `<div class="tToolbar"><select id="tCity">${cities.map(c=>`<option ${c===TCITY?'selected':''}>${c}</option>`).join('')}</select><button id="tInvBtn" class="${TVIEW==='inv'?'primary':''}">🎒 我的寶物</button><button id="tCatBtn" class="${TVIEW==='cat'?'primary':''}">📖 完整圖鑑</button><button id="tAutoBtn">🤖 自動配裝：${TAUTO?'ON':'OFF'}</button><button id="tBestBtn">⚙️ 一鍵最佳配裝</button><button id="tFuseAllBtn">⚡ 一鍵合成</button></div><div class="tSummary">${TORDER.map(g=>`<div class="tCount ${g}"><span class="tSummaryTier ${g}">${g}</span><b class="tSummaryNum ${g}">${cnt[g]}</b></div>`).join('')}</div>`}
@@ -880,7 +881,7 @@ function tResetAll(){
 function tOpen(){TCITY=R[selected]?selected:Object.keys(R)[0];TVIEW='inv';tq('mb').classList.add('open');tRenderModal()}
 const tbtn=tq('treasures');if(tbtn)tbtn.onclick=tOpen;
 
-window.__CT_TREASURE={compTier:tCompTier,award:tAward,save:tSave,resetAll:tResetAll,retireCity:tRetireCity,minTier:tFloorMinTier,itemsForChar:tForCharAll,svg:tSvg,colors:TCOL,effect:tEffect,typeName:TTYPE_NAME,rankLabel:tRankLabel};
+window.__CT_TREASURE={compTier:tCompTier,award:tAward,save:tSave,resetAll:tResetAll,retireCity:tRetireCity,minTier:tFloorMinTier,itemsForChar:tForCharAll,rosterSlots:tRosterSlotsHtml,svg:tSvg,colors:TCOL,effect:tEffect,typeName:TTYPE_NAME,rankLabel:tRankLabel};
 tLoad();tRetireAll();tSyncAll();/* Existing saves are immediately normalized to the current city's floor-retirement rules; otherwise equipped layout is preserved until a new drop or explicit auto-equip action. */if(nextEvent-turn<600)nextEvent=turn+900+Math.floor(Math.random()*601);tSave();render();
 if(location.hash==='#treasure')setTimeout(tOpen,80);
 })();
@@ -900,7 +901,7 @@ if(location.hash==='#treasure')setTimeout(tOpen,80);
   .tBattleSlot.empty{border-style:dashed;color:#536783;font-size:12px}
   .tBattleSlot.X{color:#ffe55e;border-color:#dabb45;box-shadow:0 0 12px #ffe36c70}.tBattleSlot.X::before{content:'✨';position:absolute;left:-7px;top:-8px;font-size:10px;text-shadow:0 0 8px #ffe070;z-index:2}.tBattleSlot.X::after{content:'✨';position:absolute;right:-7px;top:-8px;font-size:9px;text-shadow:0 0 8px #ffe070;z-index:2}
   .tBattleSlot.U{color:#ff8ce1;border-color:#d567c0;box-shadow:0 0 10px #ff8ce165}.tBattleSlot.U::before{content:'✦';position:absolute;left:-4px;top:-5px;font-size:7px;color:#ffd4f4;box-shadow:29px 0 0 #ffd4f4,0 29px 0 #ffd4f4,29px 29px 0 #ffd4f4;z-index:2}
-  .tBattleSlot.S{color:#ff7373;border-color:#bd4d4d;box-shadow:0 0 8px #ff68684c}.tRosterEquipMulti{display:grid;grid-template-columns:1fr;gap:4px;margin-top:6px}.tRosterEquipMulti .tRosterEquip{margin-top:0}
+  .tBattleSlot.S{color:#ff7373;border-color:#bd4d4d;box-shadow:0 0 8px #ff68684c}
   `;
   document.head.appendChild(css);
 
@@ -1997,7 +1998,7 @@ body,
   text-shadow:0 1px 1px rgba(0,0,0,.78);
 }
 .sub,.muted,.cityline,.fighterCity,.tOrigin,.megaMode,.compRound,.scheduleLine,.seedPreview,.noteMega,.fat173,
-.ev173count,.gnum173,.tBattleTreasureLabel,.tRosterEmpty,.lastSeries17414 .sub,
+.ev173count,.gnum173,.tBattleTreasureLabel,.lastSeries17414 .sub,
 #event .sub,#mb .sub,#comp1748 .sub,#arena .sub,#rank .sub{
   color:#b9c7da!important;
   text-shadow:0 1px 2px rgba(0,0,0,.92)!important;
@@ -3005,16 +3006,81 @@ try{
 // Refresh active parties without changing current HP percentage.
 try{for(const st of states||[])for(const p of st.party||[]){const c=R[st.city]?.find(x=>x.id===p.id);if(!c)continue;const om=Math.max(1,Number(p.max)||1),r=Math.max(0,Math.min(1,(Number(p.hp)||0)/om)),s=cstats(c);p.max=s.hp;p.hp=p.alive===false?0:Math.max(1,Math.round(s.hp*r));p.atk=s.atk;p.def=s.def;p.speed=s.speed;p.crit=s.crit;p.dodge=s.dodge;p.critDmg=s.critDmg}}catch(e){console.warn('CT131 party refresh',e)}
 
-const prevRoster131=window.showRoster;
-if(typeof prevRoster131==='function'){window.showRoster=showRoster=function(city){prevRoster131(city);requestAnimationFrame(()=>requestAnimationFrame(()=>{try{
-  const note=[...document.querySelectorAll('#ct127TeamSummary .sub')].find(el=>el.textContent.includes('上限：'));
-  if(note)note.textContent='上限：自然閃避 50%＋寶物最高 70%｜自然爆率 60%＋寶物可推至 100%｜自然爆傷 +500%＋命運天書 +200%（最高 +700%）｜攻速無上限。自然閃避溢出→HP/DEF；自然爆率超過60%與寶物把總爆率推過100%的部分→ATK/攻速；自然爆傷超過+500%的部分→ATK/攻速。';
+let ctTeamDataRaf=0,ctTeamDataCity=null,ctTeamDataLast=0;
+function ctStopRosterLiveSync(){if(ctTeamDataRaf){cancelAnimationFrame(ctTeamDataRaf);ctTeamDataRaf=0}ctTeamDataCity=null;ctTeamDataLast=0}
+function ctSetText(el,text){if(el&&el.textContent!==String(text))el.textContent=String(text)}
+function ctSetHtml(el,html){if(el&&el.innerHTML!==html)el.innerHTML=html}
+function ctSetTierClass(el,tier){if(!el)return;for(const g of ['X','U','S','A','B','C','D','E','F','Z'])el.classList.remove(g);el.classList.add(tier)}
+function ctPatchCityOverview(){
+  const box=document.getElementById('mbo'),grid=box?.querySelector('.cityGrid');if(!grid)return;
+  const m=meta(),ordered=Object.values(m).sort((a,b)=>(a.rank??a.powerRank??999)-(b.rank??b.powerRank??999));
+  for(const x of ordered){
+    const btn=[...grid.querySelectorAll('.cityBtn')].find(b=>b.dataset.city===x.city);if(!btn)continue;
+    const av=teamAvg127(x.city),rank=x.rank??x.powerRank,st=(states||[]).find(z=>z.city===x.city),floor=Math.max(1,Number(st?.floor)||1);
+    const cityName=btn.querySelector(':scope>b');ctSetTierClass(cityName,x.tier);if(cityName)cityName.classList.add('ratingText');
+    const line=btn.children[2];if(line){const html=`評級 <span class="tier tierLetter tierMotion ${x.tier}">${x.tier}</span>｜戰力 <span class="ratingText ${x.tier}">${x.power.toFixed(2)}</span>｜#${Number.isFinite(rank)?rank:'—'}`;ctSetHtml(line,html)}
+    ctSetText(btn.querySelector('.ct127Floor b'),`${floor}F`);
+    ctSetText(btn.querySelector('.ct127TeamMini'),`均攻速 ${av.speed.toFixed(1)}｜爆率 ${(av.crit*100).toFixed(1)}%｜閃避 ${(av.dodge*100).toFixed(1)}%｜爆傷 +${(av.critDmg*100).toFixed(0)}%`);
+    grid.appendChild(btn);
+  }
+}
+function ctPatchRosterSummary(city){
+  const sum=document.getElementById('ct127TeamSummary');if(!sum)return;
+  const mm=meta()[city],av=teamAvg127(city),st=(states||[]).find(z=>z.city===city),floor=Math.max(1,Number(st?.floor)||1);if(!mm)return;
+  const head=sum.querySelector('.ct127Head');
+  if(head){const html=`<b>${city}｜${TEAMN[city]||''}</b><span>評級 <span class="tier tierLetter tierMotion ${mm.tier}">${mm.tier}</span>｜隊伍戰力 <span class="ratingText ${mm.tier}">${mm.power.toFixed(2)}</span>｜全服 #${Number.isFinite(mm.rank??mm.powerRank)?(mm.rank??mm.powerRank):'—'}｜關卡 <b>${floor}F</b></span>`;ctSetHtml(head,html)}
+  const vals=[Math.round(av.hp),Math.round(av.atk),Math.round(av.def),av.speed.toFixed(1),(av.crit*100).toFixed(1)+'%',(av.dodge*100).toFixed(1)+'%','+'+(av.critDmg*100).toFixed(0)+'%'];
+  sum.querySelectorAll('.ct127Stat').forEach((el,i)=>{const b=el.querySelector('b');if(b&&vals[i]!=null)ctSetText(b,vals[i])});
+}
+function ctBindRosterCards(city){
   const cs=[...(R[city]||[])].sort((a,b)=>craw(b)-craw(a));
-  document.querySelectorAll('#mbo .rosterCard').forEach((card,i)=>{const c=cs[i];if(!c)return;const s=cstats(c);card.querySelectorAll('.ct131Break').forEach(x=>x.remove());const n=document.createElement('div');n.className='ct127Overflow ct131Break';n.textContent=`構成｜閃避 ${(s.naturalDodge*100).toFixed(1)}%＋寶物 ${(s.treasureDodge*100).toFixed(1)}%＝${(s.dodge*100).toFixed(1)}%｜爆率 ${(s.naturalCrit*100).toFixed(1)}%＋寶物 ${(s.treasureCrit*100).toFixed(1)}%＝${(s.crit*100).toFixed(1)}%｜爆傷 +${(s.naturalCritDmg*100).toFixed(0)}%＋寶物 +${(s.treasureCritDmg*100).toFixed(0)}%＝+${(s.critDmg*100).toFixed(0)}%`;card.appendChild(n);});
-}catch(e){console.warn('CT131 roster',e)}}));};}
+  document.querySelectorAll('#mbo .rosterCard').forEach((card,i)=>{const c=cs[i];if(c)card.dataset.charId=c.id});
+}
+function ctPatchRosterCard(card,c,g,cityRank,active){
+  if(!card||!c||!g)return;card.classList.toggle('active',active);
+  const st=cstats(c),need=xpNeed(c.lv),pct=Math.max(0,Math.min(100,100*c.xp/need));
+  const name=card.querySelector('.cardTop>div>b');if(name){ctSetText(name,`#${cityRank} ${c.name}`);name.classList.add('ratingText');ctSetTierClass(name,g.tier)}
+  const grade=card.querySelector('.cardTop>div>.sub');if(grade){const html=`目前評級 <span class="tier tierLetter tierMotion ${g.tier}">${g.tier}</span>｜全服角色#${g.rank}｜原始階級 <span class="ratingText ${c.grade}">${c.grade}</span>｜原始總分 ${c.total}`;ctSetHtml(grade,html)}
+  const lv=card.querySelector('.cardTop>b');if(lv){const html=`<span class="tier tierLetter tierMotion ${g.tier}" style="font-size:22px">${g.tier}</span><br>Lv.${c.lv}`;ctSetHtml(lv,html)}
+  const xp=card.querySelector('.xp i'),width=pct.toFixed(2)+'%';if(xp&&xp.style.width!==width)xp.style.width=width;
+  const power=[...card.querySelectorAll(':scope>.sub')].find(el=>el.textContent.includes('EXP '));if(power){ctSetText(power,`EXP ${c.xp}/${need}｜個人戰力 ${(10*craw(c)/initialTop).toFixed(2)}`);power.classList.add('ratingText');ctSetTierClass(power,g.tier)}
+  const stats=card.querySelector('.stats'),vals=[st.hp,st.atk,st.def,st.speed.toFixed(1),(st.crit*100).toFixed(1)+'%',(st.dodge*100).toFixed(1)+'%','+'+(st.critDmg*100).toFixed(0)+'%'];
+  if(stats)stats.querySelectorAll('.stat b').forEach((b,i)=>{if(vals[i]!=null)ctSetText(b,vals[i])});
+  const battle=[...card.querySelectorAll(':scope>.sub')].find(el=>el.textContent.startsWith('出場 '));if(battle)ctSetText(battle,`出場 ${c.deploys}｜攻擊 ${c.attacks}｜暴擊 ${c.crits}`);
+  card.querySelectorAll('.ct131Break,.ct130DodgeBreak').forEach(x=>x.remove());
+  let note=card.querySelector('.ct147Break');if(!note){note=document.createElement('div');note.className='ct127Overflow ct147Break';card.appendChild(note)}
+  ctSetText(note,`構成｜閃避 ${(st.naturalDodge*100).toFixed(1)}%＋寶物 ${(st.treasureDodge*100).toFixed(1)}%＝${(st.dodge*100).toFixed(1)}%｜爆率 ${(st.naturalCrit*100).toFixed(1)}%＋寶物 ${(st.treasureCrit*100).toFixed(1)}%＝${(st.crit*100).toFixed(1)}%｜爆傷 +${(st.naturalCritDmg*100).toFixed(0)}%＋寶物 +${(st.treasureCritDmg*100).toFixed(0)}%＝+${(st.critDmg*100).toFixed(0)}%`);
+  const api=window.__CT_TREASURE,items=api?.itemsForChar?.(c)||[],sig=items.map(x=>x.id).join(',');let slots=card.querySelector('.tRosterEquipMulti');
+  if(!slots&&api?.rosterSlots){card.insertAdjacentHTML('beforeend',api.rosterSlots(c));slots=card.querySelector('.tRosterEquipMulti')}
+  else if(slots&&slots.dataset.treasureSig!==sig&&api?.rosterSlots){const tmp=document.createElement('div');tmp.innerHTML=api.rosterSlots(c);slots.replaceWith(tmp.firstElementChild)}
+}
+function ctPatchRoster(city){
+  const box=document.getElementById('mbo');if(!box?.querySelector('.roster'))return;ctPatchRosterSummary(city);
+  const cs=[...(R[city]||[])].sort((a,b)=>craw(b)-craw(a)),active=new Set(((states||[]).find(x=>x.city===city)?.party||[]).map(p=>p.id)),roster=box.querySelector('.roster'),cm=charMetaV173();
+  for(let i=0;i<cs.length;i++){const c=cs[i];let card=[...roster.querySelectorAll('.rosterCard')].find(x=>x.dataset.charId===c.id);if(!card){ctBindRosterCards(city);card=[...roster.querySelectorAll('.rosterCard')].find(x=>x.dataset.charId===c.id)}if(!card)continue;ctPatchRosterCard(card,c,cm[c.id],i+1,active.has(c.id));roster.appendChild(card)}
+}
+function ctTeamDataLoop(ts){
+  const mb=document.getElementById('mb'),back=document.getElementById('back'),body=document.getElementById('mbo');
+  if(!mb?.classList.contains('open')){ctStopRosterLiveSync();return}
+  if(ts-ctTeamDataLast>=250){ctTeamDataLast=ts;try{if(back?.style.display==='none')ctPatchCityOverview();else if(ctTeamDataCity&&body?.querySelector('.roster'))ctPatchRoster(ctTeamDataCity)}catch(e){console.warn('CT147 smooth team sync',e)}}
+  ctTeamDataRaf=requestAnimationFrame(ctTeamDataLoop)
+}
+function ctStartRosterLiveSync(){if(!ctTeamDataRaf)ctTeamDataRaf=requestAnimationFrame(ctTeamDataLoop)}
+const prevCities147=window.showCities;
+if(typeof prevCities147==='function'){window.showCities=showCities=function(){prevCities147();ctTeamDataCity=null;ctStartRosterLiveSync()}}
+const prevRoster131=window.showRoster;
+if(typeof prevRoster131==='function'){window.showRoster=showRoster=function(city){
+  prevRoster131(city);ctTeamDataCity=city;ctStartRosterLiveSync();
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{try{
+    ctBindRosterCards(city);ctPatchRoster(city);
+    const note=[...document.querySelectorAll('#ct127TeamSummary .sub')].find(el=>el.textContent.includes('上限：'));
+    if(note)note.textContent='上限：自然閃避 50%＋寶物最高 70%｜自然爆率 60%＋寶物可推至 100%｜自然爆傷 +500%＋命運天書 +200%（最高 +700%）｜攻速無上限。自然閃避溢出→HP/DEF；自然爆率超過60%與寶物把總爆率推過100%的部分→ATK/攻速；自然爆傷超過+500%的部分→ATK/攻速。';
+  }catch(e){console.warn('CT147 roster init',e)}}));
+};}
+try{document.getElementById('close')?.addEventListener('click',ctStopRosterLiveSync)}catch(e){console.warn('CT147 roster sync controls',e)}
 
 try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.131');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.131')}catch(e){}
-window.__CT_BUILD='V17.4.141-new-game-repair';
+window.__CT_BUILD='V17.4.147-smooth-team-live-sync';
 try{if(typeof render==='function')render();if(typeof save==='function')save(true)}catch(e){console.warn('CT131 final render',e)}
 })();
 </script>
