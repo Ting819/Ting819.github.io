@@ -134,7 +134,7 @@ window.ctBattleTreasureInline126=function(c){
 </script>
 <script>
 const SAVE='CITY_TOWER_V17_SAVE';
-const CT_BUILD_VERSION='V17.4.138';
+const CT_BUILD_VERSION='V17.4.139';
 const CT_SAVE_PREUPDATE='CITY_TOWER_V17_PREUPDATE_BACKUP';
 const CT_TREASURE_SAVE_KEY='CITY_TOWER_V1743_TREASURE';
 const CT_TREASURE_PREUPDATE='CITY_TOWER_V1743_TREASURE_PREUPDATE_BACKUP';
@@ -827,10 +827,20 @@ function tInvHtml(){const inv=TINV.filter(x=>x.city===TCITY).sort((a,b)=>TASC.in
  return fusion+`<div class="tInvGrid">${inv.map(it=>`<div class="tItem t${it.tier}" style="--tg:${TCOL[it.tier]}"><img class="tPic" src="${tSvg(it.type,it.tier)}"><div class="tItemHead"><span class="tGrade ratingText ${it.tier}">${it.tier}｜${tTierName(it.tier)}</span><span class="sub">${it.equippedTo?'已裝備':'背包'}</span></div><div class="tName ratingText ${it.tier}">${it.name}</div><div class="tEffect ratingText ${it.tier}">${TTYPE_NAME[it.type]}<br>${tEffect(it.tier,it.type)}</div><div class="tOrigin ratingText ${it.tier}">${it.origin}${it.floor?'｜'+it.floor+'F':''}</div><select class="tAssign" data-id="${it.id}"><option value="">— 背包／卸下 —</option>${R[TCITY].map(c=>{const eq=tForCharAll(c),n=eq.length,own=it.equippedTo===c.id,same=!own&&eq.some(x=>x.type===it.type),full=!own&&n>=5,disabled=same||full;return `<option value="${c.id}" ${own?'selected':''} ${disabled?'disabled':''}>${c.name}（${n}/5）${full?' 已滿':same?' 同類已裝':''}</option>`}).join('')}</select></div>`).join('')}</div>`}
 function tCatalogHtml(){return `<div class="tRule"><b>完整寶物圖鑑｜由強到弱 <span class="tierWord17434 X">X</span> → <span class="tierWord17434 Z">Z</span></b><br>${TORDER.map(g=>`<span class="tierWord17434 ${g}">${g} ${tTierName(g)}</span>`).join('｜')}。<span class="tierWord17434 X">X</span> 為正黃色創世特效、<span class="tierWord17434 U">U</span> 為正粉色、<span class="tierWord17434 S">S</span> 為正紅色；<span class="tierWord17434 A">A</span> 以下依正色評級顯示。每階都有 5 種不同定位。<br><b>新屬性：</b>🪽速度型＝攻速＋爆率＋閃避；🔮技巧型＝爆率＋攻速＋爆傷。爆傷採「額外傷害」表示，例如 <b>爆傷 +50%</b> 代表爆擊總傷害 1.5 倍。<br><b>屬性上限：</b>自然閃避 50%＋寶物突破最高 70%｜自然爆率 60%＋寶物可突破至 100%｜自然爆傷 +500%＋命運天書可再 +200%｜攻速無上限；自然閃避溢出→HP／DEF；自然爆率超過 60% 與寶物把總爆率推過 100% 的部分→ATK／攻速；自然爆傷超過 +500% 的部分→ATK／攻速。</div>`+TORDER.map(g=>`<h3 class="catalogTierTitle ratingText ${g}" style="margin:14px 0 7px">${g}｜${tTierName(g)}</h3><div class="tCatalogGrid">${TTYPES.map(type=>`<div class="tItem t${g}" style="--tg:${TCOL[g]}"><img class="tPic" src="${tSvg(type,g)}"><div class="tItemHead"><span class="tGrade ratingText ${g}">${g}｜${tTierName(g)}</span><span class="sub ratingText ${g}">${TTYPE_NAME[type]}</span></div><div class="tName ratingText ${g}">${TNAMES[g][type]}</div><div class="tEffect ratingText ${g}">${tEffect(g,type)}</div></div>`).join('')}</div>`).join('')}
 function tRenderModal(){if(!tq('mb').classList.contains('open')||!tq('mbo'))return;tq('mt').textContent='🎁 寶物庫｜'+TCITY;tq('back').style.display='none';tq('mbo').innerHTML=tModalShell()+(TVIEW==='inv'?tInvHtml():tCatalogHtml());tq('tCity').onchange=e=>{TCITY=e.target.value;tRenderModal()};tq('tInvBtn').onclick=()=>{TVIEW='inv';tRenderModal()};tq('tCatBtn').onclick=()=>{TVIEW='cat';tRenderModal()};tq('tAutoBtn').onclick=()=>{TAUTO=!TAUTO;tSave();if(TAUTO)tAutoEquip(TCITY,true);tSyncAll();render();tRenderModal()};tq('tBestBtn').onclick=()=>{tAutoEquip(TCITY);tRenderModal()};const fuseAllBtn=tq('tFuseAllBtn');if(fuseAllBtn){const canFuse=TASC.slice(0,-1).some(g=>TINV.filter(x=>x.city===TCITY&&x.tier===g&&!x.equippedTo).length>=5);fuseAllBtn.disabled=!canFuse;fuseAllBtn.onclick=()=>tFuseAll(TCITY)}document.querySelectorAll('.tAssign').forEach(x=>x.onchange=e=>{tEquip(tItem(e.target.dataset.id),e.target.value||null);tRenderModal()});document.querySelectorAll('.tFuseBtn').forEach(x=>x.onclick=()=>tFuse(TCITY,x.dataset.tier))}
+function tResetAll(){
+ TINV=[];TSEQ=1;TAUTO=true;TCITY=R[selected]?selected:(Object.keys(R)[0]||'臺北市');TVIEW='inv';
+ for(const arr of Object.values(R))for(const c of arr){c.treasureIds=[];c.treasureId=null}
+ try{localStorage.removeItem(TSAVE);localStorage.removeItem(CT_TREASURE_PREUPDATE)}catch(e){console.warn('treasure reset storage',e)}
+ try{tSyncAll()}catch(e){console.warn('treasure reset sync',e)}
+ // Persist an explicit empty treasure state so recovery logic can never resurrect a pre-reset backup.
+ tSave();
+ try{if(tq('mb')?.classList.contains('open')&&tq('mbo'))tRenderModal()}catch(e){console.warn('treasure reset modal',e)}
+ return true;
+}
 function tOpen(){TCITY=R[selected]?selected:Object.keys(R)[0];TVIEW='inv';tq('mb').classList.add('open');tRenderModal()}
 const tbtn=tq('treasures');if(tbtn)tbtn.onclick=tOpen;
 
-window.__CT_TREASURE={compTier:tCompTier,award:tAward,save:tSave,itemsForChar:tForCharAll,svg:tSvg,colors:TCOL,effect:tEffect,typeName:TTYPE_NAME,rankLabel:tRankLabel};
+window.__CT_TREASURE={compTier:tCompTier,award:tAward,save:tSave,resetAll:tResetAll,itemsForChar:tForCharAll,svg:tSvg,colors:TCOL,effect:tEffect,typeName:TTYPE_NAME,rankLabel:tRankLabel};
 tLoad();tSyncAll();/* Preserve the exact equippedTo layout from treasure save on reload. Auto-equip only reacts to new drops or an explicit user action. */if(nextEvent-turn<600)nextEvent=turn+900+Math.floor(Math.random()*601);tSave();render();
 if(location.hash==='#treasure')setTimeout(tOpen,80);
 })();
@@ -998,15 +1008,17 @@ if(location.hash==='#treasure')setTimeout(tOpen,80);
     yes.disabled=true; yes.textContent='重新建立中…';
     try{
       ctClearAllProgressStorage();
-      if(typeof TINV!=='undefined')TINV=[];
-      if(typeof TSEQ!=='undefined')TSEQ=1;
-      if(typeof TAUTO!=='undefined')TAUTO=true;
+      const treasureApi=window.__CT_TREASURE;
+      if(!treasureApi||typeof treasureApi.resetAll!=='function')throw new Error('寶物重置模組未就緒');
+      treasureApi.resetAll();
       init();
       // Keep rare competitive events in the current treasure rules.
       nextEvent=turn+900+Math.floor(Math.random()*601);
-      if(typeof tSave==='function')tSave();
+      treasureApi.save();
       save(true);
       render();
+      // If the treasure modal was already open, repaint it immediately as an empty inventory.
+      try{const openModal=document.getElementById('mb');if(openModal?.classList.contains('open')){openModal.classList.remove('open')}}catch(_e){}
       back.classList.remove('open');
     }catch(err){
       console.error('hard reset failed',err);
