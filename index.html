@@ -134,14 +134,14 @@ window.ctBattleTreasureInline126=function(c){
 </script>
 <script>
 const SAVE='CITY_TOWER_V17_SAVE';
-const CT_BUILD_VERSION='V17.4.139';
+const CT_BUILD_VERSION='V17.4.141';
 const CT_SAVE_PREUPDATE='CITY_TOWER_V17_PREUPDATE_BACKUP';
 const CT_TREASURE_SAVE_KEY='CITY_TOWER_V1743_TREASURE';
 const CT_TREASURE_PREUPDATE='CITY_TOWER_V1743_TREASURE_PREUPDATE_BACKUP';
 const CT_SAVE_LAST_BUILD='CITY_TOWER_LAST_BUILD';
 function ctClearAllProgressStorage(){
  try{
-  [SAVE,CT_SAVE_PREUPDATE,CT_TREASURE_SAVE_KEY,CT_TREASURE_PREUPDATE,'CITY_TOWER_POWER_BASELINE_131'].forEach(k=>localStorage.removeItem(k));
+  [SAVE,CT_SAVE_PREUPDATE,CT_TREASURE_SAVE_KEY,CT_TREASURE_PREUPDATE,'CITY_TOWER_POWER_BASELINE_131','CITY_TOWER_RUN_ID'].forEach(k=>localStorage.removeItem(k));
  }catch(e){console.warn('CT clear progress',e)}
 }
 function ctPrepareUpdateSave(){
@@ -602,7 +602,7 @@ function tSvg(type,tier){
  return uri;
 }
 function tNew(city,tier,origin,floor,type=null){type=type||TTYPES[Math.floor(Math.random()*TTYPES.length)];const it={id:'T'+(TSEQ++),city,tier,type,name:TNAMES[tier][type],origin:origin||'未知',floor:floor||0,turn:turn||0,equippedTo:null};TINV.push(it);return it}
-function tSave(){try{localStorage.setItem(TSAVE,JSON.stringify({v:1,inv:TINV,seq:TSEQ,auto:TAUTO}))}catch(e){console.warn('treasure save',e)}}
+function tSave(){try{localStorage.setItem(TSAVE,JSON.stringify({v:1,inv:TINV,seq:TSEQ,auto:TAUTO}));return true}catch(e){console.warn('treasure save',e);return false}}
 function tLoad(){try{
  let d=null;
  try{d=JSON.parse(localStorage.getItem(TSAVE)||'null')}catch(_e){}
@@ -830,10 +830,11 @@ function tRenderModal(){if(!tq('mb').classList.contains('open')||!tq('mbo'))retu
 function tResetAll(){
  TINV=[];TSEQ=1;TAUTO=true;TCITY=R[selected]?selected:(Object.keys(R)[0]||'臺北市');TVIEW='inv';
  for(const arr of Object.values(R))for(const c of arr){c.treasureIds=[];c.treasureId=null}
- try{localStorage.removeItem(TSAVE);localStorage.removeItem(CT_TREASURE_PREUPDATE)}catch(e){console.warn('treasure reset storage',e)}
+ try{
+  localStorage.removeItem(TSAVE);localStorage.removeItem(CT_TREASURE_PREUPDATE);
+  localStorage.setItem(TSAVE,JSON.stringify({v:1,inv:[],seq:1,auto:true}));
+ }catch(e){console.warn('treasure reset storage',e)}
  try{tSyncAll()}catch(e){console.warn('treasure reset sync',e)}
- // Persist an explicit empty treasure state so recovery logic can never resurrect a pre-reset backup.
- tSave();
  try{if(tq('mb')?.classList.contains('open')&&tq('mbo'))tRenderModal()}catch(e){console.warn('treasure reset modal',e)}
  return true;
 }
@@ -957,12 +958,8 @@ if(location.hash==='#treasure')setTimeout(tOpen,80);
 </script>
 <script>
 (()=>{
-  const old=document.getElementById('reset');
-  if(!old)return;
-
-  // Replacing the DOM node removes every stale onclick/pointer listener left by older patches.
-  const fresh=old.cloneNode(true);
-  old.replaceWith(fresh);
+  const resetBtn=document.getElementById('reset');
+  if(!resetBtn)return;
 
   const style=document.createElement('style');
   style.id='reset1747css';
@@ -974,70 +971,60 @@ if(location.hash==='#treasure')setTimeout(tOpen,80);
     .reset1747Warn{margin-top:10px;padding:9px 10px;background:#351820;border:1px solid #73313f;border-radius:10px;color:#ffbdc6;font-size:11px;line-height:1.5}
     .reset1747Actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
     .reset1747Actions button{padding:12px;font-weight:900;font-size:14px}.reset1747Yes{background:#7b2635!important;border-color:#b3485b!important;color:white!important}
-    #reset.reset1747Touch{transform:scale(.96)!important;filter:brightness(1.25)}
   `;
   document.head.appendChild(style);
 
-  document.body.insertAdjacentHTML('beforeend',`<div class="reset1747Back" id="reset1747Back"><div class="reset1747Box"><h3>🎲 開始新遊戲？</h3><p>會重新建立22隊爬塔進度，並重新開始寶物收集。</p><div class="reset1747Warn">目前的爬塔進度、角色成長、寶物、裝備與更新前備份都會清除。這個動作無法復原。</div><div class="reset1747Actions"><button id="reset1747No">取消</button><button id="reset1747Yes" class="reset1747Yes">確定開新遊戲</button></div></div></div>`);
+  document.body.insertAdjacentHTML('beforeend',`<div class="reset1747Back" id="reset1747Back"><div class="reset1747Box"><h3>🎲 開始新遊戲？</h3><p>會重新建立22隊爬塔進度，並重新開始寶物收集。</p><div class="reset1747Warn">目前的爬塔進度、角色成長、寶物、裝備與更新前備份都會清除。版本更新本身不會清除進度。</div><div class="reset1747Actions"><button id="reset1747No">取消</button><button id="reset1747Yes" class="reset1747Yes">確定開新遊戲</button></div></div></div>`);
 
   const back=document.getElementById('reset1747Back');
   const no=document.getElementById('reset1747No');
   const yes=document.getElementById('reset1747Yes');
-  let opening=false;
+  let resetting=false;
 
-  function hardStop(){
-    try{ if(typeof window.stop==='function') window.stop(); }
-    catch(e){ try{running=false;if(raf)cancelAnimationFrame(raf);raf=0}catch(_){} }
+  function stopGame(){
     try{running=false}catch(e){}
     try{if(raf)cancelAnimationFrame(raf);raf=0}catch(e){}
-    const a=document.getElementById('auto'); if(a)a.textContent='▶ 自動';
+    const a=document.getElementById('auto');if(a)a.textContent='▶ 自動';
   }
-  function openReset(e){
-    if(e){e.preventDefault();e.stopPropagation();if(e.stopImmediatePropagation)e.stopImmediatePropagation()}
-    if(opening||back.classList.contains('open'))return;
-    opening=true;
-    fresh.classList.add('reset1747Touch');
-    hardStop();
-    back.classList.add('open');
-    requestAnimationFrame(()=>{opening=false;fresh.classList.remove('reset1747Touch')});
-  }
-  function closeReset(e){if(e){e.preventDefault();e.stopPropagation()}back.classList.remove('open')}
-  function doReset(e){
-    if(e){e.preventDefault();e.stopPropagation();if(e.stopImmediatePropagation)e.stopImmediatePropagation()}
-    hardStop();
-    yes.disabled=true; yes.textContent='重新建立中…';
+  function openReset(){stopGame();back.classList.add('open')}
+  function closeReset(){if(!resetting)back.classList.remove('open')}
+  function doReset(){
+    if(resetting)return;
+    resetting=true;yes.disabled=true;yes.textContent='正在建立新遊戲…';
     try{
-      ctClearAllProgressStorage();
+      stopGame();
       const treasureApi=window.__CT_TREASURE;
-      if(!treasureApi||typeof treasureApi.resetAll!=='function')throw new Error('寶物重置模組未就緒');
-      treasureApi.resetAll();
+      if(!treasureApi||typeof treasureApi.resetAll!=='function')throw new Error('寶物系統尚未載入');
+
+      // New game is intentionally atomic but stays in the same JS page:
+      // remove every persisted progress source first so init() cannot be blocked by an older save.
+      ctClearAllProgressStorage();
+
+      // Rebuild the authoritative roster/states from BASE, then clear the treasure module's
+      // in-memory inventory against that freshly-created roster.
       init();
-      // Keep rare competitive events in the current treasure rules.
-      nextEvent=turn+900+Math.floor(Math.random()*601);
-      treasureApi.save();
+      treasureApi.resetAll();
+
+      // Persist the new empty game only after both systems are reset.
       save(true);
-      render();
-      // If the treasure modal was already open, repaint it immediately as an empty inventory.
-      try{const openModal=document.getElementById('mb');if(openModal?.classList.contains('open')){openModal.classList.remove('open')}}catch(_e){}
+      if(typeof treasureApi.save==='function')treasureApi.save();
+      try{localStorage.setItem(CT_SAVE_LAST_BUILD,CT_BUILD_VERSION)}catch(e){}
+
       back.classList.remove('open');
+      const mb=document.getElementById('mb');if(mb)mb.classList.remove('open');
+      render();
+      yes.disabled=false;yes.textContent='確定開新遊戲';resetting=false;
     }catch(err){
-      console.error('hard reset failed',err);
+      console.error('new game reset failed',err);
       alert('新遊戲初始化失敗：'+(err&&err.message?err.message:err));
-    }finally{
-      yes.disabled=false;yes.textContent='確定開新遊戲';
+      yes.disabled=false;yes.textContent='確定開新遊戲';resetting=false;
     }
   }
 
-  // pointerdown is intentionally used for immediate iPad response.
-  fresh.addEventListener('pointerdown',openReset,{capture:true});
-  // Fallbacks for keyboard/older webviews.
-  fresh.addEventListener('click',openReset,{capture:true});
-  fresh.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){openReset(e)}});
-  no.addEventListener('pointerdown',closeReset,{capture:true});
-  no.addEventListener('click',closeReset,{capture:true});
-  yes.addEventListener('pointerdown',doReset,{capture:true});
-  yes.addEventListener('click',doReset,{capture:true});
-  back.addEventListener('pointerdown',e=>{if(e.target===back)closeReset(e)},{capture:true});
+  resetBtn.onclick=openReset;
+  no.onclick=closeReset;
+  yes.onclick=doReset;
+  back.addEventListener('click',e=>{if(e.target===back)closeReset()});
 })();
 </script>
 <script>
@@ -1117,6 +1104,7 @@ if(location.hash==='#treasure')setTimeout(tOpen,80);
     .compRound{margin:7px 0;font-size:12px;color:#b3c2d7;font-weight:800}.compHit{min-height:44px;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:1000;color:#ffe18b;text-shadow:0 0 13px #ffb800;text-align:center;padding:5px}.compChars{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:7px}.compChar{background:#142138;border:1px solid #314966;border-radius:10px;padding:7px;min-width:0}.compChar b{font-size:11px}.compChar .sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .rank1748{display:grid;grid-template-columns:34px 1fr 74px 72px;gap:5px;align-items:center;padding:6px;border-bottom:1px solid #20324d;font-size:10px;transition:.18s}.rank1748.top{background:#2d260d;border:1px solid #7f6623;border-radius:8px;margin:2px 0}.rank1748.seed{box-shadow:inset 3px 0 #65b7ff}.rank1748 .pos{font-weight:1000}.rank1748 .score{text-align:right;font-weight:900}.rank1748 .delta{text-align:right;color:#8fd9ff}
     .leagueDuel{background:linear-gradient(180deg,#111d31,#0b1524);border:1px solid #3a5073;border-radius:14px;padding:9px;margin:8px 0}.seriesTop{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin-bottom:7px}.seriesTeam{text-align:center;font-size:13px;font-weight:1000}.seriesScore{font-size:22px;font-weight:1000;color:#ffd66e;text-align:center;min-width:88px}.seriesScore .sub{font-size:9px;font-weight:600;color:#91a4bf}.seriesScore .seriesPoint111{color:var(--rU,#FF00CC)!important;-webkit-text-fill-color:var(--rU,#FF00CC)!important;text-shadow:0 0 6px var(--rU,#FF00CC),0 0 13px #ff00cc88!important}.seriesScore .seriesWin111{color:var(--rX,#FFF176)!important;-webkit-text-fill-color:var(--rX,#FFF176)!important;text-shadow:0 0 6px var(--rX,#FFF176),0 0 14px #fff17688!important}.seriesScore .seriesLose118{color:var(--rZ,#808080)!important;-webkit-text-fill-color:var(--rZ,#808080)!important;text-shadow:0 0 5px #80808088!important}.leagueReward111{margin:10px 0;padding:10px;border:1px solid #4c6082;border-radius:12px;background:#0d1727}.leagueReward111 h3{margin:0 0 7px;font-size:13px;color:#ffe58a}.leagueReward111 .rwHead111,.leagueReward111 .rw111{display:grid;grid-template-columns:36px 1fr 100px 100px minmax(100px,1.25fr);gap:6px;align-items:center;padding:5px 6px;font-size:9px}.leagueReward111 .rwHead111{color:#9eb0c9;border-bottom:1px solid #2d4264;font-weight:900}.leagueReward111 .rw111{border-bottom:1px solid #1e304b}.leagueReward111 .rw111.top111{background:#2a240d;border-radius:7px}.leagueReward111 .rw111 b{color:#f6f8ff}.leagueReward111 .rwTreasure111{font-weight:900}.leagueRewardPreview111{margin:8px 0;padding:8px 10px;border:1px dashed #4b6389;border-radius:9px;background:#101b2d;font-size:9px;line-height:1.55;color:#b9c7dc}.leagueRewardPreview111 b{color:#ffe58a}
+    .leagueTop8Hold174142{margin:10px 0;padding:12px;border:1px solid #8b7130;border-radius:13px;background:linear-gradient(180deg,#2a240d,#111b2d);box-shadow:0 0 22px #ffd45f20}.leagueTop8Hold174142 h3{margin:0 0 8px;font-size:15px;color:#ffe58a}.leagueTop8Grid174142{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.leagueTop8Seed174142{padding:7px 8px;border:1px solid #405878;border-radius:9px;background:#142138;font-size:10px}.leagueTop8Seed174142 b{color:#ffd970}.leagueTop8Pairs174142{margin-top:8px;font-size:10px;line-height:1.6;color:#c4d1e3}.leagueTop8Countdown174142{margin-top:8px;text-align:center;font-size:13px;font-weight:1000;color:#ffe18b}.leagueTop8Out174142{margin-top:6px;font-size:9px;color:#899bb5}@media(max-width:850px){.leagueTop8Grid174142{grid-template-columns:repeat(2,1fr)}}
     .duelBoard{display:grid;grid-template-columns:1fr 90px 1fr;gap:8px;align-items:stretch}.fighter{border:1px solid #304866;background:#142138;border-radius:12px;padding:9px;min-width:0}.fighter.winGlow{box-shadow:0 0 18px #74e3a144;border-color:#67cd94}.fighterName{font-size:14px;font-weight:1000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.fighterCity{font-size:10px;color:#93a8c4;margin-bottom:5px}.fighterHpTop{display:flex;justify-content:space-between;font-size:10px;margin-bottom:3px}.fighterHp{height:18px;background:#301721;border:1px solid #6c3341;border-radius:999px;overflow:hidden}.fighterHp i{height:100%;display:block;background:linear-gradient(90deg,#52d78c,#82eab1);transition:none}.fighterHp.low i{background:linear-gradient(90deg,#ff455c,#ff8a78)}.fighterStats{font-size:9px;color:#aebbd0;margin-top:5px;line-height:1.45}.fighterTreasures{display:flex;gap:3px;margin-top:5px;min-height:25px}.fighterTreasures img{width:24px;height:24px;border-radius:5px;border:1px solid #415878;background:#08101d;object-fit:contain}.fighterTreasures .none{font-size:9px;color:#6f829f;padding-top:4px}
     .duelVs{display:flex;align-items:center;justify-content:center;flex-direction:column;font-weight:1000;color:#ffd36c}.duelVs strong{font-size:23px}.duelVs span{font-size:9px;color:#9cafc9;text-align:center}.duelLog{margin-top:7px;padding:7px;background:#09131f;border:1px solid #233a58;border-radius:8px;min-height:36px;font-size:11px;color:#f4d88d;text-align:center;font-weight:800}
     .scheduleLine{font-size:10px;color:#9fb0c9;line-height:1.5}.lastSeries17414{margin:7px 0;padding:8px 10px;border:1px solid #3a5073;border-radius:10px;background:#101b2d;font-size:11px;color:#c8d5e7}.lastSeries17414 b{color:#ffe28a;font-size:12px}.phaseBadge{display:inline-flex;border:1px solid #48658f;border-radius:999px;padding:2px 8px;font-size:9px;margin-right:4px;color:#b9d8ff}.boBadge{color:#ffd36c;border-color:#856a25}
@@ -1373,7 +1361,7 @@ if(location.hash==='#treasure')setTimeout(tOpen,80);
       clearPreviewBracket();resetBracket();
       updateBracketMatch('WQ1',s[0],s[7],0,0,'ready');updateBracketMatch('WQ2',s[3],s[4],0,0,'ready');updateBracketMatch('WQ3',s[1],s[6],0,0,'ready');updateBracketMatch('WQ4',s[2],s[5],0,0,'ready');
       q('leagueInfo17412').innerHTML=`<span class="phaseBadge">八強雙敗淘汰</span><span class="phaseBadge boBadge">BO5 / BO7 / BO9</span> #1/#2 分屬不同半場，最快勝部決賽才會碰頭。`;
-      q('leagueRound1748').textContent='🏆 例行賽結束｜八強雙敗淘汰開始';q('leagueHit1748').textContent=`八強種子：${s.map(x=>'#'+x.seed+' '+x.city).join('｜')}`;rank.innerHTML=rankHtml(reg,'league');
+      q('leagueRound1748').textContent='🏆 例行賽結束｜八強晉級總結';q('leagueHit1748').textContent=`八強種子：${s.map(x=>'#'+x.seed+' '+x.city).join('｜')}`;rank.innerHTML=rankHtml(reg,'league');
       const P={};let elim7=[],elim5=[],fourth=null,third=null;
       function m(id,a,b,bo,label,next){playSeries17412(a,b,bo,label,id,z=>{P[id]=z;next(z)})}
       function qf1(){m('WQ1',s[0],s[7],5,'勝部八強 1–8',qf2)}
@@ -1412,7 +1400,29 @@ if(location.hash==='#treasure')setTimeout(tOpen,80);
       function gf(){m('GF',P.WF.winner,P.LBF.winner,9,'🏆 總冠軍賽',z=>{
         finishLeague(z.winner,z.loser,third,fourth,elim5,elim7,reg)
       })}
-      qf1();
+      const previousAuto=!!compState.auto,previousSkip=!!compState.skip;
+      clearCompTimer();
+      compState.phaseHold174142=true;compState.auto=false;compState.skip=false;compState.pending=null;
+      const oldHold=stage.querySelector('.leagueTop8Hold174142');if(oldHold)oldHold.remove();
+      const hold=document.createElement('div');hold.className='leagueTop8Hold174142';
+      hold.innerHTML=`<h3>🏆 八強晉級總結</h3><div class="leagueTop8Grid174142">${s.map(x=>`<div class="leagueTop8Seed174142"><b>#${x.seed}</b> ${x.city}<div class="sub">${x.wins}-${x.losses}｜GD ${x.diff>=0?'+':''}${x.diff}</div></div>`).join('')}</div><div class="leagueTop8Pairs174142"><b>八強對位</b>｜#1 ${s[0].city} vs #8 ${s[7].city}　｜　#4 ${s[3].city} vs #5 ${s[4].city}<br>#2 ${s[1].city} vs #7 ${s[6].city}　｜　#3 ${s[2].city} vs #6 ${s[5].city}</div><div class="leagueTop8Out174142">第9–22名例行賽止步：${reg.slice(8).map(x=>'#'+x.seed+' '+x.city).join('、')}</div><div class="leagueTop8Countdown174142" id="leagueTop8Countdown174142">⏸ 強制停留 5 秒｜5</div>`;
+      const duel=q('leagueDuel17412');if(duel)duel.before(hold);else stage.appendChild(hold);
+      const controls=['compAuto1748','compNext1748','compNextBO17414','compNextMatch17413','compSkip1748'];controls.forEach(id=>{const e=q(id);if(e)e.disabled=true});
+      updateCompControls();controls.forEach(id=>{const e=q(id);if(e)e.disabled=true});
+      let remain=5;
+      const tick=()=>{
+        if(!compState||!compState.phaseHold174142)return;
+        const cd=q('leagueTop8Countdown174142');if(cd)cd.textContent=`⏸ 強制停留 5 秒｜${remain}`;
+        if(remain<=0){
+          compState.phaseHold174142=false;compState.skip=previousSkip;compState.auto=previousSkip?true:previousAuto;
+          controls.forEach(id=>{const e=q(id);if(e)e.disabled=false});
+          if(hold.isConnected)hold.remove();
+          q('leagueRound1748').textContent='🏆 八強雙敗淘汰開始';
+          updateCompControls();qf1();return;
+        }
+        remain--;compTimer=setTimeout(tick,1000);
+      };
+      tick();
     }
 
     function finishLeague(champ,runner,third,fourth,elim5,elim7,reg){
@@ -2965,7 +2975,7 @@ if(typeof prevRoster131==='function'){window.showRoster=showRoster=function(city
 }catch(e){console.warn('CT131 roster',e)}}));};}
 
 try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.131');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.131')}catch(e){}
-window.__CT_BUILD='V17.4.137-strength-weighted-treasure';
+window.__CT_BUILD='V17.4.141-new-game-repair';
 try{if(typeof render==='function')render();if(typeof save==='function')save(true)}catch(e){console.warn('CT131 final render',e)}
 })();
 </script>
