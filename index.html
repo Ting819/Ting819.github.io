@@ -134,7 +134,7 @@ window.ctBattleTreasureInline126=function(c){
 </script>
 <script>
 const SAVE='CITY_TOWER_V17_SAVE';
-const CT_BUILD_VERSION='V17.4.143';
+const CT_BUILD_VERSION='V17.4.144';
 const CT_SAVE_PREUPDATE='CITY_TOWER_V17_PREUPDATE_BACKUP';
 const CT_TREASURE_SAVE_KEY='CITY_TOWER_V1743_TREASURE';
 const CT_TREASURE_PREUPDATE='CITY_TOWER_V1743_TREASURE_PREUPDATE_BACKUP';
@@ -2577,7 +2577,7 @@ td,th,.ev173row,.rankMega,.rewardMega>div,.bf .nm,.compChar b,.compChar .sub{
 .ct127StatGrid{display:grid;grid-template-columns:repeat(7,minmax(72px,1fr));gap:5px}
 .ct127Stat{background:#17263d;border:1px solid #2d4568;border-radius:8px;padding:6px;text-align:center;font-size:9px;color:#9fb2cc}
 .ct127Stat b{display:block;font-size:12px;color:#fff1b1;margin-top:2px}
-.cityBtn .ct127TeamMini{margin-top:5px;font-size:8px;line-height:1.5;color:#9fb2cc}
+.cityBtn .ct127Floor{margin-top:2px;font-weight:800;white-space:nowrap}.cityBtn .ct127TeamMini{margin-top:5px;font-size:8px;line-height:1.5;color:#9fb2cc}
 .rosterCard .ct127Overflow{margin-top:5px;font-size:8px;line-height:1.45;color:#ffd993}
 @media(max-width:900px){.ct127StatGrid{grid-template-columns:repeat(4,1fr)}}
 @media(max-width:620px){.ct127StatGrid{grid-template-columns:repeat(2,1fr)}}
@@ -2706,7 +2706,7 @@ window.CT_TEAM_AVG_STATS=teamAvg127;
 const PREV_SHOW_CITIES_127=window.showCities;
 window.showCities=showCities=function(){
   const m=meta();$('mt').textContent='📚 隊伍資料｜22縣市';$('back').style.display='none';
-  $('mbo').innerHTML='<div class="cityGrid">'+Object.values(m).sort((a,b)=>(a.rank??a.powerRank??999)-(b.rank??b.powerRank??999)).map(x=>{const s=teamAvg127(x.city),teamRank=x.rank??x.powerRank,st=(states||[]).find(z=>z.city===x.city),floor=Math.max(1,Number(st?.floor)||1);return `<button class="cityBtn" data-city="${x.city}"><b class="ratingText ${x.tier}">${x.city}</b><div class="sub">${TEAMN[x.city]}</div><div>評級 <span class="tier tierLetter tierMotion ${x.tier}">${x.tier}</span>｜戰力 <span class="ratingText ${x.tier}">${x.power.toFixed(2)}</span>｜#${Number.isFinite(teamRank)?teamRank:'—'}｜關卡 <b>${floor}F</b></div><div class="ct127TeamMini">均攻速 ${s.speed.toFixed(1)}｜爆率 ${(s.crit*100).toFixed(1)}%｜閃避 ${(s.dodge*100).toFixed(1)}%｜爆傷 +${(s.critDmg*100).toFixed(0)}%</div></button>`}).join('')+'</div>';
+  $('mbo').innerHTML='<div class="cityGrid">'+Object.values(m).sort((a,b)=>(a.rank??a.powerRank??999)-(b.rank??b.powerRank??999)).map(x=>{const s=teamAvg127(x.city),teamRank=x.rank??x.powerRank,st=(states||[]).find(z=>z.city===x.city),floor=Math.max(1,Number(st?.floor)||1);return `<button class="cityBtn" data-city="${x.city}"><b class="ratingText ${x.tier}">${x.city}</b><div class="sub">${TEAMN[x.city]}</div><div>評級 <span class="tier tierLetter tierMotion ${x.tier}">${x.tier}</span>｜戰力 <span class="ratingText ${x.tier}">${x.power.toFixed(2)}</span>｜#${Number.isFinite(teamRank)?teamRank:'—'}</div><div class="ct127Floor">關卡 <b>${floor}F</b></div><div class="ct127TeamMini">均攻速 ${s.speed.toFixed(1)}｜爆率 ${(s.crit*100).toFixed(1)}%｜閃避 ${(s.dodge*100).toFixed(1)}%｜爆傷 +${(s.critDmg*100).toFixed(0)}%</div></button>`}).join('')+'</div>';
   document.querySelectorAll('.cityBtn').forEach(b=>b.onclick=()=>showRoster(b.dataset.city));
 };
 
