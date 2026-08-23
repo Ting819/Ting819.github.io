@@ -10,8 +10,8 @@
 <title>Taiwan City Tower</title>
 <style>
 :root{--bg:#08101d;--p:#101b2d;--p2:#17243a;--bd:#2b3e5d;--tx:#eef5ff;--mu:#93a4bf;--gold:#ffd56a;--red:#ff6d7d;--green:#6fe0a2}
-*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-body{min-height:100vh}button,select{font:inherit;color:var(--tx);background:#17253d;border:1px solid #344c71;border-radius:9px;padding:8px 11px}
+*{box-sizing:border-box;scrollbar-width:none;-ms-overflow-style:none}*::-webkit-scrollbar{width:0!important;height:0!important;display:none!important}html,body{margin:0;background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+body{min-height:100vh}html,body,body *{-webkit-user-select:none!important;user-select:none!important}button,select{font:inherit;color:var(--tx);background:#17253d;border:1px solid #344c71;border-radius:9px;padding:8px 11px}
 button{cursor:pointer}button.primary{background:#f0b935;color:#14100a;font-weight:900}button.danger{background:#50232b}button:active{transform:scale(.98)}
 .app{max-width:1600px;margin:auto;padding:10px}h1{font-size:24px;margin:4px 0}.sub{font-size:10px;color:var(--mu)}.top{position:sticky;top:0;z-index:20;background:#08101dee;backdrop-filter:blur(12px);padding-bottom:8px}
 .controls{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:7px}.kpi{background:var(--p);border:1px solid var(--bd);border-radius:10px;padding:8px}.kpi b{font-size:20px;display:block;margin-top:3px}
@@ -134,6 +134,24 @@ window.ctBattleTreasureInline126=function(c){
 </script>
 <script>
 const SAVE='CITY_TOWER_V17_SAVE';
+const CT_BUILD_VERSION='V17.4.136';
+const CT_SAVE_PREUPDATE='CITY_TOWER_V17_PREUPDATE_BACKUP';
+const CT_TREASURE_SAVE_KEY='CITY_TOWER_V1743_TREASURE';
+const CT_TREASURE_PREUPDATE='CITY_TOWER_V1743_TREASURE_PREUPDATE_BACKUP';
+const CT_SAVE_LAST_BUILD='CITY_TOWER_LAST_BUILD';
+function ctPrepareUpdateSave(){
+ try{
+  const prevBuild=localStorage.getItem(CT_SAVE_LAST_BUILD);
+  if(prevBuild!==CT_BUILD_VERSION){
+   const cur=localStorage.getItem(SAVE);
+   if(cur){const parsed=JSON.parse(cur);if(parsed&&parsed.v===17)localStorage.setItem(CT_SAVE_PREUPDATE,cur);}
+   const treasure=localStorage.getItem(CT_TREASURE_SAVE_KEY);
+   if(treasure){const parsedT=JSON.parse(treasure);if(parsedT&&parsedT.v===1)localStorage.setItem(CT_TREASURE_PREUPDATE,treasure);}
+  }
+  localStorage.setItem(CT_SAVE_LAST_BUILD,CT_BUILD_VERSION);
+ }catch(e){console.warn('CT update backup',e)}
+}
+ctPrepareUpdateSave();
 let R={},states=[],turn=0,selected='臺北市',running=false,raf=0,last=0,acc=0,lastPaint=0,nextEvent=160,lastEvent=null,initialTop=1;
 const $=id=>document.getElementById(id), clamp=(x,a,b)=>Math.max(a,Math.min(b,x)), rnd=(a,b)=>a+Math.random()*(b-a);
 const XP_K={normal:12,elite:18,small:25,big:40,chapter:60};
@@ -208,7 +226,15 @@ function save(silent=false){try{
  }catch(e){$('ks').textContent='⚠️ 儲存失敗';return false}}
 function load(){
  try{
-  let d=JSON.parse(localStorage.getItem(SAVE)||'null');if(!d||d.v!==17)return false;
+  let d=null;
+  try{d=JSON.parse(localStorage.getItem(SAVE)||'null')}catch(_e){}
+  if(!d||d.v!==17){
+   try{
+    const backup=JSON.parse(localStorage.getItem(CT_SAVE_PREUPDATE)||'null');
+    if(backup&&backup.v===17){d=backup;localStorage.setItem(SAVE,JSON.stringify(backup));}
+   }catch(_e){}
+  }
+  if(!d||d.v!==17)return false;
   const oldR=(d.R&&typeof d.R==='object')?d.R:{};
   makeRoster();
   for(const city of Object.keys(R)){
@@ -244,7 +270,7 @@ function load(){
   render();save(true);$('ks').innerHTML='<span class="saveDot"></span>已修復並接續 T'+turn;return true;
  }catch(e){console.error('SAVE RECOVERY',e);return false}
 }
-function showCities(){let m=meta();$('mt').textContent='📚 隊伍資料｜22縣市';$('back').style.display='none';$('mbo').innerHTML='<div class="cityGrid">'+Object.values(m).sort((a,b)=>a.rank-b.rank).map(x=>`<button class="cityBtn" data-city="${x.city}"><b class="ratingText ${x.tier}">${x.city}</b><div class="sub">${TEAMN[x.city]}</div><div>評級 <span class="tier tierLetter tierMotion ${x.tier}">${x.tier}</span>｜戰力 <span class="ratingText ${x.tier}">${x.power.toFixed(2)}</span>｜#${x.rank}</div></button>`).join('')+'</div>';document.querySelectorAll('.cityBtn').forEach(b=>b.onclick=()=>showRoster(b.dataset.city))}
+function showCities(){let m=meta();$('mt').textContent='📚 隊伍資料｜22縣市';$('back').style.display='none';$('mbo').innerHTML='<div class="cityGrid">'+Object.values(m).sort((a,b)=>(a.rank??a.powerRank??999)-(b.rank??b.powerRank??999)).map(x=>{const teamRank=x.rank??x.powerRank;return `<button class="cityBtn" data-city="${x.city}"><b class="ratingText ${x.tier}">${x.city}</b><div class="sub">${TEAMN[x.city]}</div><div>評級 <span class="tier tierLetter tierMotion ${x.tier}">${x.tier}</span>｜戰力 <span class="ratingText ${x.tier}">${x.power.toFixed(2)}</span>｜#${Number.isFinite(teamRank)?teamRank:'—'}</div></button>`}).join('')+'</div>';document.querySelectorAll('.cityBtn').forEach(b=>b.onclick=()=>showRoster(b.dataset.city))}
 function showRoster(city){let s=states.find(x=>x.city===city),active=new Set(s.party.map(p=>p.id));$('mt').textContent='👥 '+city+'｜12人完整資料';$('back').style.display='';$('mbo').innerHTML='<div class="roster">'+[...R[city]].sort((a,b)=>craw(b)-craw(a)).map((c,i)=>{let st=cstats(c),pct=100*c.xp/xpNeed(c.lv);return `<div class="rosterCard ${active.has(c.id)?'active':''}"><div class="cardTop"><div><b>#${i+1} ${c.name}</b><div class="sub">原始階級 ${c.grade}｜原始總分 ${c.total}</div></div><b>Lv.${c.lv}</b></div><div class="xp"><i style="width:${pct}%"></i></div><div class="sub">EXP ${c.xp}/${xpNeed(c.lv)}｜個人戰力 ${(10*craw(c)/initialTop).toFixed(2)}</div><div class="stats"><div class="stat">HP<b>${st.hp}</b></div><div class="stat">ATK<b>${st.atk}</b></div><div class="stat">DEF<b>${st.def}</b></div><div class="stat">攻速<b>${st.speed.toFixed(1)}</b></div><div class="stat">暴擊<b>${(st.crit*100).toFixed(1)}%</b></div><div class="stat">擊殺<b>${c.kills}</b></div></div><div class="sub">出場 ${c.deploys}｜攻擊 ${c.attacks}｜暴擊 ${c.crits}</div></div>`}).join('')+'</div>'}
 $('step').onclick=()=>tick();$('auto').onclick=start;$('teams').onclick=()=>{$('mb').classList.add('open');showCities()};$('close').onclick=()=>$('mb').classList.remove('open');$('back').onclick=showCities;$('save').onclick=()=>save(false);
 $('reset').onclick=()=>{if(confirm('確定要清除目前進度並開新遊戲？')){localStorage.removeItem(SAVE);localStorage.removeItem('CITY_TOWER_POWER_BASELINE_131');init()}};
@@ -573,7 +599,14 @@ function tSvg(type,tier){
 function tNew(city,tier,origin,floor,type=null){type=type||TTYPES[Math.floor(Math.random()*TTYPES.length)];const it={id:'T'+(TSEQ++),city,tier,type,name:TNAMES[tier][type],origin:origin||'未知',floor:floor||0,turn:turn||0,equippedTo:null};TINV.push(it);return it}
 function tSave(){try{localStorage.setItem(TSAVE,JSON.stringify({v:1,inv:TINV,seq:TSEQ,auto:TAUTO}))}catch(e){console.warn('treasure save',e)}}
 function tLoad(){try{
- const d=JSON.parse(localStorage.getItem(TSAVE)||'null');
+ let d=null;
+ try{d=JSON.parse(localStorage.getItem(TSAVE)||'null')}catch(_e){}
+ if(!d||d.v!==1){
+  try{
+   const backup=JSON.parse(localStorage.getItem(CT_TREASURE_PREUPDATE)||'null');
+   if(backup&&backup.v===1){d=backup;localStorage.setItem(TSAVE,JSON.stringify(backup));}
+  }catch(_e){}
+ }
  if(d&&d.v===1){TINV=Array.isArray(d.inv)?d.inv:[];TSEQ=Number.isFinite(d.seq)?d.seq:1;TAUTO=d.auto!==false}else{TINV=[];TSEQ=1;TAUTO=true}
  for(const arr of Object.values(R))for(const c of arr){c.treasureIds=[];c.treasureId=null}
  for(const it of TINV){
@@ -589,28 +622,49 @@ function tLoad(){try{
 function tToast(it,title='獲得寶物'){let el=tq('tToast');if(!el){document.body.insertAdjacentHTML('beforeend','<div id="tToast" class="tToast"></div>');el=tq('tToast')}el.innerHTML=`<img src="${tSvg(it.type,it.tier)}"><div><b class="ratingText ${it.tier}">${title}｜${it.tier} ${tTierName(it.tier)}｜${it.name}</b><div class="sub ratingText ${it.tier}">${it.city}｜${it.origin}${it.floor?'｜'+it.floor+'F':''}</div></div>`;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2600)}
 function tInterp(anchors,f){if(f<=anchors[0][0])return anchors[0][1].slice();for(let i=1;i<anchors.length;i++){if(f<=anchors[i][0]){const [x1,a]=anchors[i-1],[x2,b]=anchors[i],u=(f-x1)/(x2-x1);return a.map((v,j)=>v+(b[j]-v)*u)}}return anchors[anchors.length-1][1].slice()}
 function tRoll(tiers,weights){let sum=weights.reduce((a,b)=>a+Math.max(0,b),0),r=Math.random()*sum;for(let i=0;i<tiers.length;i++){r-=Math.max(0,weights[i]);if(r<=0)return tiers[i]}return tiers[tiers.length-1]}
-function tNormalChance(f){const a=[[1,.06],[20,.08],[40,.10],[60,.12],[100,.14],[200,.18],[300,.21],[500,.25],[1000,.28]];if(f>=1000)return .28;for(let i=1;i<a.length;i++)if(f<=a[i][0]){let [x1,y1]=a[i-1],[x2,y2]=a[i],u=(f-x1)/(x2-x1);return y1+(y2-y1)*u}return .28}
-function tDropTier(source,f){
- if(source==='normal'){return tRoll(['Z','F','E'],tInterp([[1,[62,30,8]],[20,[52,34,14]],[40,[42,36,22]],[60,[34,38,28]],[100,[28,40,32]],[200,[15,40,45]],[300,[8,35,57]],[500,[3,25,72]]],f))}
- if(source==='elite'){return tRoll(['Z','F','E'],tInterp([[1,[40,38,22]],[20,[30,40,30]],[40,[22,42,36]],[60,[16,42,42]],[100,[12,40,48]],[200,[5,28,67]],[300,[2,18,80]],[500,[0,4,96]]],f))}
- if(source==='small'){return tRoll(['Z','F','E','D'],tInterp([[1,[28,30,30,12]],[20,[20,28,34,18]],[40,[14,24,38,24]],[60,[10,20,40,30]],[100,[7,16,40,37]],[150,[3,10,35,52]],[200,[1,6,27,66]],[250,[0,4,20,76]],[300,[0,2,13,85]],[400,[0,0,7,93]]],f))}
- return tRoll(['Z','F','E','D','C'],tInterp([[1,[18,24,28,22,8]],[25,[12,20,30,26,12]],[50,[8,16,28,30,18]],[75,[6,12,24,32,26]],[100,[4,10,20,32,34]],[150,[2,6,16,32,44]],[200,[1,4,11,29,55]],[250,[0,3,8,24,65]],[300,[0,1,5,19,75]],[400,[0,0,3,12,85]],[500,[0,0,1,7,92]],[1000,[0,0,0,3,97]]],f))
+function tLootStrength(city,f=1){
+ const cities=Object.keys(R),rows=cities.map(c=>({city:c,p:Math.max(0,Number(teamRaw(c))||0)})).sort((a,b)=>b.p-a.p||String(a.city).localeCompare(String(b.city),'zh-Hant'));
+ const rank=Math.max(1,rows.findIndex(x=>x.city===city)+1),n=Math.max(1,rows.length);
+ const rankScore=n<=1?1:(n-rank)/(n-1);
+ const floorScore=tclamp(Math.log1p(Math.max(1,Number(f)||1))/Math.log(1001),0,1);
+ return{rank,rankScore,floorScore,score:tclamp(rankScore*.70+floorScore*.30,0,1)}
 }
-function tCompTier(f,rank,highBoost=0){
- // 競賽寶物：只有前三名能抽 A；只有前十名能抽 B，且 B 機率逐名下降。
- // V17.4.113：聯賽評級只增加 A/B 的「高階率」，不突破原本名次資格，也不會直接掉 S/U/X。
+function tLootTilt(tiers,weights,city,f,scale=0.30){
+ const s=tLootStrength(city,f).score;
+ return weights.map((w,i)=>Math.max(0,w)*(1+s*scale*i));
+}
+function tNormalChance(f,city){
+ const a=[[1,.06],[20,.08],[40,.10],[60,.12],[100,.14],[200,.18],[300,.21],[500,.25],[1000,.28]];let base=.28;
+ if(f<1000)for(let i=1;i<a.length;i++)if(f<=a[i][0]){let [x1,y1]=a[i-1],[x2,y2]=a[i],u=(f-x1)/(x2-x1);base=y1+(y2-y1)*u;break}
+ const s=tLootStrength(city,f).score;return tclamp(base+s*.08,.03,.38)
+}
+function tDropTier(source,f,city){
+ let tiers,weights,scale=.28;
+ if(source==='normal'){tiers=['Z','F','E','D','C'];weights=tInterp([[1,[62,30,8,0,0]],[100,[20,38,32,9,1]],[300,[5,20,42,29,4]],[500,[1,9,35,45,10]],[1000,[0,2,22,55,21]]],f);scale=.20}
+ else if(source==='elite'){tiers=['F','E','D','C','B'];weights=tInterp([[1,[52,34,12,2,0]],[100,[18,38,32,11,1]],[300,[4,18,38,34,6]],[500,[1,7,28,49,15]],[1000,[0,2,16,52,30]]],f);scale=.24}
+ else if(source==='small'){tiers=['E','D','C','B','A'];weights=tInterp([[1,[60,28,10,2,0]],[100,[25,42,27,6,0]],[300,[8,28,42,20,2]],[500,[2,15,40,37,6]],[1000,[0,5,28,53,14]]],f);scale=.28}
+ else if(source==='big'){tiers=['D','C','B','A'];weights=tInterp([[25,[55,35,9,1]],[100,[30,43,23,4]],[300,[12,35,43,10]],[500,[5,25,52,18]],[1000,[1,12,54,33]]],f);scale=.34}
+ else {tiers=['D','C','B','A'];weights=tInterp([[50,[45,38,15,2]],[100,[30,40,25,5]],[300,[10,32,45,13]],[500,[4,22,52,22]],[1000,[1,10,52,37]]],f);scale=.40}
+ return tRoll(tiers,tLootTilt(tiers,weights,city,f,scale))
+}
+function tFuseChance(city,tier){
+ const base=TFUSE[tier]??0,st=states.find(x=>x.city===city),f=st?st.floor:1,s=tLootStrength(city,f).score;
+ return tclamp(base+s*.06,0,.99)
+}
+function tCompTier(f,rank,highBoost=0,city=null){
+ // 競賽仍由名次決定 A/B 資格，但同名次下，隊伍越強越容易抽到高階。S/U/X 仍只可合成。
  const aBase=tInterp([[1,[4]],[100,[10]],[200,[18]],[300,[26]],[500,[38]],[1000,[50]]],f)[0];
  const bBase=tInterp([[1,[14]],[100,[22]],[200,[30]],[300,[38]],[500,[46]],[1000,[54]]],f)[0];
  const aMul=rank===1?1:rank===2?.70:rank===3?.45:0;
  const bMul=[0,1,.92,.84,.74,.64,.54,.45,.36,.28,.20][rank]||0;
  let A=aBase*aMul;
  let B=rank<=10?bBase*bMul:0;
- const boost=Math.max(0,Number(highBoost)||0); // 單位：百分點，例如 7.3 = +7.3 個百分點高階率
+ const strengthBoost=city?tLootStrength(city,f).score*10:0;
+ const boost=Math.max(0,Number(highBoost)||0)+strengthBoost;
  if(boost>0){
   if(rank<=3){A+=boost*.40;B+=boost*.60}
   else if(rank<=10)B+=boost;
  }
- // A/B 合計仍封頂 85%，至少保留 15% 給 C 以下。
  if(A>85)A=85;
  B=Math.min(B,Math.max(0,85-A));
  const low=tInterp([[1,[8,13,20,25,34]],[100,[2,8,16,27,47]],[200,[0,4,12,27,57]],[300,[0,2,8,24,66]],[500,[0,0,4,18,78]],[1000,[0,0,1,9,90]]],f);
@@ -662,7 +716,7 @@ function tAutoEquip(city,quiet=false){
  tSyncCity(city);tSave();if(!quiet)render()
 }
 function tAward(city,tier,origin,floor,show=true){const it=tNew(city,tier,origin,floor);if(TAUTO)tAutoEquip(city,true);tSyncCity(city);tSave();if(show)tToast(it);return it}
-function tFuse(city,tier){const next=TNEXT[tier];if(!next)return;const pool=TINV.filter(x=>x.city===city&&x.tier===tier&&!x.equippedTo);if(pool.length<5){alert(`${city} 的 ${tier} 未裝備寶物不足5件`);return}const used=pool.slice(0,5),ids=new Set(used.map(x=>x.id));TINV=TINV.filter(x=>!ids.has(x.id));const ok=Math.random()<TFUSE[tier];let it=null;if(ok){it=tNew(city,next,'5合1合成',0);if(TAUTO)tAutoEquip(city,true);tToast(it,`合成成功 ${tier}→${next}`)}else{const fake={type:'core',tier,name:`${tier} 合成失敗`,city,origin:'5件素材已消耗',floor:0};tToast(fake,'💥 合成失敗')}tSyncCity(city);tSave();tRenderModal()}
+function tFuse(city,tier){const next=TNEXT[tier];if(!next)return;const pool=TINV.filter(x=>x.city===city&&x.tier===tier&&!x.equippedTo);if(pool.length<5){alert(`${city} 的 ${tier} 未裝備寶物不足5件`);return}const used=pool.slice(0,5),ids=new Set(used.map(x=>x.id));TINV=TINV.filter(x=>!ids.has(x.id));const ok=Math.random()<tFuseChance(city,tier);let it=null;if(ok){it=tNew(city,next,'5合1合成',0);if(TAUTO)tAutoEquip(city,true);tToast(it,`合成成功 ${tier}→${next}`)}else{const fake={type:'core',tier,name:`${tier} 合成失敗`,city,origin:'5件素材已消耗',floor:0};tToast(fake,'💥 合成失敗')}tSyncCity(city);tSave();tRenderModal()}
 function tFuseAll(city){
  let attempts=0,success=0,failed=0,highest=null,safety=0;
  const made=[];
@@ -674,7 +728,7 @@ function tFuseAll(city){
    attempts++;
    const used=pool.slice(0,5),ids=new Set(used.map(x=>x.id));
    TINV=TINV.filter(x=>!ids.has(x.id));
-   if(Math.random()<TFUSE[tier]){
+   if(Math.random()<tFuseChance(city,tier)){
     const it=tNew(city,next,'一鍵5合1合成',0);made.push(it);success++;highest=!highest||TASC.indexOf(next)>TASC.indexOf(highest)?next:highest;
    }else failed++;
   }
@@ -749,11 +803,11 @@ window.ehit=function(s){
 
 // Drop treasures after each successful floor clear. Bosses are guaranteed; normal enemies are not.
 const PREV_ROUND_T=window.round;
-window.round=function(s){const f=s.floor,key=s.enemy&&s.enemy.key||'normal';PREV_ROUND_T(s);if(s.floor>f){let drop=key!=='normal'||Math.random()<tNormalChance(f);if(drop){const tier=tDropTier(key,f),origin=key==='normal'?'一般怪掉落':key==='elite'?'精英Boss掉落':key==='small'?'小Boss掉落':key==='big'?'大Boss掉落':'章節Boss掉落',it=tAward(s.city,tier,origin,f,false);log(s,`🎁 ${tier} ${it.name}｜${origin}`);if(s.city===selected)tToast(it)}}};
+window.round=function(s){const f=s.floor,key=s.enemy&&s.enemy.key||'normal';PREV_ROUND_T(s);if(s.floor>f){let drop=key!=='normal'||Math.random()<tNormalChance(f,s.city);if(drop){const tier=tDropTier(key,f,s.city),origin=key==='normal'?'一般怪掉落':key==='elite'?'精英Boss掉落':key==='small'?'小Boss掉落':key==='big'?'大Boss掉落':'章節Boss掉落',it=tAward(s.city,tier,origin,f,false);log(s,`🎁 ${tier} ${it.name}｜${origin}`);if(s.city===selected)tToast(it)}}};
 
 // Competitive event: rare (900~1500 turns), one guaranteed event treasure per team, ranking strongly modifies B/A odds.
 const PREV_EVENT_T=window.eventRun;
-window.eventRun=function(){PREV_EVENT_T();try{if(lastEvent&&Array.isArray(lastEvent.rows)){const rewards=[];lastEvent.rows.forEach((x,i)=>{const rank=i+1,s=states.find(z=>z.city===x.city),f=s?s.floor:1,tier=tCompTier(f,rank),it=tAward(x.city,tier,(lastEvent.type||'競賽')+'｜'+tRankLabel(lastEvent.type,rank),f,false);rewards.push({city:x.city,rank,label:tRankLabel(lastEvent.type,rank),tier,name:it.name});const row=document.querySelectorAll('#ev173body .ev173row')[i];if(row){const rew=row.querySelector('.ev173rew');if(rew)rew.innerHTML+=`<br><b class="${tier}">🎁 ${tRankLabel(lastEvent.type,rank)}寶箱｜${tier} ${tTierName(tier)}｜${it.name}</b>`}});lastEvent.treasureRewards=rewards;if(rewards[0])tToast(TINV.find(x=>x.city===rewards[0].city&&x.name===rewards[0].name)||{...rewards[0],type:'core',origin:'競賽'},'🏆 '+rewards[0].label+'寶物');const sub=tq('ev173sub');if(sub)sub.textContent+=`｜正式競賽寶物：名次越前，高階率越高`;tSave()}nextEvent=turn+900+Math.floor(Math.random()*601)}catch(e){console.error('competition treasure',e);nextEvent=turn+900+Math.floor(Math.random()*601)}};
+window.eventRun=function(){PREV_EVENT_T();try{if(lastEvent&&Array.isArray(lastEvent.rows)){const rewards=[];lastEvent.rows.forEach((x,i)=>{const rank=i+1,s=states.find(z=>z.city===x.city),f=s?s.floor:1,tier=tCompTier(f,rank,0,x.city),it=tAward(x.city,tier,(lastEvent.type||'競賽')+'｜'+tRankLabel(lastEvent.type,rank),f,false);rewards.push({city:x.city,rank,label:tRankLabel(lastEvent.type,rank),tier,name:it.name});const row=document.querySelectorAll('#ev173body .ev173row')[i];if(row){const rew=row.querySelector('.ev173rew');if(rew)rew.innerHTML+=`<br><b class="${tier}">🎁 ${tRankLabel(lastEvent.type,rank)}寶箱｜${tier} ${tTierName(tier)}｜${it.name}</b>`}});lastEvent.treasureRewards=rewards;if(rewards[0])tToast(TINV.find(x=>x.city===rewards[0].city&&x.name===rewards[0].name)||{...rewards[0],type:'core',origin:'競賽'},'🏆 '+rewards[0].label+'寶物');const sub=tq('ev173sub');if(sub)sub.textContent+=`｜正式競賽寶物：名次越前，高階率越高`;tSave()}nextEvent=turn+900+Math.floor(Math.random()*601)}catch(e){console.error('competition treasure',e);nextEvent=turn+900+Math.floor(Math.random()*601)}};
 
 function tRenderEquipped(){const sel=states.find(x=>x.city===selected)||states[0];if(!sel)return;
  /* V17.4.119: leaderboard intentionally does not render treasure icons; five slots only appear in the selected-team battle cards. */
@@ -764,7 +818,7 @@ const PREV_ROSTER_T=window.showRoster;window.showRoster=function(city){PREV_ROST
 
 function tCounts(city){const o=Object.fromEntries(TORDER.map(x=>[x,0]));for(const it of TINV)if(it.city===city)o[it.tier]++;return o}
 function tModalShell(){const cities=Object.keys(R),cnt=tCounts(TCITY);return `<div class="tToolbar"><select id="tCity">${cities.map(c=>`<option ${c===TCITY?'selected':''}>${c}</option>`).join('')}</select><button id="tInvBtn" class="${TVIEW==='inv'?'primary':''}">🎒 我的寶物</button><button id="tCatBtn" class="${TVIEW==='cat'?'primary':''}">📖 完整圖鑑</button><button id="tAutoBtn">🤖 自動配裝：${TAUTO?'ON':'OFF'}</button><button id="tBestBtn">⚙️ 一鍵最佳配裝</button><button id="tFuseAllBtn">⚡ 一鍵合成</button></div><div class="tSummary">${TORDER.map(g=>`<div class="tCount ${g}"><span class="tSummaryTier ${g}">${g}</span><b class="tSummaryNum ${g}">${cnt[g]}</b></div>`).join('')}</div>`}
-function tInvHtml(){const inv=TINV.filter(x=>x.city===TCITY).sort((a,b)=>TASC.indexOf(b.tier)-TASC.indexOf(a.tier)||b.turn-a.turn),cnt=tCounts(TCITY);let fusion=`<div class="tRule"><b>掉落規則</b>｜一般怪只會 <span class="tierWord17434 Z">Z</span>/<span class="tierWord17434 F">F</span>/<span class="tierWord17434 E">E</span> 且不一定掉；精英最高 <span class="tierWord17434 E">E</span>、小Boss最高 <span class="tierWord17434 D">D</span>、大Boss／章節Boss最高 <span class="tierWord17434 C">C</span>，而且所有Boss必掉。大型競賽才可直接出高階：世界Boss與22隊大混鬥最高<span class="tierWord17434 B">B</span>，城市聯賽最高<span class="tierWord17434 A">A</span>；聯賽只有前3名有<span class="tierWord17434 A">A</span>機會、前10名有<span class="tierWord17434 B">B</span>機會且名次越後<span class="tierWord17434 B">B</span>率越低；<span class="tierWord17434 S">S</span>/<span class="tierWord17434 U">U</span>/<span class="tierWord17434 X">X</span> 永遠只能合成。每名角色最多裝5件寶物，且同一種類最多只能裝1件。樓層越高，在各自上限內越容易出高階。<br><b>強度斷層：</b><span class="tierWord17434 X">X</span> ≫≫≫ <span class="tierWord17434 U">U</span> ≫≫ <span class="tierWord17434 S">S</span> ≫ <span class="tierWord17434 A">A</span> ＞ <span class="tierWord17434 B">B</span> ＞ <span class="tierWord17434 C">C</span> ＞ <span class="tierWord17434 D">D</span> ＞ <span class="tierWord17434 E">E</span> ＞ <span class="tierWord17434 F">F</span> ＞ <span class="tierWord17434 Z">Z</span>。</div><div class="tFusion">${TASC.slice(0,-1).map(g=>`<div class="tFuse"><b class="fuseTitle17428"><span class="tierMark17428 tierLetter tierMotion ${g}">${g}</span><span class="fuseArrow17428">×5 →</span><span class="tierMark17428 tierLetter tierMotion ${TNEXT[g]}">${TNEXT[g]}</span></b><div>未裝備：${TINV.filter(x=>x.city===TCITY&&x.tier===g&&!x.equippedTo).length}｜成功率 ${Math.round(TFUSE[g]*100)}%</div><button class="tFuseBtn" data-tier="${g}" ${TINV.filter(x=>x.city===TCITY&&x.tier===g&&!x.equippedTo).length<5?'disabled':''}>5合1</button></div>`).join('')}</div>`;if(!inv.length)return fusion+'<div class="tRule">目前還沒有寶物。繼續爬塔：Boss 必掉寶物；一般怪則有機率掉落。</div>';
+function tInvHtml(){const inv=TINV.filter(x=>x.city===TCITY).sort((a,b)=>TASC.indexOf(b.tier)-TASC.indexOf(a.tier)||b.turn-a.turn),cnt=tCounts(TCITY);let fusion=`<div class="tRule"><b>掉落規則</b>｜所有寶物來源都採「隊伍強度加權」：目前隊伍戰力排名越高、樓層越深、敵人／Boss越強、競賽名次越前，高階寶物機率越高。一般怪最高可到 <span class="tierWord17434 C">C</span>、精英最高 <span class="tierWord17434 B">B</span>、小Boss／大Boss／章節Boss最高可直接出 <span class="tierWord17434 A">A</span>；Boss皆必掉，一般怪掉率也會隨樓層與隊伍強度提升。世界Boss與22隊大混鬥仍最高 <span class="tierWord17434 B">B</span>，城市聯賽最高 <span class="tierWord17434 A">A</span>；聯賽前3名才有 <span class="tierWord17434 A">A</span>資格、前10名才有 <span class="tierWord17434 B">B</span>資格，同名次下強隊高階率更高。5合1成功率也會依隊伍強度獲得小幅加成。寶物相關機率畫面一律四捨五入顯示整數，實際抽獎仍保留完整小數精度。<span class="tierWord17434 S">S</span>/<span class="tierWord17434 U">U</span>/<span class="tierWord17434 X">X</span> 仍只能合成。每名角色最多裝5件寶物，且同一種類最多只能裝1件。<br><b>強度斷層：</b><span class="tierWord17434 X">X</span> ≫≫≫ <span class="tierWord17434 U">U</span> ≫≫ <span class="tierWord17434 S">S</span> ≫ <span class="tierWord17434 A">A</span> ＞ <span class="tierWord17434 B">B</span> ＞ <span class="tierWord17434 C">C</span> ＞ <span class="tierWord17434 D">D</span> ＞ <span class="tierWord17434 E">E</span> ＞ <span class="tierWord17434 F">F</span> ＞ <span class="tierWord17434 Z">Z</span>。</div><div class="tFusion">${TASC.slice(0,-1).map(g=>`<div class="tFuse"><b class="fuseTitle17428"><span class="tierMark17428 tierLetter tierMotion ${g}">${g}</span><span class="fuseArrow17428">×5 →</span><span class="tierMark17428 tierLetter tierMotion ${TNEXT[g]}">${TNEXT[g]}</span></b><div>未裝備：${TINV.filter(x=>x.city===TCITY&&x.tier===g&&!x.equippedTo).length}｜成功率 ${Math.round(tFuseChance(TCITY,g)*100)}%</div><button class="tFuseBtn" data-tier="${g}" ${TINV.filter(x=>x.city===TCITY&&x.tier===g&&!x.equippedTo).length<5?'disabled':''}>5合1</button></div>`).join('')}</div>`;if(!inv.length)return fusion+'<div class="tRule">目前還沒有寶物。繼續爬塔：Boss 必掉寶物；一般怪則有機率掉落。</div>';
  return fusion+`<div class="tInvGrid">${inv.map(it=>`<div class="tItem t${it.tier}" style="--tg:${TCOL[it.tier]}"><img class="tPic" src="${tSvg(it.type,it.tier)}"><div class="tItemHead"><span class="tGrade ratingText ${it.tier}">${it.tier}｜${tTierName(it.tier)}</span><span class="sub">${it.equippedTo?'已裝備':'背包'}</span></div><div class="tName ratingText ${it.tier}">${it.name}</div><div class="tEffect ratingText ${it.tier}">${TTYPE_NAME[it.type]}<br>${tEffect(it.tier,it.type)}</div><div class="tOrigin ratingText ${it.tier}">${it.origin}${it.floor?'｜'+it.floor+'F':''}</div><select class="tAssign" data-id="${it.id}"><option value="">— 背包／卸下 —</option>${R[TCITY].map(c=>{const eq=tForCharAll(c),n=eq.length,own=it.equippedTo===c.id,same=!own&&eq.some(x=>x.type===it.type),full=!own&&n>=5,disabled=same||full;return `<option value="${c.id}" ${own?'selected':''} ${disabled?'disabled':''}>${c.name}（${n}/5）${full?' 已滿':same?' 同類已裝':''}</option>`}).join('')}</select></div>`).join('')}</div>`}
 function tCatalogHtml(){return `<div class="tRule"><b>完整寶物圖鑑｜由強到弱 <span class="tierWord17434 X">X</span> → <span class="tierWord17434 Z">Z</span></b><br>${TORDER.map(g=>`<span class="tierWord17434 ${g}">${g} ${tTierName(g)}</span>`).join('｜')}。<span class="tierWord17434 X">X</span> 為正黃色創世特效、<span class="tierWord17434 U">U</span> 為正粉色、<span class="tierWord17434 S">S</span> 為正紅色；<span class="tierWord17434 A">A</span> 以下依正色評級顯示。每階都有 5 種不同定位。<br><b>新屬性：</b>🪽速度型＝攻速＋爆率＋閃避；🔮技巧型＝爆率＋攻速＋爆傷。爆傷採「額外傷害」表示，例如 <b>爆傷 +50%</b> 代表爆擊總傷害 1.5 倍。<br><b>屬性上限：</b>自然閃避 50%＋寶物突破最高 70%｜自然爆率 60%＋寶物可突破至 100%｜自然爆傷 +500%＋命運天書可再 +200%｜攻速無上限；自然閃避溢出→HP／DEF；自然爆率超過 60% 與寶物把總爆率推過 100% 的部分→ATK／攻速；自然爆傷超過 +500% 的部分→ATK／攻速。</div>`+TORDER.map(g=>`<h3 class="catalogTierTitle ratingText ${g}" style="margin:14px 0 7px">${g}｜${tTierName(g)}</h3><div class="tCatalogGrid">${TTYPES.map(type=>`<div class="tItem t${g}" style="--tg:${TCOL[g]}"><img class="tPic" src="${tSvg(type,g)}"><div class="tItemHead"><span class="tGrade ratingText ${g}">${g}｜${tTierName(g)}</span><span class="sub ratingText ${g}">${TTYPE_NAME[type]}</span></div><div class="tName ratingText ${g}">${TNAMES[g][type]}</div><div class="tEffect ratingText ${g}">${tEffect(g,type)}</div></div>`).join('')}</div>`).join('')}
 function tRenderModal(){if(!tq('mb').classList.contains('open')||!tq('mbo'))return;tq('mt').textContent='🎁 寶物庫｜'+TCITY;tq('back').style.display='none';tq('mbo').innerHTML=tModalShell()+(TVIEW==='inv'?tInvHtml():tCatalogHtml());tq('tCity').onchange=e=>{TCITY=e.target.value;tRenderModal()};tq('tInvBtn').onclick=()=>{TVIEW='inv';tRenderModal()};tq('tCatBtn').onclick=()=>{TVIEW='cat';tRenderModal()};tq('tAutoBtn').onclick=()=>{TAUTO=!TAUTO;tSave();if(TAUTO)tAutoEquip(TCITY,true);tSyncAll();render();tRenderModal()};tq('tBestBtn').onclick=()=>{tAutoEquip(TCITY);tRenderModal()};const fuseAllBtn=tq('tFuseAllBtn');if(fuseAllBtn){const canFuse=TASC.slice(0,-1).some(g=>TINV.filter(x=>x.city===TCITY&&x.tier===g&&!x.equippedTo).length>=5);fuseAllBtn.disabled=!canFuse;fuseAllBtn.onclick=()=>tFuseAll(TCITY)}document.querySelectorAll('.tAssign').forEach(x=>x.onchange=e=>{tEquip(tItem(e.target.dataset.id),e.target.value||null);tRenderModal()});document.querySelectorAll('.tFuseBtn').forEach(x=>x.onclick=()=>tFuse(TCITY,x.dataset.tier))}
@@ -1145,7 +1199,7 @@ if(location.hash==='#treasure')setTimeout(tOpen,80);
       details.push({x,r,baseXp,baseG,teamTier,teamBonus,avgCharBonus,charRewards,treasureBoost,it:null});
     });
     const rewards=[];
-    if(api){details.forEach(d=>{try{const st=states.find(z=>z.city===d.x.city),f=st?st.floor:1,tier=api.compTier(f,d.r,d.treasureBoost),it=api.award(d.x.city,tier,type+'｜聯賽名次 #'+d.r,f,false);d.it=it;rewards.push({city:d.x.city,rank:d.r,tier,name:it.name})}catch(err){console.warn(err)}});try{api.save()}catch(err){}}
+    if(api){details.forEach(d=>{try{const st=states.find(z=>z.city===d.x.city),f=st?st.floor:1,tier=api.compTier(f,d.r,d.treasureBoost,d.x.city),it=api.award(d.x.city,tier,type+'｜聯賽名次 #'+d.r,f,false);d.it=it;rewards.push({city:d.x.city,rank:d.r,tier,name:it.name})}catch(err){console.warn(err)}});try{api.save()}catch(err){}}
     lastEvent={type,turn,rows,top:rows.slice(0,5),treasureRewards:rewards,official:true};nextEvent=turn+900+Math.floor(Math.random()*601);save(true);
     try{render()}catch(err){console.error('league reward main render recovered',err)}
     const stage=q('compStage1748');
@@ -1157,7 +1211,7 @@ if(location.hash==='#treasure')setTimeout(tOpen,80);
         const expTxt=fmtRange(d.charRewards,'xp',' EXP');
         const gArr=d.charRewards.map(z=>({v:z.g*100})),gMin=Math.min(...gArr.map(z=>z.v)),gMax=Math.max(...gArr.map(z=>z.v)),gTxt=gMin===gMax?`+${gMin.toFixed(2)}%`:`+${gMin.toFixed(2)}～${gMax.toFixed(2)}%`;
         const chars=d.charRewards.map(z=>z.charTier).join('/');
-        return `<div class="rw111 ${d.r<=3?'top111':''}"><b>#${d.r}</b><span>${d.x.city}<div class="sub">隊伍 ${d.teamTier} +${pct113(d.teamBonus)}｜角色 ${chars} 平均 +${pct113(d.avgCharBonus)}</div></span><span>${expTxt}</span><span>${gTxt}</span><span class="rwTreasure111 ${d.it?d.it.tier:''}">${d.it?'🎁 '+d.it.tier+'｜'+d.it.name:'—'}${leagueMode&&d.treasureBoost>0?`<div class="sub">A/B高階率 +${d.treasureBoost.toFixed(1)}pt</div>`:''}</span></div>`
+        return `<div class="rw111 ${d.r<=3?'top111':''}"><b>#${d.r}</b><span>${d.x.city}<div class="sub">隊伍 ${d.teamTier} +${pct113(d.teamBonus)}｜角色 ${chars} 平均 +${pct113(d.avgCharBonus)}</div></span><span>${expTxt}</span><span>${gTxt}</span><span class="rwTreasure111 ${d.it?d.it.tier:''}">${d.it?'🎁 '+d.it.tier+'｜'+d.it.name:'—'}${leagueMode&&d.treasureBoost>0?`<div class="sub">A/B高階率 +${Math.round(d.treasureBoost)}pt</div>`:''}</span></div>`
       }).join('');
       const preview=stage.querySelector('.leagueRewardPreview111');
       if(preview)preview.replaceWith(box);else stage.prepend(box);
@@ -1185,7 +1239,7 @@ if(location.hash==='#treasure')setTimeout(tOpen,80);
       const xpTxt=range(d.charRewards,'xp',v=>'+'+Math.round(v)+' EXP');
       const gTxt=range(d.charRewards,'g',v=>'+'+(v*100).toFixed(2)+'%');
       const pool=d.r<=3?'前三名獎池｜有 A 機會':d.r<=10?'前十名獎池｜有 B 機會':'一般名次獎池';
-      return `<div class="rw111 ${d.r<=3?'top111':''}"><b>#${d.r}</b><span>${d.x.city}<div class="sub">隊伍 ${d.teamTier} +${pct113(d.teamBonus)}｜角色 ${chars} 平均 +${pct113(d.avgCharBonus)}</div></span><span>${xpTxt}</span><span>${gTxt}</span><span class="rwTreasure111">🎁 ${pool}${d.treasureBoost>0?`<div class="sub">A/B高階率 +${d.treasureBoost.toFixed(1)}pt</div>`:''}</span></div>`;
+      return `<div class="rw111 ${d.r<=3?'top111':''}"><b>#${d.r}</b><span>${d.x.city}<div class="sub">隊伍 ${d.teamTier} +${pct113(d.teamBonus)}｜角色 ${chars} 平均 +${pct113(d.avgCharBonus)}</div></span><span>${xpTxt}</span><span>${gTxt}</span><span class="rwTreasure111">🎁 ${pool}${d.treasureBoost>0?`<div class="sub">A/B高階率 +${Math.round(d.treasureBoost)}pt</div>`:''}</span></div>`;
     }).join('');
     const preview=stage.querySelector('.leagueRewardPreview111');if(preview)preview.replaceWith(box);else stage.prepend(box);
     stage.scrollTop=0;requestAnimationFrame(()=>{stage.scrollTop=0});
@@ -1408,7 +1462,7 @@ function extra(c,dmg,crit){let z=0;for(const it of its(c)){if(it.type==='blade')
 function wing(c,n){let p=0;for(const it of its(c)){if(it.type!=='wing')continue;const every=it.tier==='X'?4:it.tier==='U'?5:it.tier==='S'?6:0,val=it.tier==='X'?60:it.tier==='U'?35:it.tier==='S'?18:0;if(every&&n%every===0)p+=val}return p}
 function gear(c){const a=its(c);return a.length?a.map(x=>(x.tier==='X'?'✨X✨':x.tier)+' '+x.name).join('｜'):'未裝備'}
 function nextSchedule(){nextEvent=turn+900+Math.floor(Math.random()*601)}
-function treasureAward(x,rank,kind,type){const A=api();if(!A)return null;try{const s=states.find(z=>z.city===x.city),f=s?s.floor:1;let tier=A.compTier(f,rank);if((kind==='boss'||kind==='brawl')&&tier==='A')tier='B';return A.award(x.city,tier,type+'｜#'+rank,f,false)}catch(e){return null}}
+function treasureAward(x,rank,kind,type){const A=api();if(!A)return null;try{const s=states.find(z=>z.city===x.city),f=s?s.floor:1;let tier=A.compTier(f,rank,0,x.city);if((kind==='boss'||kind==='brawl')&&tier==='A')tier='B';return A.award(x.city,tier,type+'｜#'+rank,f,false)}catch(e){return null}}
 function pod(rows,kind,official){return `<div class="podMega">${rows.slice(0,3).map((x,i)=>`<div><b>${i===0?'🥇冠軍':i===1?'🥈亞軍':'🥉季軍'}</b><div>${x.city}</div><div class="sub">${kind==='boss'?`傷害 ${x.pct.toFixed(2)}%`:`${x.c.name}｜${x.kills}殺｜傷 ${Math.round(x.damage)}`}</div></div>`).join('')}</div><div class="${official?'officialMega':'practiceMega'}">${official?'✅ 正式競賽：名次主獎勵＋戰功額外獎勵；本模式寶物最高B。':'🧪 練習模式：不給EXP、不加永久成長、不掉寶。'}</div>`}
 function open(kind,official){ensure();stopTower(!!official);C={kind,official,auto:true,speed:+q('megaSpeed').value||1,pending:null,delay:300,skip:false,boundary:false};q('megaTitle').textContent=kind==='boss'?'🌐 世界 Boss':'⚔️ 22隊大混鬥';q('megaMode').innerHTML=official?'<span class="officialMega">正式大型競賽｜有完整名次與戰功獎勵</span>':'<span class="practiceMega">手動練習｜只看過程、不發獎勵</span>';q('megaComp').classList.add('open');q('megaSkip').style.display='';ctl();kind==='boss'?worldBoss():brawl()}
 function phase(p){return p>75?['Ⅰ・甦醒',1]:p>50?['Ⅱ・狂怒',1.2]:p>25?['Ⅲ・暴走',1.45]:['Ⅳ・終焉',1.75]}
@@ -2630,7 +2684,7 @@ window.CT_TEAM_AVG_STATS=teamAvg127;
 const PREV_SHOW_CITIES_127=window.showCities;
 window.showCities=showCities=function(){
   const m=meta();$('mt').textContent='📚 隊伍資料｜22縣市';$('back').style.display='none';
-  $('mbo').innerHTML='<div class="cityGrid">'+Object.values(m).sort((a,b)=>a.rank-b.rank).map(x=>{const s=teamAvg127(x.city);return `<button class="cityBtn" data-city="${x.city}"><b class="ratingText ${x.tier}">${x.city}</b><div class="sub">${TEAMN[x.city]}</div><div>評級 <span class="tier tierLetter tierMotion ${x.tier}">${x.tier}</span>｜戰力 <span class="ratingText ${x.tier}">${x.power.toFixed(2)}</span>｜#${x.rank}</div><div class="ct127TeamMini">均攻速 ${s.speed.toFixed(1)}｜爆率 ${(s.crit*100).toFixed(1)}%｜閃避 ${(s.dodge*100).toFixed(1)}%｜爆傷 +${(s.critDmg*100).toFixed(0)}%</div></button>`}).join('')+'</div>';
+  $('mbo').innerHTML='<div class="cityGrid">'+Object.values(m).sort((a,b)=>(a.rank??a.powerRank??999)-(b.rank??b.powerRank??999)).map(x=>{const s=teamAvg127(x.city),teamRank=x.rank??x.powerRank;return `<button class="cityBtn" data-city="${x.city}"><b class="ratingText ${x.tier}">${x.city}</b><div class="sub">${TEAMN[x.city]}</div><div>評級 <span class="tier tierLetter tierMotion ${x.tier}">${x.tier}</span>｜戰力 <span class="ratingText ${x.tier}">${x.power.toFixed(2)}</span>｜#${Number.isFinite(teamRank)?teamRank:'—'}</div><div class="ct127TeamMini">均攻速 ${s.speed.toFixed(1)}｜爆率 ${(s.crit*100).toFixed(1)}%｜閃避 ${(s.dodge*100).toFixed(1)}%｜爆傷 +${(s.critDmg*100).toFixed(0)}%</div></button>`}).join('')+'</div>';
   document.querySelectorAll('.cityBtn').forEach(b=>b.onclick=()=>showRoster(b.dataset.city));
 };
 
@@ -2640,7 +2694,7 @@ window.showRoster=showRoster=function(city){
   requestAnimationFrame(()=>{
     try{
       const mm=meta()[city], av=teamAvg127(city),box=$('mbo');if(!box)return;
-      const summary=document.createElement('div');summary.id='ct127TeamSummary';summary.innerHTML=`<div class="ct127Head"><b>${city}｜${TEAMN[city]||''}</b><span>評級 <span class="tier tierLetter tierMotion ${mm.tier}">${mm.tier}</span>｜隊伍戰力 <span class="ratingText ${mm.tier}">${mm.power.toFixed(2)}</span>｜全服 #${mm.rank}</span></div><div class="ct127StatGrid"><div class="ct127Stat">平均 HP<b>${Math.round(av.hp)}</b></div><div class="ct127Stat">平均 ATK<b>${Math.round(av.atk)}</b></div><div class="ct127Stat">平均 DEF<b>${Math.round(av.def)}</b></div><div class="ct127Stat">平均攻速<b>${av.speed.toFixed(1)}</b></div><div class="ct127Stat">平均爆率<b>${(av.crit*100).toFixed(1)}%</b></div><div class="ct127Stat">平均閃避<b>${(av.dodge*100).toFixed(1)}%</b></div><div class="ct127Stat">平均爆傷<b>+${(av.critDmg*100).toFixed(0)}%</b></div></div><div class="sub" style="margin-top:7px">上限：自然閃避 50%＋寶物突破最高 70%｜爆率 80%｜爆傷 500%｜攻速無上限。只有自然閃避溢出→HP/DEF；寶物閃避直接突破；爆率與爆傷溢出→ATK/攻速。</div>`;
+      const summary=document.createElement('div');summary.id='ct127TeamSummary';summary.innerHTML=`<div class="ct127Head"><b>${city}｜${TEAMN[city]||''}</b><span>評級 <span class="tier tierLetter tierMotion ${mm.tier}">${mm.tier}</span>｜隊伍戰力 <span class="ratingText ${mm.tier}">${mm.power.toFixed(2)}</span>｜全服 #${Number.isFinite(mm.rank??mm.powerRank)?(mm.rank??mm.powerRank):'—'}</span></div><div class="ct127StatGrid"><div class="ct127Stat">平均 HP<b>${Math.round(av.hp)}</b></div><div class="ct127Stat">平均 ATK<b>${Math.round(av.atk)}</b></div><div class="ct127Stat">平均 DEF<b>${Math.round(av.def)}</b></div><div class="ct127Stat">平均攻速<b>${av.speed.toFixed(1)}</b></div><div class="ct127Stat">平均爆率<b>${(av.crit*100).toFixed(1)}%</b></div><div class="ct127Stat">平均閃避<b>${(av.dodge*100).toFixed(1)}%</b></div><div class="ct127Stat">平均爆傷<b>+${(av.critDmg*100).toFixed(0)}%</b></div></div><div class="sub" style="margin-top:7px">上限：自然閃避 50%＋寶物突破最高 70%｜爆率 80%｜爆傷 500%｜攻速無上限。只有自然閃避溢出→HP/DEF；寶物閃避直接突破；爆率與爆傷溢出→ATK/攻速。</div>`;
       box.prepend(summary);
       const cs=[...(R[city]||[])].sort((a,b)=>craw(b)-craw(a));
       document.querySelectorAll('#mbo .rosterCard').forEach((card,i)=>{const c=cs[i];if(!c)return;const st=cstats(c),stats=card.querySelector('.stats');if(stats)stats.innerHTML=`<div class="stat">HP<b>${st.hp}</b></div><div class="stat">ATK<b>${st.atk}</b></div><div class="stat">DEF<b>${st.def}</b></div><div class="stat">攻速<b>${st.speed.toFixed(1)}</b></div><div class="stat">爆率<b>${(st.crit*100).toFixed(1)}%</b></div><div class="stat">閃避<b>${(st.dodge*100).toFixed(1)}%</b></div><div class="stat">爆傷<b>+${(st.critDmg*100).toFixed(0)}%</b></div>`;
@@ -2899,7 +2953,7 @@ if(typeof prevRoster131==='function'){window.showRoster=showRoster=function(city
 }catch(e){console.warn('CT131 roster',e)}}));};}
 
 try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.131');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.131')}catch(e){}
-window.__CT_BUILD='V17.4.131-crit60-treasure100-xbook200-power-team';
+window.__CT_BUILD='V17.4.137-strength-weighted-treasure';
 try{if(typeof render==='function')render();if(typeof save==='function')save(true)}catch(e){console.warn('CT131 final render',e)}
 })();
 </script>
@@ -3080,7 +3134,7 @@ html,body{padding-top:0!important}
 (()=>{
   'use strict';
   const tiers=['X','U','S','A','B','C','D','E','F','Z'];
-  const desc={X:'創世白金呼吸＋單神環＋雙向旋轉側弧＋星河＋四重爆發',U:'至尊呼吸＋粉紫側弧＋單神環＋爆發舞台',S:'深紅小戰徽＋大範圍呼吸光＋重擊爆發',A:'橘金側飾＋大範圍柔光呼吸（無實體環無脈衝）',B:'紫色弱呼吸',C:'純藍弱呼吸',D:'柔綠微呼吸',E:'白色普通評級',F:'咖啡色瑕疵評級',Z:'灰色大裂痕評級'};
+  const desc={X:'創世白金呼吸＋單神環＋星河＋四重爆發',U:'至尊呼吸＋粉紫側弧＋單神環＋爆發舞台',S:'深紅小戰徽＋大範圍呼吸光＋重擊爆發',A:'橘金側飾＋大範圍柔光呼吸（無實體環無脈衝）',B:'紫色弱呼吸',C:'純藍弱呼吸',D:'柔綠微呼吸',E:'白色普通評級',F:'咖啡色瑕疵評級',Z:'灰色大裂痕評級'};
   const back=document.getElementById('ctTierFxBack');
   const grid=document.getElementById('ctTierFxGrid');
   let focusedTier=null;
@@ -3102,7 +3156,7 @@ html,body{padding-top:0!important}
 </script>
 
 <style id="ctIndexTierClickPreviewStyle">
-#kr .tierMotion, #rank .rankTierCell .tierMotion{cursor:pointer;touch-action:manipulation}
+#kr .tierMotion, #rank .rankTierCell .tierMotion{cursor:pointer!important;touch-action:manipulation}
 #kr .tierMotion:active, #rank .rankTierCell .tierMotion:active{filter:brightness(1.35)}
 .ctTierFxCard.ctTierFxFocused{outline:2px solid rgba(255,255,255,.88);outline-offset:3px;box-shadow:0 0 28px currentColor,0 0 50px rgba(255,255,255,.18)}
 </style>
@@ -3203,7 +3257,7 @@ html,body{padding-top:0!important}
   window.meta = meta = function(){
     const raw=ctPRRawPowerMap();
 
-    // Rating rank is pure current team power, not floor/progress.
+    // 先用純隊伍戰力計算原始 PR／原始評級；powerRank 只代表戰力名次。
     const byPower=Object.keys(raw).sort((a,b)=>{
       const d=(Number(raw[b])||0)-(Number(raw[a])||0);
       return Math.abs(d)>1e-12?d:String(a).localeCompare(String(b),'zh-Hant');
@@ -3211,26 +3265,25 @@ html,body{padding-top:0!important}
 
     const n=byPower.length;
     const data=byPower.map((city,i)=>{
-      const rank=i+1;
-      const pr=n<=1?100:((n-rank)/(n-1))*100;
+      const powerRank=i+1;
+      const pr=n<=1?100:((n-powerRank)/(n-1))*100;
       return {
         city,
         rawPower:ctPRTwo(raw[city]),
         power:ctPRTwo(raw[city]),
-        powerRank:rank,
+        rank:powerRank,
+        powerRank,
         pr:Math.round(pr*10)/10,
         tier:ctPRTier(pr)
       };
     });
 
-    // X: unique and optional.
+    // X / U 仍先依隊伍戰力資格產生；最後再接受主排行榜名次鎖定。
     if(data[0] && data[1] &&
        data[0].power>=50 &&
        data[0].power>=data[1].power*1.25){
       data[0].tier='X';
     }
-
-    // U: unique and optional; test only the strongest non-X team.
     const nonX=data.filter(x=>x.tier!=='X');
     if(nonX[0] && nonX[1] &&
        nonX[0].power>=20 &&
@@ -3238,13 +3291,43 @@ html,body{padding-top:0!important}
       nonX[0].tier='U';
     }
 
-    return Object.fromEntries(data.map(x=>[x.city,x]));
+    const byCity=Object.fromEntries(data.map(x=>[x.city,x]));
+
+    // 主排行榜正式名次：樓層高者優先；同樓層先看怪物剩餘 HP%，再看戰力。
+    const progress=[...(states||[])].sort((a,b)=>{
+      const af=Number(a?.floor)||0, bf=Number(b?.floor)||0;
+      if(bf!==af)return bf-af;
+      const ar=(Number(a?.enemy?.hp)||0)/Math.max(1,Number(a?.enemy?.max)||1);
+      const br=(Number(b?.enemy?.hp)||0)/Math.max(1,Number(b?.enemy?.max)||1);
+      if(Math.abs(ar-br)>1e-12)return ar-br;
+      const ap=Number(raw[a?.city])||0, bp=Number(raw[b?.city])||0;
+      if(Math.abs(bp-ap)>1e-12)return bp-ap;
+      return String(a?.city||'').localeCompare(String(b?.city||''),'zh-Hant');
+    });
+
+    // rank 改為畫面真正顯示的主排行榜名次；powerRank 保留純戰力名次。
+    progress.forEach((s,i)=>{if(byCity[s.city])byCity[s.city].rank=i+1;});
+
+    // 以高排名為準：低排名可同級或更低，但永遠不能高於任何上方隊伍。
+    // 只向下修正，絕不把高排名隊伍為了配合後面而往上抬級。
+    const tierOrder=['X','U','S','A','B','C','D','E','F','Z'];
+    for(let i=1;i<progress.length;i++){
+      const prev=byCity[progress[i-1].city], cur=byCity[progress[i].city];
+      if(!prev||!cur)continue;
+      const p=tierOrder.indexOf(prev.tier), c=tierOrder.indexOf(cur.tier);
+      if(p>=0 && c>=0 && c<p)cur.tier=prev.tier;
+    }
+
+    return byCity;
   };
 
   // Expose thresholds for team-data / future UI descriptions.
   window.CT_TEAM_PR_RATING={
     x:{maxTeams:1,minPower:50,gap:1.25},
     u:{maxTeams:1,minPower:20,gap:1.12},
+    rankLock:'main-progress-rank-high-first',
+    updateSafe:true,
+    build:CT_BUILD_VERSION,
     prBands:[
       {tier:'S',min:85},{tier:'A',min:70},{tier:'B',min:55},
       {tier:'C',min:40},{tier:'D',min:25},{tier:'E',min:15},
@@ -4011,4 +4094,19 @@ html body .tierMotion.A:not(.tSummaryTier)::before,html body .ctGlobalTierGlyph.
 @keyframes ctASideMarks{0%,15%,30%,45%,60%,75%{opacity:.24}7.5%,22.5%,37.5%,52.5%,67.5%{opacity:.50}80%{opacity:.38}90%,97%{opacity:.68}100%{opacity:.24}}
 @-webkit-keyframes ctASideMarks{0%,15%,30%,45%,60%,75%{opacity:.24}7.5%,22.5%,37.5%,52.5%,67.5%{opacity:.50}80%{opacity:.38}90%,97%{opacity:.68}100%{opacity:.24}}
 </style>
+
+<script id="ctDesktopGameMode174134">
+(()=>{
+  const isStandalone=()=>window.matchMedia?.('(display-mode: standalone)').matches||window.navigator.standalone===true;
+  const enterFullscreen=()=>{
+    if(isStandalone()||document.fullscreenElement)return;
+    const el=document.documentElement;
+    const fn=el.requestFullscreen||el.webkitRequestFullscreen;
+    if(fn){try{const r=fn.call(el);if(r&&typeof r.catch==='function')r.catch(()=>{});}catch(_){}}
+  };
+  const firstGesture=()=>{enterFullscreen();};
+  window.addEventListener('pointerdown',firstGesture,{once:true,capture:true,passive:true});
+  window.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&!document.fullscreenElement)enterFullscreen();},{once:true,capture:true});
+})();
+</script>
 </body></html>
