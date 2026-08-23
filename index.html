@@ -92,7 +92,7 @@ html,body,.app,.modal,button,select,input,textarea{
 .cityBtn .tier{display:inline!important}
 </style>
 
-<meta content="ct-1787337796" name="ct-app-build"/>
+<meta content="ct-v17.4.174-background-catchup" name="ct-app-build"/>
 </head><body>
 <div class="app">
 <div class="top">
@@ -145,7 +145,7 @@ window.ctBattleTreasureInline126=function(c){
 </script>
 <script>
 const SAVE='CITY_TOWER_V17_SAVE';
-const CT_BUILD_VERSION='V17.4.172';
+const CT_BUILD_VERSION='V17.4.174';
 const CT_SAVE_PREUPDATE='CITY_TOWER_V17_PREUPDATE_BACKUP';
 const CT_TREASURE_SAVE_KEY='CITY_TOWER_V1743_TREASURE';
 const CT_TREASURE_PREUPDATE='CITY_TOWER_V1743_TREASURE_PREUPDATE_BACKUP';
@@ -4550,8 +4550,8 @@ window.render=function(){
  }catch(e){console.warn('CT164 tower combat fx',e)}
  return out
 };
-try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.173');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.173')}catch(e){}
-window.__CT_BUILD='V17.4.173-activity-scroll-unlock';
+try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.174');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.174')}catch(e){}
+window.__CT_BUILD='V17.4.174-background-catchup';
 })();
 </script>
 
@@ -4661,4 +4661,130 @@ window.__CT_BUILD='V17.4.173-activity-scroll-unlock';
   window.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&!document.fullscreenElement)enterFullscreen();},{once:true,capture:true});
 })();
 </script>
+
+
+<script id="ctBackgroundCatchup174">
+(()=>{
+  /* V17.4.174 — Background/offline catch-up.
+     Browsers throttle/suspend requestAnimationFrame in hidden tabs and when the device is locked.
+     We therefore remember the moment Auto was running, then replay the missing tower turns on return.
+     Automatic special activities are deliberately deferred until the page is visible again. */
+  const KEY='CITY_TOWER_V174_BACKGROUND_RUN';
+  const q=id=>document.getElementById(id);
+  let catching=false, hiddenSnapshot=null;
+
+  const activityOpen=()=>!!(
+    q('megaComp')?.classList.contains('open') ||
+    q('comp1748')?.classList.contains('open') ||
+    q('eventModalV173')?.classList.contains('open')
+  );
+  const getSpeed=()=>Math.max(1,Number(q('speed')?.value)||1);
+  const read=()=>{try{return JSON.parse(localStorage.getItem(KEY)||'null')}catch(_){return null}};
+  const clear=()=>{try{localStorage.removeItem(KEY)}catch(_){}};
+  const write=(forceRunning=null)=>{
+    try{
+      const active=(forceRunning===null)?!!running:!!forceRunning;
+      if(!active||activityOpen()){ if(!active)clear(); return; }
+      const rec={v:1,at:Date.now(),turn:Number(turn)||0,speed:getSpeed(),running:true};
+      localStorage.setItem(KEY,JSON.stringify(rec));
+      hiddenSnapshot=rec;
+    }catch(e){console.warn('CT174 background snapshot',e)}
+  };
+
+  function showStatus(done,total,seconds){
+    const el=q('ks');if(!el)return;
+    const pct=total?Math.min(100,Math.round(done/total*100)):100;
+    el.innerHTML='<span class="saveDot"></span>離線補算 '+pct+'%｜'+done.toLocaleString()+'/'+total.toLocaleString()+'T｜離開 '+seconds+'秒';
+  }
+
+  function resumeAuto(){
+    try{
+      if(typeof window.__CT_FORCE_TOWER_RESUME==='function')window.__CT_FORCE_TOWER_RESUME('background-catchup');
+      else if(typeof window.start==='function'&&!running)window.start();
+    }catch(e){console.warn('CT174 background resume',e)}
+  }
+
+  function catchUp(rec,source='visible'){
+    if(catching||!rec||rec.v!==1||!rec.running)return;
+    const now=Date.now(), elapsed=Math.max(0,now-(Number(rec.at)||now));
+    const speed=Math.max(1,Number(rec.speed)||1);
+    const expected=Math.max(0,Math.floor(elapsed*speed/1000));
+    // Hidden tabs sometimes manage a few throttled ticks. Do not count those twice.
+    const already=Math.max(0,(Number(turn)||0)-(Number(rec.turn)||0));
+    const missing=Math.max(0,expected-already);
+    if(missing<=0){clear();if(!running&&!activityOpen())resumeAuto();return}
+
+    catching=true;
+    const shouldResume=true;
+    // Freeze the live RAF while replaying, otherwise visible-return can double tick.
+    try{running=false;if(raf)cancelAnimationFrame(raf);raf=0}catch(_){ }
+
+    // Keep visual/interactive competitions for the player. If one became due while away,
+    // it will trigger normally on the first live tick after catch-up.
+    const savedNextEvent=nextEvent;
+    const savedGenesis=window.__CT_GENESIS_TICK;
+    nextEvent=Number.MAX_SAFE_INTEGER;
+    window.__CT_GENESIS_TICK=null;
+
+    let done=0;
+    const seconds=Math.floor(elapsed/1000);
+    showStatus(done,missing,seconds);
+    const CHUNK=800;
+    const pump=()=>{
+      const end=Math.min(missing,done+CHUNK);
+      try{
+        for(;done<end;done++)tick(false);
+      }catch(e){
+        console.error('CT174 background catch-up',e);
+        done=missing;
+      }
+      showStatus(done,missing,seconds);
+      if(done<missing){setTimeout(pump,0);return}
+
+      nextEvent=savedNextEvent;
+      window.__CT_GENESIS_TICK=savedGenesis;
+      catching=false;hiddenSnapshot=null;clear();
+      try{render();save(true)}catch(e){console.warn('CT174 catch-up final paint',e)}
+      const el=q('ks');if(el)el.innerHTML='<span class="saveDot"></span>已補算 '+missing.toLocaleString()+'T｜離開 '+seconds+'秒';
+      if(shouldResume&&!activityOpen())resumeAuto();
+    };
+    pump();
+  }
+
+  function onHidden(){
+    if(catching)return;
+    if(running&&!activityOpen())write(true);else clear();
+    try{save(true)}catch(_){ }
+  }
+  function onVisible(){
+    if(catching)return;
+    const rec=hiddenSnapshot||read();
+    if(rec?.running&&!activityOpen())catchUp(rec,'visible');
+  }
+
+  document.addEventListener('visibilitychange',()=>document.hidden?onHidden():onVisible(),true);
+  window.addEventListener('pagehide',onHidden,true);
+  window.addEventListener('pageshow',()=>{if(!document.hidden)onVisible()},true);
+  window.addEventListener('freeze',onHidden,true);
+  window.addEventListener('focus',()=>{if(!document.hidden)onVisible()},true);
+
+  // Keep the persistent running intent in sync with the Auto button and speed selector.
+  document.addEventListener('click',e=>{
+    if(e.target?.id!=='auto')return;
+    setTimeout(()=>{if(running&&!activityOpen())write(true);else clear()},0);
+  },true);
+  q('speed')?.addEventListener('change',()=>{if(running&&!document.hidden&&!activityOpen())write(true)});
+
+  // Full reload / Home-Screen relaunch: load() has already restored the last saved tower state.
+  // Resume from the hidden/pagehide timestamp if Auto had been running when the page disappeared.
+  setTimeout(()=>{
+    if(document.hidden||activityOpen())return;
+    const rec=read();
+    if(rec?.running)catchUp(rec,'startup');
+  },80);
+
+  window.__CT_BACKGROUND_CATCHUP_174={read,clear,write,catchUp};
+})();
+</script>
+
 </body></html>
