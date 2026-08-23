@@ -134,7 +134,7 @@ window.ctBattleTreasureInline126=function(c){
 </script>
 <script>
 const SAVE='CITY_TOWER_V17_SAVE';
-const CT_BUILD_VERSION='V17.4.159';
+const CT_BUILD_VERSION='V17.4.161';
 const CT_SAVE_PREUPDATE='CITY_TOWER_V17_PREUPDATE_BACKUP';
 const CT_TREASURE_SAVE_KEY='CITY_TOWER_V1743_TREASURE';
 const CT_TREASURE_PREUPDATE='CITY_TOWER_V1743_TREASURE_PREUPDATE_BACKUP';
@@ -429,7 +429,7 @@ const TPWR={Z:.015,F:.025,E:.040,D:.060,C:.090,B:.130,A:.180,S:.450,U:1.000,X:2.
 const TFUSE={Z:.95,F:.90,E:.82,D:.72,C:.62,B:.52,A:.40,S:.22,U:.08};
 const TNEXT={Z:'F',F:'E',E:'D',D:'C',C:'B',B:'A',A:'S',S:'U',U:'X'};
 const TTYPES=['blade','shield','wing','core','sigil'];
-// Treasure-library display order only: core → wing → sigil → blade → shield. Drop generation remains unchanged.
+// Treasure-library display order only: blade → shield → wing → core → sigil. Drop generation remains unchanged.
 const TDISPLAY_TYPES=['blade','shield','wing','core','sigil'];
 const TTYPE_NAME={blade:'⚔️ 攻擊型',shield:'🛡️ 防禦型',wing:'🪽 速度型',core:'💎 綜合型',sigil:'🔮 技巧型'};
 const TTIER_NAME={X:'創世',U:'至尊',S:'神話',A:'傳說',B:'史詩',C:'稀有',D:'優良',E:'普通',F:'粗糙',Z:'劣質'};
@@ -762,9 +762,8 @@ function tAutoEquip(city,quiet=false){
 }
 function tAward(city,tier,origin,floor,show=true){const st=states.find(x=>x.city===city),f=Math.max(1,Number(floor)||(st?Number(st.floor):1)||1);tier=tFloorClampTier(tier,f);const it=tNew(city,tier,origin,floor);if(TAUTO)tAutoEquip(city,true);tSyncCity(city);tSave();if(show)tToast(it);return it}
 function tFuse(city,tier){const next=TNEXT[tier];if(!next)return;const pool=TINV.filter(x=>x.city===city&&x.tier===tier&&!x.equippedTo);if(pool.length<5){alert(`${city} 的 ${tier} 未裝備寶物不足5件`);return}const used=pool.slice(0,5),ids=new Set(used.map(x=>x.id));TINV=TINV.filter(x=>!ids.has(x.id));const ok=Math.random()<tFuseChance(city,tier);let it=null;if(ok){it=tNew(city,next,'5合1合成',0);if(TAUTO)tAutoEquip(city,true);tToast(it,`合成成功 ${tier}→${next}`)}else{const fake={type:'core',tier,name:`${tier} 合成失敗`,city,origin:'5件素材已消耗',floor:0};tToast(fake,'💥 合成失敗')}tSyncCity(city);tSave();tRenderModal()}
-function tFuseAll(city){
+function tFuseAllCore(city){
  let attempts=0,success=0,failed=0,highest=null,safety=0;
- const made=[];
  for(const tier of TASC.slice(0,-1)){
   const next=TNEXT[tier];if(!next)continue;
   while(safety++<5000){
@@ -774,15 +773,34 @@ function tFuseAll(city){
    const used=pool.slice(0,5),ids=new Set(used.map(x=>x.id));
    TINV=TINV.filter(x=>!ids.has(x.id));
    if(Math.random()<tFuseChance(city,tier)){
-    const it=tNew(city,next,'一鍵5合1合成',0);made.push(it);success++;highest=!highest||TASC.indexOf(next)>TASC.indexOf(highest)?next:highest;
+    tNew(city,next,'一鍵5合1合成',0);success++;highest=!highest||TASC.indexOf(next)>TASC.indexOf(highest)?next:highest;
    }else failed++;
   }
  }
- if(!attempts){tToast({type:'core',tier:'Z',name:'目前沒有可5合1的未裝備寶物',city,origin:'一鍵合成',floor:0},'⚡ 一鍵合成');return}
+ return{city,attempts,success,failed,highest};
+}
+function tFuseAll(city){
+ const r=tFuseAllCore(city);
+ if(!r.attempts){tToast({type:'core',tier:'Z',name:'目前沒有可5合1的未裝備寶物',city,origin:'一鍵合成',floor:0},'⚡ 一鍵合成');return}
  if(TAUTO)tAutoEquip(city,true);else tSyncCity(city);
  tSave();
- const tier=highest||'Z';
- tToast({type:'core',tier,name:`完成 ${attempts} 次｜成功 ${success}｜失敗 ${failed}`,city,origin:'一鍵合成全部可合素材',floor:0},'⚡ 一鍵合成完成');
+ const tier=r.highest||'Z';
+ tToast({type:'core',tier,name:`完成 ${r.attempts} 次｜成功 ${r.success}｜失敗 ${r.failed}`,city,origin:'一鍵合成全部可合素材',floor:0},'⚡ 一鍵合成完成');
+ tRenderModal();
+}
+function tFuseAllTeams(){
+ const rows=[];
+ for(const city of Object.keys(R)){
+  const r=tFuseAllCore(city);
+  if(r.attempts)rows.push(r);
+ }
+ if(!rows.length){tToast({type:'core',tier:'Z',name:'22隊目前都沒有可5合1的未裝備寶物',city:TCITY,origin:'一鍵全隊伍合成',floor:0},'🌐 全隊伍合成');return}
+ for(const r of rows){if(TAUTO)tAutoEquip(r.city,true);else tSyncCity(r.city)}
+ tSave();
+ if(typeof render==='function')render();
+ const attempts=rows.reduce((n,r)=>n+r.attempts,0),success=rows.reduce((n,r)=>n+r.success,0),failed=rows.reduce((n,r)=>n+r.failed,0);
+ const highest=rows.map(r=>r.highest).filter(Boolean).sort((a,b)=>TASC.indexOf(b)-TASC.indexOf(a))[0]||'Z';
+ tToast({type:'core',tier:highest,name:`${rows.length}隊｜完成 ${attempts} 次｜成功 ${success}｜失敗 ${failed}`,city:'全22隊',origin:'一鍵全隊伍合成全部可合素材',floor:0},'🌐 一鍵全隊伍合成完成');
  tRenderModal();
 }
 function tRankLabel(type,r){if((type||'').includes('Boss'))return r===1?'MVP討伐王':r===2?'次席戰功':r===3?'第三戰功':r<=8?'核心討伐隊':r<=16?'主力討伐隊':'支援討伐隊';return r===1?'總冠軍':r===2?'亞軍':r===3?'季軍':r<=8?'八強菁英':r<=16?'晉級組':'聯賽席位'}
@@ -862,11 +880,11 @@ const PREV_RENDER_T=window.render;window.render=function(){PREV_RENDER_T();tRend
 function tRosterSlotsHtml(c){const its=tForCharAll(c),slots=[];for(let i=0;i<5;i++){const it=its[i];if(it){const title=`${it.tier} ${tTierName(it.tier)}｜${it.name}｜${TTYPE_NAME[it.type]}｜${tEffect(it.tier,it.type)}`;slots.push(`<div class="tRosterEquip ${it.tier}" style="color:${TCOL[it.tier]}" title="${title.replace(/"/g,'&quot;')}"><img src="${tSvg(it.type,it.tier)}" alt="${it.tier}"><b class="ratingText ${it.tier}">${it.tier}</b></div>`)}else slots.push('<div class="tRosterEquip empty" title="空寶物槽"><span>◇</span><b>空</b></div>')}return `<div class="tRosterEquipMulti" data-treasure-sig="${its.map(x=>x.id).join(',')}">${slots.join('')}</div>`}
 
 function tCounts(city){const o=Object.fromEntries(TORDER.map(x=>[x,0]));for(const it of TINV)if(it.city===city)o[it.tier]++;return o}
-function tModalShell(){const cities=Object.keys(R),cnt=tCounts(TCITY);return `<div class="tToolbar"><select id="tCity">${cities.map(c=>`<option ${c===TCITY?'selected':''}>${c}</option>`).join('')}</select><button id="tInvBtn" class="${TVIEW==='inv'?'primary':''}">🎒 我的寶物</button><button id="tCatBtn" class="${TVIEW==='cat'?'primary':''}">📖 完整圖鑑</button><button id="tAutoBtn">🤖 自動配裝：${TAUTO?'ON':'OFF'}</button><button id="tBestBtn">⚙️ 一鍵最佳配裝</button><button id="tFuseAllBtn">⚡ 一鍵合成</button></div><div class="tSummary">${TORDER.map(g=>`<div class="tCount ${g}"><span class="tSummaryTier ${g}">${g}</span><b class="tSummaryNum ${g}">${cnt[g]}</b></div>`).join('')}</div>`}
+function tModalShell(){const cities=Object.keys(R),cnt=tCounts(TCITY);return `<div class="tToolbar"><select id="tCity">${cities.map(c=>`<option ${c===TCITY?'selected':''}>${c}</option>`).join('')}</select><button id="tInvBtn" class="${TVIEW==='inv'?'primary':''}">🎒 我的寶物</button><button id="tCatBtn" class="${TVIEW==='cat'?'primary':''}">📖 完整圖鑑</button><button id="tAutoBtn">🤖 自動配裝：${TAUTO?'ON':'OFF'}</button><button id="tBestBtn">⚙️ 一鍵最佳配裝</button><button id="tFuseAllBtn">⚡ 一鍵合成</button><button id="tFuseAllTeamsBtn">🌐 一鍵全隊伍合成</button></div><div class="tSummary">${TORDER.map(g=>`<div class="tCount ${g}"><span class="tSummaryTier ${g}">${g}</span><b class="tSummaryNum ${g}">${cnt[g]}</b></div>`).join('')}</div>`}
 function tInvHtml(){const inv=TINV.filter(x=>x.city===TCITY).sort((a,b)=>TASC.indexOf(b.tier)-TASC.indexOf(a.tier)||TDISPLAY_TYPES.indexOf(a.type)-TDISPLAY_TYPES.indexOf(b.type)||b.turn-a.turn),cnt=tCounts(TCITY);let fusion=`<div class="tRule"><b>掉落規則</b>｜所有寶物來源都採「隊伍強度加權」：目前隊伍戰力排名越高、樓層越深、敵人／Boss越強、競賽名次越前，高階寶物機率越高。一般怪最高可到 <span class="tierWord17434 C">C</span>、精英最高 <span class="tierWord17434 B">B</span>、小Boss／大Boss／章節Boss最高可直接出 <span class="tierWord17434 A">A</span>；Boss皆必掉，一般怪掉率也會隨樓層與隊伍強度提升。<br><b>關卡絕版：</b><span class="tierWord17434 Z">Z</span> 1000F、<span class="tierWord17434 F">F</span> 1500F、<span class="tierWord17434 E">E</span> 2000F、<span class="tierWord17434 D">D</span> 3000F、<span class="tierWord17434 C">C</span> 5000F 起永久絕版。達到門檻時，該城市所有已絕版寶物（包含已裝備）會依 <b>ceil(數量÷5)</b> 100%退役升一階，並一路連鎖整理到當前最低可存在階級；例如 4Z→1F、6Z→2F。之後爬塔、世界Boss、22隊大混鬥、城市聯賽都不會再發已絕版階級。<br><b>大型競賽寶物：</b>正式世界Boss與22隊大混鬥每隊必得1件，最高 <span class="tierWord17434 B">B</span>；正式城市聯賽每隊必得1件，最高 <span class="tierWord17434 A">A</span>。聯賽正常情況前3名才有 <span class="tierWord17434 A">A</span>機會、前10名才有 <span class="tierWord17434 B">B</span>機會；但關卡絕版保護會把任何已絕版的低階結果自動抬到當前最低合法階級，絕不直接抬成 <span class="tierWord17434 A">A</span>。同名次下強隊高階率更高。<br><b>世界Boss獎勵：</b>#1/#2/#3 基礎每名出戰角色 +220/+180/+150 EXP、+1.60/+1.30/+1.10% 永久成長；#4–5 +120/+0.85%、#6–10 +90/+0.60%、#11–16 +60/+0.35%、#17–22 +35/+0.18%，再依實際Boss傷害占比等比例提高；每波MVP每次另 +8 EXP，最後一擊另 +60 EXP／+0.30%。<br><b>22隊大混鬥獎勵：</b>#1/#2/#3 出戰角色基礎 +190/+155/+130 EXP、+1.30/+1.00/+0.85%；#4–5 +105/+0.65%、#6–10 +80/+0.45%、#11–16 +55/+0.25%、#17–22 +35/+0.13%。每擊殺 +15 EXP；總傷害 #1 +70 EXP/+0.20%、#2 +45/+0.12%、#3 +30/+0.08%、#4–5 +15 EXP；最後淘汰一擊另 +50 EXP/+0.25%。<br><b>城市聯賽：</b>冠軍/亞軍/季軍/殿軍每名領獎角色基礎 +240/+190/+160/+135 EXP、+1.50/+1.20/+1.00/+0.80%；第5–8名 +100/+0.55%、第9–16名 +65/+0.30%、第17–22名 +40/+0.15%，再套用隊伍與角色評級加成；寶物A/B高階率也吃評級加成。<br>5合1成功率會依隊伍強度獲得小幅加成；寶物相關機率畫面一律四捨五入顯示整數，實際抽獎仍保留完整小數精度。<span class="tierWord17434 S">S</span>/<span class="tierWord17434 U">U</span>/<span class="tierWord17434 X">X</span> 仍只能合成。每名角色最多裝5件寶物，且同一種類最多只能裝1件。<br><b>強度斷層：</b><span class="tierWord17434 X">X</span> ≫≫≫ <span class="tierWord17434 U">U</span> ≫≫ <span class="tierWord17434 S">S</span> ≫ <span class="tierWord17434 A">A</span> ＞ <span class="tierWord17434 B">B</span> ＞ <span class="tierWord17434 C">C</span> ＞ <span class="tierWord17434 D">D</span> ＞ <span class="tierWord17434 E">E</span> ＞ <span class="tierWord17434 F">F</span> ＞ <span class="tierWord17434 Z">Z</span>。</div><div class="tFusion">${TASC.slice(0,-1).map(g=>`<div class="tFuse"><b class="fuseTitle17428"><span class="tierMark17428 tierLetter tierMotion ${g}">${g}</span><span class="fuseArrow17428">×5 →</span><span class="tierMark17428 tierLetter tierMotion ${TNEXT[g]}">${TNEXT[g]}</span></b><div>未裝備：${TINV.filter(x=>x.city===TCITY&&x.tier===g&&!x.equippedTo).length}｜成功率 ${Math.round(tFuseChance(TCITY,g)*100)}%</div><button class="tFuseBtn" data-tier="${g}" ${TINV.filter(x=>x.city===TCITY&&x.tier===g&&!x.equippedTo).length<5?'disabled':''}>5合1</button></div>`).join('')}</div>`;if(!inv.length)return fusion+'<div class="tRule">目前還沒有寶物。繼續爬塔：Boss 必掉寶物；一般怪則有機率掉落。</div>';
  return fusion+`<div class="tInvGrid">${inv.map(it=>`<div class="tItem t${it.tier}" style="--tg:${TCOL[it.tier]}"><img class="tPic" src="${tSvg(it.type,it.tier)}"><div class="tItemHead"><span class="tGrade ratingText ${it.tier}">${it.tier}｜${tTierName(it.tier)}</span><span class="sub">${it.equippedTo?'已裝備':'背包'}</span></div><div class="tName ratingText ${it.tier}">${it.name}</div><div class="tEffect ratingText ${it.tier}">${TTYPE_NAME[it.type]}<br>${tEffect(it.tier,it.type)}</div><div class="tOrigin ratingText ${it.tier}">${it.origin}${it.floor?'｜'+it.floor+'F':''}</div><select class="tAssign" data-id="${it.id}"><option value="">— 背包／卸下 —</option>${R[TCITY].map(c=>{const eq=tForCharAll(c),n=eq.length,own=it.equippedTo===c.id,same=!own&&eq.some(x=>x.type===it.type),full=!own&&n>=5,disabled=same||full;return `<option value="${c.id}" ${own?'selected':''} ${disabled?'disabled':''}>${c.name}（${n}/5）${full?' 已滿':same?' 同類已裝':''}</option>`}).join('')}</select></div>`).join('')}</div>`}
 function tCatalogHtml(){return `<div class="tRule"><b>完整寶物圖鑑｜由強到弱 <span class="tierWord17434 X">X</span> → <span class="tierWord17434 Z">Z</span></b><br>${TORDER.map(g=>`<span class="tierWord17434 ${g}">${g} ${tTierName(g)}</span>`).join('｜')}。<span class="tierWord17434 X">X</span> 為正黃色創世特效、<span class="tierWord17434 U">U</span> 為正粉色、<span class="tierWord17434 S">S</span> 為正紅色；<span class="tierWord17434 A">A</span> 以下依正色評級顯示。每階都有 5 種不同定位。<br><b>新屬性：</b>🪽速度型＝攻速＋爆率＋閃避；🔮技巧型＝爆率＋攻速＋爆傷。爆傷採「額外傷害」表示，例如 <b>爆傷 +50%</b> 代表爆擊總傷害 1.5 倍。<br><b>屬性上限：</b>自然閃避 50%＋寶物突破最高 70%｜自然爆率 60%＋寶物可突破至 100%｜自然爆傷 +500%＋命運天書可再 +200%｜攻速無上限；自然閃避溢出→HP／DEF；自然爆率超過 60% 與寶物把總爆率推過 100% 的部分→ATK／攻速；自然爆傷超過 +500% 的部分→ATK／攻速。</div>`+TORDER.map(g=>`<h3 class="catalogTierTitle ratingText ${g}" style="margin:14px 0 7px">${g}｜${tTierName(g)}</h3><div class="tCatalogGrid">${TDISPLAY_TYPES.map(type=>`<div class="tItem t${g}" style="--tg:${TCOL[g]}"><img class="tPic" src="${tSvg(type,g)}"><div class="tItemHead"><span class="tGrade ratingText ${g}">${g}｜${tTierName(g)}</span><span class="sub ratingText ${g}">${TTYPE_NAME[type]}</span></div><div class="tName ratingText ${g}">${TNAMES[g][type]}</div><div class="tEffect ratingText ${g}">${tEffect(g,type)}</div></div>`).join('')}</div>`).join('')}
-function tRenderModal(){if(!tq('mb').classList.contains('open')||!tq('mbo'))return;tq('mt').textContent='🎁 寶物庫｜'+TCITY;tq('back').style.display='none';tq('mbo').innerHTML=tModalShell()+(TVIEW==='inv'?tInvHtml():tCatalogHtml());tq('tCity').onchange=e=>{TCITY=e.target.value;tRenderModal()};tq('tInvBtn').onclick=()=>{TVIEW='inv';tRenderModal()};tq('tCatBtn').onclick=()=>{TVIEW='cat';tRenderModal()};tq('tAutoBtn').onclick=()=>{TAUTO=!TAUTO;tSave();if(TAUTO)tAutoEquip(TCITY,true);tSyncAll();render();tRenderModal()};tq('tBestBtn').onclick=()=>{tAutoEquip(TCITY);tRenderModal()};const fuseAllBtn=tq('tFuseAllBtn');if(fuseAllBtn){const canFuse=TASC.slice(0,-1).some(g=>TINV.filter(x=>x.city===TCITY&&x.tier===g&&!x.equippedTo).length>=5);fuseAllBtn.disabled=!canFuse;fuseAllBtn.onclick=()=>tFuseAll(TCITY)}document.querySelectorAll('.tAssign').forEach(x=>x.onchange=e=>{tEquip(tItem(e.target.dataset.id),e.target.value||null);tRenderModal()});document.querySelectorAll('.tFuseBtn').forEach(x=>x.onclick=()=>tFuse(TCITY,x.dataset.tier))}
+function tRenderModal(){if(!tq('mb').classList.contains('open')||!tq('mbo'))return;tq('mt').textContent='🎁 寶物庫｜'+TCITY;tq('back').style.display='none';tq('mbo').innerHTML=tModalShell()+(TVIEW==='inv'?tInvHtml():tCatalogHtml());tq('tCity').onchange=e=>{TCITY=e.target.value;tRenderModal()};tq('tInvBtn').onclick=()=>{TVIEW='inv';tRenderModal()};tq('tCatBtn').onclick=()=>{TVIEW='cat';tRenderModal()};tq('tAutoBtn').onclick=()=>{TAUTO=!TAUTO;tSave();if(TAUTO)tAutoEquip(TCITY,true);tSyncAll();render();tRenderModal()};tq('tBestBtn').onclick=()=>{tAutoEquip(TCITY);tRenderModal()};const fuseAllBtn=tq('tFuseAllBtn');if(fuseAllBtn){const canFuse=TASC.slice(0,-1).some(g=>TINV.filter(x=>x.city===TCITY&&x.tier===g&&!x.equippedTo).length>=5);fuseAllBtn.disabled=!canFuse;fuseAllBtn.onclick=()=>tFuseAll(TCITY)}const fuseAllTeamsBtn=tq('tFuseAllTeamsBtn');if(fuseAllTeamsBtn){const canFuseTeams=Object.keys(R).some(city=>TASC.slice(0,-1).some(g=>TINV.filter(x=>x.city===city&&x.tier===g&&!x.equippedTo).length>=5));fuseAllTeamsBtn.disabled=!canFuseTeams;fuseAllTeamsBtn.onclick=tFuseAllTeams}document.querySelectorAll('.tAssign').forEach(x=>x.onchange=e=>{tEquip(tItem(e.target.dataset.id),e.target.value||null);tRenderModal()});document.querySelectorAll('.tFuseBtn').forEach(x=>x.onclick=()=>tFuse(TCITY,x.dataset.tier))}
 function tResetAll(){
  TINV=[];TSEQ=1;TAUTO=true;TCITY=R[selected]?selected:(Object.keys(R)[0]||'臺北市');TVIEW='inv';
  for(const arr of Object.values(R))for(const c of arr){c.treasureIds=[];c.treasureId=null}
@@ -4123,7 +4141,21 @@ function ctTier153(el,t){if(!el)return;const active=CT_TIERS.filter(g=>el.classL
 function ctState153(city){return (states||[]).find(s=>s.city===city)}
 function ctMeta153(){return typeof meta==='function'?meta():{}}
 function ctCharMeta153(){return typeof charMetaV173==='function'?charMetaV173():(typeof window.charMeta==='function'?window.charMeta():{})}
-function ctTeamAvg153(city){return typeof teamAvg127==='function'?teamAvg127(city):{hp:0,atk:0,def:0,speed:0,crit:0,dodge:0,critDmg:0}}
+function ctTeamAvg153(city){
+ const out={hp:0,atk:0,def:0,speed:0,crit:0,dodge:0,critDmg:0},arr=(R&&R[city])?R[city]:[];
+ if(!arr.length)return out;
+ let n=0;
+ for(const c of arr){
+  try{
+   const st=(typeof window.cstats==='function'?window.cstats(c):(typeof cstats==='function'?cstats(c):null));
+   if(!st)continue;
+   out.hp+=Number(st.hp)||0;out.atk+=Number(st.atk)||0;out.def+=Number(st.def)||0;out.speed+=Number(st.speed)||0;out.crit+=Number(st.crit)||0;out.dodge+=Number(st.dodge)||0;out.critDmg+=Number(st.critDmg)||0;n++;
+  }catch(e){console.warn('CT160 team avg skip',city,c?.id,e)}
+ }
+ if(!n)return out;
+ for(const k of Object.keys(out))out[k]/=n;
+ return out
+}
 function ctPower153(c){return (10*craw(c)/Math.max(1e-9,Number(initialTop)||1)).toFixed(2)}
 function ctFloor153(city){return Math.max(1,Number(ctState153(city)?.floor)||1)}
 function ctNow153(){const d=new Date();return [d.getHours(),d.getMinutes(),d.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':')}
@@ -4334,8 +4366,8 @@ window.__CT_TEAM_SYNC_TIMER=setInterval(ctRefresh153,CT_TEAM_SYNC_MS);
 const ctRenderBefore153=window.render;
 window.render=function(){ctRenderBefore153();if(document.getElementById('mb')?.classList.contains('open')&&Date.now()-ctTeamLast153>=CT_TEAM_SYNC_MS)ctRefresh153()};
 
-try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.159');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.157')}catch(e){}
-window.__CT_BUILD='V17.4.159-review-typename-fix-treasure-order';
+try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.161');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.161')}catch(e){}
+window.__CT_BUILD='V17.4.161-all-team-treasure-fusion';
 })();
 </script>
 
