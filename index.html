@@ -134,7 +134,7 @@ window.ctBattleTreasureInline126=function(c){
 </script>
 <script>
 const SAVE='CITY_TOWER_V17_SAVE';
-const CT_BUILD_VERSION='V17.4.151';
+const CT_BUILD_VERSION='V17.4.153';
 const CT_SAVE_PREUPDATE='CITY_TOWER_V17_PREUPDATE_BACKUP';
 const CT_TREASURE_SAVE_KEY='CITY_TOWER_V1743_TREASURE';
 const CT_TREASURE_PREUPDATE='CITY_TOWER_V1743_TREASURE_PREUPDATE_BACKUP';
@@ -275,8 +275,8 @@ function load(){
   render();save(true);$('ks').innerHTML='<span class="saveDot"></span>已修復並接續 T'+turn;return true;
  }catch(e){console.error('SAVE RECOVERY',e);return false}
 }
-function showCities(){let m=meta();$('mt').textContent='📚 隊伍資料｜22縣市';$('back').style.display='none';$('mbo').innerHTML='<div class="cityGrid">'+Object.values(m).sort((a,b)=>(a.rank??a.powerRank??999)-(b.rank??b.powerRank??999)).map(x=>{const teamRank=x.rank??x.powerRank;return `<button class="cityBtn" data-city="${x.city}"><b class="ratingText ${x.tier}">${x.city}</b><div class="sub">${TEAMN[x.city]}</div><div>評級 <span class="tier tierLetter tierMotion ${x.tier}">${x.tier}</span>｜戰力 <span class="ratingText ${x.tier}">${x.power.toFixed(2)}</span>｜#${Number.isFinite(teamRank)?teamRank:'—'}</div></button>`}).join('')+'</div>';document.querySelectorAll('.cityBtn').forEach(b=>b.onclick=()=>showRoster(b.dataset.city))}
-function showRoster(city){let s=states.find(x=>x.city===city),active=new Set(s.party.map(p=>p.id));$('mt').textContent='👥 '+city+'｜12人完整資料';$('back').style.display='';$('mbo').innerHTML='<div class="roster">'+[...R[city]].sort((a,b)=>craw(b)-craw(a)).map((c,i)=>{let st=cstats(c),pct=100*c.xp/xpNeed(c.lv);return `<div class="rosterCard ${active.has(c.id)?'active':''}"><div class="cardTop"><div><b>#${i+1} ${c.name}</b><div class="sub">原始階級 ${c.grade}｜原始總分 ${c.total}</div></div><b>Lv.${c.lv}</b></div><div class="xp"><i style="width:${pct}%"></i></div><div class="sub">EXP ${c.xp}/${xpNeed(c.lv)}｜個人戰力 ${(10*craw(c)/initialTop).toFixed(2)}</div><div class="stats"><div class="stat">HP<b>${st.hp}</b></div><div class="stat">ATK<b>${st.atk}</b></div><div class="stat">DEF<b>${st.def}</b></div><div class="stat">攻速<b>${st.speed.toFixed(1)}</b></div><div class="stat">暴擊<b>${(st.crit*100).toFixed(1)}%</b></div><div class="stat">擊殺<b>${c.kills}</b></div></div><div class="sub">出場 ${c.deploys}｜攻擊 ${c.attacks}｜暴擊 ${c.crits}</div></div>`}).join('')+'</div>'}
+function showCities(){return window.__CT_TEAM_UI?.showCities?.()}
+function showRoster(city){return window.__CT_TEAM_UI?.showRoster?.(city)}
 $('step').onclick=()=>tick();$('auto').onclick=start;$('teams').onclick=()=>{$('mb').classList.add('open');showCities()};$('close').onclick=()=>$('mb').classList.remove('open');$('back').onclick=showCities;$('save').onclick=()=>save(false);
 
 $('install').onclick=()=>alert('iPad：請用 Safari 開啟本頁 → 點「分享」→「加入主畫面」→ 名稱 Taiwan City Tower → 加入。之後請從桌面 Taiwan City Tower 圖示開啟。');
@@ -284,7 +284,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)save(true)}
 if(!load())init();
 </script><script>
 (()=>{
-const OLD_RENDER=window.render, OLD_SHOW_ROSTER=window.showRoster;
+const OLD_RENDER=window.render;
 const q=id=>document.getElementById(id), clamp2=(x,a,b)=>Math.max(a,Math.min(b,x));
 let eventWasRunning=false,eventTimer=0,eventSecs=0;
 
@@ -386,7 +386,6 @@ function patchUI(){let cm=charMetaV173(),sel=states.find(x=>x.city===selected)||
   if(lastEvent&&lastEvent.top&&q('event'))q('event').innerHTML='<b>'+lastEvent.type+'</b>｜T'+(lastEvent.turn||turn)+'<br>'+lastEvent.top.map((x,i)=>(i+1)+'. '+x.city+'｜'+x.score.toFixed(0)+(x.reward?'｜+EXP '+x.reward.xp:'')).join('<br>');
 }
 window.render=function(){OLD_RENDER();patchUI()};
-window.showRoster=function(city){OLD_SHOW_ROSTER(city);requestAnimationFrame(()=>{let cm=charMetaV173(),cs=[...R[city]].sort((a,b)=>craw(b)-craw(a));document.querySelectorAll('#mbo .rosterCard').forEach((card,i)=>{let c=cs[i],g=cm[c.id],sub=card.querySelector('.sub');if(sub)sub.innerHTML=`目前評級 <span class="tier tierLetter tierMotion ${g.tier}">${g.tier}</span>｜全服角色#${g.rank}｜原始階級 <span class="ratingText ${c.grade}">${c.grade}</span>｜原始總分 ${c.total}`;let top=card.querySelector('.cardTop');if(top){const nm=top.querySelector('b');if(nm){nm.classList.remove('X','U','S','A','B','C','D','E','F','Z');nm.classList.add('ratingText',g.tier)}if(!top.querySelector('.tier'))top.lastElementChild.insertAdjacentHTML('afterbegin',`<span class="tier tierLetter tierMotion ${g.tier}" style="font-size:22px">${g.tier}</span><br>`);}const power=[...card.querySelectorAll('.sub')].find(el=>el.textContent.includes('個人戰力'));if(power){power.classList.remove('X','U','S','A','B','C','D','E','F','Z');power.classList.add('ratingText',g.tier)}})})};
 ensureEventUI();render();save(true);
 })();
 
@@ -859,7 +858,6 @@ function tRenderEquipped(){const sel=states.find(x=>x.city===selected)||states[0
 }
 const PREV_RENDER_T=window.render;window.render=function(){PREV_RENDER_T();tRenderEquipped()};
 function tRosterSlotsHtml(c){const its=tForCharAll(c),slots=[];for(let i=0;i<5;i++){const it=its[i];if(it){const title=`${it.tier} ${tTierName(it.tier)}｜${it.name}｜${TTYPE_NAME[it.type]}｜${tEffect(it.tier,it.type)}`;slots.push(`<div class="tRosterEquip ${it.tier}" style="color:${TCOL[it.tier]}" title="${title.replace(/"/g,'&quot;')}"><img src="${tSvg(it.type,it.tier)}" alt="${it.tier}"><b class="ratingText ${it.tier}">${it.tier}</b></div>`)}else slots.push('<div class="tRosterEquip empty" title="空寶物槽"><span>◇</span><b>空</b></div>')}return `<div class="tRosterEquipMulti" data-treasure-sig="${its.map(x=>x.id).join(',')}">${slots.join('')}</div>`}
-const PREV_ROSTER_T=window.showRoster;window.showRoster=function(city){PREV_ROSTER_T(city);requestAnimationFrame(()=>{const cs=[...R[city]].sort((a,b)=>craw(b)-craw(a));document.querySelectorAll('#mbo .rosterCard').forEach((card,i)=>{card.querySelectorAll('.tRosterEquipMulti').forEach(x=>x.remove());const c=cs[i];if(c)card.insertAdjacentHTML('beforeend',tRosterSlotsHtml(c))})})};
 
 function tCounts(city){const o=Object.fromEntries(TORDER.map(x=>[x,0]));for(const it of TINV)if(it.city===city)o[it.tier]++;return o}
 function tModalShell(){const cities=Object.keys(R),cnt=tCounts(TCITY);return `<div class="tToolbar"><select id="tCity">${cities.map(c=>`<option ${c===TCITY?'selected':''}>${c}</option>`).join('')}</select><button id="tInvBtn" class="${TVIEW==='inv'?'primary':''}">🎒 我的寶物</button><button id="tCatBtn" class="${TVIEW==='cat'?'primary':''}">📖 完整圖鑑</button><button id="tAutoBtn">🤖 自動配裝：${TAUTO?'ON':'OFF'}</button><button id="tBestBtn">⚙️ 一鍵最佳配裝</button><button id="tFuseAllBtn">⚡ 一鍵合成</button></div><div class="tSummary">${TORDER.map(g=>`<div class="tCount ${g}"><span class="tSummaryTier ${g}">${g}</span><b class="tSummaryNum ${g}">${cnt[g]}</b></div>`).join('')}</div>`}
@@ -2742,30 +2740,6 @@ function teamAvg127(city){
 }
 window.CT_TEAM_AVG_STATS=teamAvg127;
 
-// Team list now reflects the recalculated combat model.
-const PREV_SHOW_CITIES_127=window.showCities;
-window.showCities=showCities=function(){
-  const m=meta();$('mt').textContent='📚 隊伍資料｜22縣市';$('back').style.display='none';
-  $('mbo').innerHTML='<div class="cityGrid">'+Object.values(m).sort((a,b)=>(a.rank??a.powerRank??999)-(b.rank??b.powerRank??999)).map(x=>{const s=teamAvg127(x.city),teamRank=x.rank??x.powerRank,st=(states||[]).find(z=>z.city===x.city),floor=Math.max(1,Number(st?.floor)||1);return `<button class="cityBtn" data-city="${x.city}"><b class="ratingText ${x.tier}">${x.city}</b><div class="sub">${TEAMN[x.city]}</div><div>評級 <span class="tier tierLetter tierMotion ${x.tier}">${x.tier}</span>｜戰力 <span class="ratingText ${x.tier}">${x.power.toFixed(2)}</span>｜#${Number.isFinite(teamRank)?teamRank:'—'}</div><div class="ct127Floor">關卡 <b>${floor}F</b></div><div class="ct127TeamMini">均攻速 ${s.speed.toFixed(1)}｜爆率 ${(s.crit*100).toFixed(1)}%｜閃避 ${(s.dodge*100).toFixed(1)}%｜爆傷 +${(s.critDmg*100).toFixed(0)}%</div></button>`}).join('')+'</div>';
-  document.querySelectorAll('.cityBtn').forEach(b=>b.onclick=()=>showRoster(b.dataset.city));
-};
-
-const PREV_SHOW_ROSTER_127=window.showRoster;
-window.showRoster=showRoster=function(city){
-  PREV_SHOW_ROSTER_127(city);
-  requestAnimationFrame(()=>{
-    try{
-      const mm=meta()[city], av=teamAvg127(city),box=$('mbo'),st=(states||[]).find(z=>z.city===city),floor=Math.max(1,Number(st?.floor)||1);if(!box)return;
-      const summary=document.createElement('div');summary.id='ct127TeamSummary';summary.innerHTML=`<div class="ct127Head"><b>${city}｜${TEAMN[city]||''}</b><span>評級 <span class="tier tierLetter tierMotion ${mm.tier}">${mm.tier}</span>｜隊伍戰力 <span class="ratingText ${mm.tier}">${mm.power.toFixed(2)}</span>｜全服 #${Number.isFinite(mm.rank??mm.powerRank)?(mm.rank??mm.powerRank):'—'}｜關卡 <b>${floor}F</b></span></div><div class="ct127StatGrid"><div class="ct127Stat">平均 HP<b>${Math.round(av.hp)}</b></div><div class="ct127Stat">平均 ATK<b>${Math.round(av.atk)}</b></div><div class="ct127Stat">平均 DEF<b>${Math.round(av.def)}</b></div><div class="ct127Stat">平均攻速<b>${av.speed.toFixed(1)}</b></div><div class="ct127Stat">平均爆率<b>${(av.crit*100).toFixed(1)}%</b></div><div class="ct127Stat">平均閃避<b>${(av.dodge*100).toFixed(1)}%</b></div><div class="ct127Stat">平均爆傷<b>+${(av.critDmg*100).toFixed(0)}%</b></div></div><div class="sub" style="margin-top:7px">上限：自然閃避 50%＋寶物突破最高 70%｜爆率 80%｜爆傷 500%｜攻速無上限。只有自然閃避溢出→HP/DEF；寶物閃避直接突破；爆率與爆傷溢出→ATK/攻速。</div>`;
-      box.prepend(summary);
-      const cs=[...(R[city]||[])].sort((a,b)=>craw(b)-craw(a));
-      document.querySelectorAll('#mbo .rosterCard').forEach((card,i)=>{const c=cs[i];if(!c)return;const st=cstats(c),stats=card.querySelector('.stats');if(stats)stats.innerHTML=`<div class="stat">HP<b>${st.hp}</b></div><div class="stat">ATK<b>${st.atk}</b></div><div class="stat">DEF<b>${st.def}</b></div><div class="stat">攻速<b>${st.speed.toFixed(1)}</b></div><div class="stat">爆率<b>${(st.crit*100).toFixed(1)}%</b></div><div class="stat">閃避<b>${(st.dodge*100).toFixed(1)}%</b></div><div class="stat">爆傷<b>+${(st.critDmg*100).toFixed(0)}%</b></div>`;
-        card.querySelector('.ct127Overflow')?.remove();
-        const d=(st.dodgeOverflow||0)*100,cr=(st.critOverflow||0)*100,cd=(st.critDmgOverflow||0)*100;if(d>0||cr>0||cd>0){const n=document.createElement('div');n.className='ct127Overflow';n.textContent=`溢出轉換｜閃避 +${d.toFixed(1)}pt → HP/DEF｜爆率 +${cr.toFixed(1)}pt、爆傷 +${cd.toFixed(0)}pt → ATK/攻速`;card.appendChild(n)}
-      });
-    }catch(e){console.warn('CT127 roster',e)}
-  });
-};
 
 // Extend treasure effect text used by the five battle slots/tooltips.
 try{
@@ -2853,30 +2827,7 @@ try{
 }catch(e){console.warn('CT130 party refresh',e)}
 
 // Make the roster overflow note explicit: treasure dodge is breakthrough, not overflow conversion.
-const prevShowRoster130=window.showRoster;
-if(typeof prevShowRoster130==='function'){
-  window.showRoster=showRoster=function(city){
-    prevShowRoster130(city);
-    requestAnimationFrame(()=>{
-      requestAnimationFrame(()=>{
-        try{
-          const note=[...document.querySelectorAll('#ct127TeamSummary .sub')].find(el=>el.textContent.includes('上限：'));
-          if(note)note.textContent='上限：自然閃避 50%＋寶物突破最高 70%｜爆率 80%｜爆傷 +500%｜攻速無上限。只有自然閃避溢出→HP/DEF；寶物閃避直接突破；爆率與爆傷溢出→ATK/攻速。';
-          const cs=[...(R[city]||[])].sort((a,b)=>craw(b)-craw(a));
-          document.querySelectorAll('#mbo .rosterCard').forEach((card,i)=>{
-            const c=cs[i];if(!c)return;const st=cstats(c);
-            const old=card.querySelector('.ct130DodgeBreak');if(old)old.remove();
-            if((st.treasureDodge||0)>0){
-              const n=document.createElement('div');n.className='ct127Overflow ct130DodgeBreak';
-              n.textContent=`閃避構成｜自然 ${(st.naturalDodge*100).toFixed(1)}%＋寶物 ${(st.treasureDodge*100).toFixed(1)}%＝最終 ${(st.dodge*100).toFixed(1)}%`;
-              card.appendChild(n);
-            }
-          });
-        }catch(e){console.warn('CT130 roster note',e)}
-      });
-    });
-  };
-}
+// V17.4.152 cleanup: obsolete V130 roster wrapper removed; final roster rendering is canonical below.
 
 try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.130');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.130')}catch(e){}
 
@@ -3006,100 +2957,8 @@ try{
 // Refresh active parties without changing current HP percentage.
 try{for(const st of states||[])for(const p of st.party||[]){const c=R[st.city]?.find(x=>x.id===p.id);if(!c)continue;const om=Math.max(1,Number(p.max)||1),r=Math.max(0,Math.min(1,(Number(p.hp)||0)/om)),s=cstats(c);p.max=s.hp;p.hp=p.alive===false?0:Math.max(1,Math.round(s.hp*r));p.atk=s.atk;p.def=s.def;p.speed=s.speed;p.crit=s.crit;p.dodge=s.dodge;p.critDmg=s.critDmg}}catch(e){console.warn('CT131 party refresh',e)}
 
-let ctTeamDataHeartbeat=0,ctTeamDataCity=null;
-function ctStopRosterLiveSync(){if(ctTeamDataHeartbeat){clearInterval(ctTeamDataHeartbeat);ctTeamDataHeartbeat=0}ctTeamDataCity=null}
-function ctSetText(el,text){if(el&&el.textContent!==String(text))el.textContent=String(text)}
-function ctSetHtml(el,html){if(el&&el.innerHTML!==html)el.innerHTML=html}
-function ctSetTierClass(el,tier){if(!el)return;for(const g of ['X','U','S','A','B','C','D','E','F','Z'])el.classList.remove(g);el.classList.add(tier)}
-function ctPatchCityOverview(){
-  const box=document.getElementById('mbo'),grid=box?.querySelector('.cityGrid');if(!grid)return;
-  const m=meta(),ordered=Object.values(m).sort((a,b)=>(a.rank??a.powerRank??999)-(b.rank??b.powerRank??999));
-  for(const x of ordered){
-    const btn=[...grid.querySelectorAll('.cityBtn')].find(b=>b.dataset.city===x.city);if(!btn)continue;
-    const av=teamAvg127(x.city),rank=x.rank??x.powerRank,st=(states||[]).find(z=>z.city===x.city),floor=Math.max(1,Number(st?.floor)||1);
-    const cityName=btn.querySelector(':scope>b');ctSetTierClass(cityName,x.tier);if(cityName)cityName.classList.add('ratingText');
-    const line=btn.children[2];if(line){const html=`評級 <span class="tier tierLetter tierMotion ${x.tier}">${x.tier}</span>｜戰力 <span class="ratingText ${x.tier}">${x.power.toFixed(2)}</span>｜#${Number.isFinite(rank)?rank:'—'}`;ctSetHtml(line,html)}
-    ctSetText(btn.querySelector('.ct127Floor b'),`${floor}F`);
-    ctSetText(btn.querySelector('.ct127TeamMini'),`均攻速 ${av.speed.toFixed(1)}｜爆率 ${(av.crit*100).toFixed(1)}%｜閃避 ${(av.dodge*100).toFixed(1)}%｜爆傷 +${(av.critDmg*100).toFixed(0)}%`);
-    grid.appendChild(btn);
-  }
-}
-function ctPatchRosterSummary(city){
-  const sum=document.getElementById('ct127TeamSummary');if(!sum)return;
-  const mm=meta()[city],av=teamAvg127(city),st=(states||[]).find(z=>z.city===city),floor=Math.max(1,Number(st?.floor)||1);if(!mm)return;
-  const head=sum.querySelector('.ct127Head');
-  if(head){const html=`<b>${city}｜${TEAMN[city]||''}</b><span>評級 <span class="tier tierLetter tierMotion ${mm.tier}">${mm.tier}</span>｜隊伍戰力 <span class="ratingText ${mm.tier}">${mm.power.toFixed(2)}</span>｜全服 #${Number.isFinite(mm.rank??mm.powerRank)?(mm.rank??mm.powerRank):'—'}｜關卡 <b>${floor}F</b></span>`;ctSetHtml(head,html)}
-  const vals=[Math.round(av.hp),Math.round(av.atk),Math.round(av.def),av.speed.toFixed(1),(av.crit*100).toFixed(1)+'%',(av.dodge*100).toFixed(1)+'%','+'+(av.critDmg*100).toFixed(0)+'%'];
-  sum.querySelectorAll('.ct127Stat').forEach((el,i)=>{const b=el.querySelector('b');if(b&&vals[i]!=null)ctSetText(b,vals[i])});
-}
-function ctBindRosterCards(city){
-  const cs=[...(R[city]||[])].sort((a,b)=>craw(b)-craw(a));
-  document.querySelectorAll('#mbo .rosterCard').forEach((card,i)=>{const c=cs[i];if(c)card.dataset.charId=c.id});
-}
-function ctPatchRosterCard(card,c,g,cityRank,active){
-  if(!card||!c||!g)return;card.classList.toggle('active',active);
-  const st=cstats(c),need=xpNeed(c.lv),pct=Math.max(0,Math.min(100,100*c.xp/need));
-  const name=card.querySelector('.cardTop>div>b');if(name){ctSetText(name,`#${cityRank} ${c.name}`);name.classList.add('ratingText');ctSetTierClass(name,g.tier)}
-  const grade=card.querySelector('.cardTop>div>.sub');if(grade){const html=`目前評級 <span class="tier tierLetter tierMotion ${g.tier}">${g.tier}</span>｜全服角色#${g.rank}｜原始階級 <span class="ratingText ${c.grade}">${c.grade}</span>｜原始總分 ${c.total}`;ctSetHtml(grade,html)}
-  const lv=card.querySelector('.cardTop>b');if(lv){const html=`<span class="tier tierLetter tierMotion ${g.tier}" style="font-size:22px">${g.tier}</span><br>Lv.${c.lv}`;ctSetHtml(lv,html)}
-  const xp=card.querySelector('.xp i'),width=pct.toFixed(2)+'%';if(xp&&xp.style.width!==width)xp.style.width=width;
-  const power=[...card.querySelectorAll(':scope>.sub')].find(el=>el.textContent.includes('EXP '));if(power){ctSetText(power,`EXP ${c.xp}/${need}｜個人戰力 ${(10*craw(c)/initialTop).toFixed(2)}`);power.classList.add('ratingText');ctSetTierClass(power,g.tier)}
-  const stats=card.querySelector('.stats'),vals=[st.hp,st.atk,st.def,st.speed.toFixed(1),(st.crit*100).toFixed(1)+'%',(st.dodge*100).toFixed(1)+'%','+'+(st.critDmg*100).toFixed(0)+'%'];
-  if(stats)stats.querySelectorAll('.stat b').forEach((b,i)=>{if(vals[i]!=null)ctSetText(b,vals[i])});
-  const battle=[...card.querySelectorAll(':scope>.sub')].find(el=>el.textContent.startsWith('出場 '));if(battle)ctSetText(battle,`出場 ${c.deploys}｜攻擊 ${c.attacks}｜暴擊 ${c.crits}`);
-  card.querySelectorAll('.ct131Break,.ct130DodgeBreak').forEach(x=>x.remove());
-  let note=card.querySelector('.ct147Break');if(!note){note=document.createElement('div');note.className='ct127Overflow ct147Break';card.appendChild(note)}
-  ctSetText(note,`構成｜閃避 ${(st.naturalDodge*100).toFixed(1)}%＋寶物 ${(st.treasureDodge*100).toFixed(1)}%＝${(st.dodge*100).toFixed(1)}%｜爆率 ${(st.naturalCrit*100).toFixed(1)}%＋寶物 ${(st.treasureCrit*100).toFixed(1)}%＝${(st.crit*100).toFixed(1)}%｜爆傷 +${(st.naturalCritDmg*100).toFixed(0)}%＋寶物 +${(st.treasureCritDmg*100).toFixed(0)}%＝+${(st.critDmg*100).toFixed(0)}%`);
-  const api=window.__CT_TREASURE,items=api?.itemsForChar?.(c)||[],sig=items.map(x=>x.id).join(',');let slots=card.querySelector('.tRosterEquipMulti');
-  if(!slots&&api?.rosterSlots){card.insertAdjacentHTML('beforeend',api.rosterSlots(c));slots=card.querySelector('.tRosterEquipMulti')}
-  else if(slots&&slots.dataset.treasureSig!==sig&&api?.rosterSlots){const tmp=document.createElement('div');tmp.innerHTML=api.rosterSlots(c);slots.replaceWith(tmp.firstElementChild)}
-}
-function ctPatchRoster(city){
-  const box=document.getElementById('mbo');if(!box?.querySelector('.roster'))return;ctPatchRosterSummary(city);
-  const cs=[...(R[city]||[])].sort((a,b)=>craw(b)-craw(a)),active=new Set(((states||[]).find(x=>x.city===city)?.party||[]).map(p=>p.id)),roster=box.querySelector('.roster'),cm=charMetaV173();
-  for(let i=0;i<cs.length;i++){const c=cs[i];let card=[...roster.querySelectorAll('.rosterCard')].find(x=>x.dataset.charId===c.id);if(!card){ctBindRosterCards(city);card=[...roster.querySelectorAll('.rosterCard')].find(x=>x.dataset.charId===c.id)}if(!card)continue;ctPatchRosterCard(card,c,cm[c.id],i+1,active.has(c.id));roster.appendChild(card)}
-}
-function ctDetectRosterCity(){
-  if(ctTeamDataCity&&R?.[ctTeamDataCity])return ctTeamDataCity;
-  const head=document.querySelector('#ct127TeamSummary .ct127Head>b');
-  if(head){const city=(head.textContent||'').split('｜')[0].trim();if(R?.[city])return city}
-  const mt=document.getElementById('mt');
-  if(mt){const m=(mt.textContent||'').match(/👥\s*([^｜]+)｜/);if(m&&R?.[m[1].trim()])return m[1].trim()}
-  return null;
-}
-function ctTeamDataTick(){
-  const mb=document.getElementById('mb'),body=document.getElementById('mbo');
-  if(!mb?.classList.contains('open')||!body)return;
-  try{
-    if(body.querySelector('.cityGrid')){ctTeamDataCity=null;ctPatchCityOverview();return}
-    if(body.querySelector('.roster')){const city=ctDetectRosterCity();if(city){ctTeamDataCity=city;ctPatchRoster(city)}}
-  }catch(e){console.warn('CT151 team 5s sync',e)}
-}
-function ctStartRosterLiveSync(){
-  if(!ctTeamDataHeartbeat)ctTeamDataHeartbeat=setInterval(ctTeamDataTick,5000);
-  requestAnimationFrame(()=>requestAnimationFrame(ctTeamDataTick));
-}
-const prevCities147=window.showCities;
-if(typeof prevCities147==='function'){window.showCities=showCities=function(){prevCities147();ctTeamDataCity=null;ctStartRosterLiveSync()}}
-const prevRoster131=window.showRoster;
-if(typeof prevRoster131==='function'){window.showRoster=showRoster=function(city){
-  prevRoster131(city);ctTeamDataCity=city;ctStartRosterLiveSync();
-  requestAnimationFrame(()=>requestAnimationFrame(()=>{try{
-    ctBindRosterCards(city);ctPatchRoster(city);
-    const note=[...document.querySelectorAll('#ct127TeamSummary .sub')].find(el=>el.textContent.includes('上限：'));
-    if(note)note.textContent='上限：自然閃避 50%＋寶物最高 70%｜自然爆率 60%＋寶物可推至 100%｜自然爆傷 +500%＋命運天書 +200%（最高 +700%）｜攻速無上限。自然閃避溢出→HP/DEF；自然爆率超過60%與寶物把總爆率推過100%的部分→ATK/攻速；自然爆傷超過+500%的部分→ATK/攻速。';
-  }catch(e){console.warn('CT151 roster init',e)}}));
-};}
-// Reliability hooks: start/refresh from the actual UI events even if an older onclick closure bypasses the wrapped functions.
-try{
-  document.getElementById('teams')?.addEventListener('click',()=>{ctTeamDataCity=null;setTimeout(ctStartRosterLiveSync,0)},true);
-  document.getElementById('back')?.addEventListener('click',()=>{ctTeamDataCity=null;setTimeout(ctStartRosterLiveSync,0)},true);
-  document.getElementById('mbo')?.addEventListener('click',e=>{const b=e.target?.closest?.('.cityBtn');if(!b)return;ctTeamDataCity=b.dataset.city||null;setTimeout(ctStartRosterLiveSync,0)},true);
-  document.getElementById('close')?.addEventListener('click',ctStopRosterLiveSync);
-}catch(e){console.warn('CT151 roster sync controls',e)}
 
-try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.131');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.131')}catch(e){}
-window.__CT_BUILD='V17.4.151-reliable-team-5s-sync-unlimited-level';
+try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.152');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.152')}catch(e){}
 try{if(typeof render==='function')render();if(typeof save==='function')save(true)}catch(e){console.warn('CT131 final render',e)}
 })();
 </script>
@@ -4240,6 +4099,132 @@ html body .tierMotion.A:not(.tSummaryTier)::before,html body .ctGlobalTierGlyph.
 @keyframes ctASideMarks{0%,15%,30%,45%,60%,75%{opacity:.24}7.5%,22.5%,37.5%,52.5%,67.5%{opacity:.50}80%{opacity:.38}90%,97%{opacity:.68}100%{opacity:.24}}
 @-webkit-keyframes ctASideMarks{0%,15%,30%,45%,60%,75%{opacity:.24}7.5%,22.5%,37.5%,52.5%,67.5%{opacity:.50}80%{opacity:.38}90%,97%{opacity:.68}100%{opacity:.24}}
 </style>
+
+
+<style id="ctTeamCanonical153Style">
+#ct127TeamSummary .ct153SyncStamp{font-size:9px;color:#7890af;margin-left:6px;font-weight:700}
+.rosterCard .ct153TreasureWrap{margin-top:6px}
+</style>
+<script id="ctTeamCanonical153">
+(()=>{
+'use strict';
+const CT_TEAM_SYNC_MS=5000;
+const CT_TIERS=['X','U','S','A','B','C','D','E','F','Z'];
+let ctTeamCity153=null,ctTeamTimer153=0,ctTeamLast153=0,ctTeamMode153=null;
+
+function ctQ153(s,r=document){return r.querySelector(s)}
+function ctQA153(s,r=document){return [...r.querySelectorAll(s)]}
+function ctTxt153(el,v){v=String(v);if(el&&el.textContent!==v)el.textContent=v}
+function ctHtml153(el,v){if(el&&el.innerHTML!==v)el.innerHTML=v}
+function ctTier153(el,t){if(!el)return;for(const g of CT_TIERS)el.classList.remove(g);el.classList.add(t)}
+function ctState153(city){return (states||[]).find(s=>s.city===city)}
+function ctMeta153(){return typeof meta==='function'?meta():{}}
+function ctCharMeta153(){return typeof charMetaV173==='function'?charMetaV173():(typeof window.charMeta==='function'?window.charMeta():{})}
+function ctTeamAvg153(city){return typeof teamAvg127==='function'?teamAvg127(city):{hp:0,atk:0,def:0,speed:0,crit:0,dodge:0,critDmg:0}}
+function ctPower153(c){return (10*craw(c)/Math.max(1e-9,Number(initialTop)||1)).toFixed(2)}
+function ctFloor153(city){return Math.max(1,Number(ctState153(city)?.floor)||1)}
+function ctNow153(){const d=new Date();return [d.getHours(),d.getMinutes(),d.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':')}
+
+function ctCityCardHtml153(city,m){
+ const x=m[city],a=ctTeamAvg153(city),rank=x?.rank??x?.powerRank??'—',f=ctFloor153(city),tier=x?.tier||'F',power=Number(x?.power)||0;
+ return `<button class="cityBtn" data-city="${city}"><b class="ct153CityName ratingText ${tier}">${city}</b><div class="sub">${TEAMN[city]||''}</div><div class="ct153TeamLine">評級 <span class="ct153Tier tier tierLetter tierMotion ${tier}">${tier}</span>｜戰力 <span class="ct153Power ratingText ${tier}">${power.toFixed(2)}</span>｜#<span class="ct153Rank">${rank}</span></div><div class="ct127Floor">關卡 <b class="ct153Floor">${f}F</b></div><div class="ct127TeamMini">均攻速 <span class="ct153AvgSpeed">${a.speed.toFixed(1)}</span>｜爆率 <span class="ct153AvgCrit">${(a.crit*100).toFixed(1)}%</span>｜閃避 <span class="ct153AvgDodge">${(a.dodge*100).toFixed(1)}%</span>｜爆傷 <span class="ct153AvgCdmg">+${(a.critDmg*100).toFixed(0)}%</span></div></button>`
+}
+function ctRenderCities153(){
+ const body=document.getElementById('mbo'),title=document.getElementById('mt'),back=document.getElementById('back');if(!body)return;
+ const m=ctMeta153(),ordered=Object.keys(R||{}).sort((a,b)=>(m[a]?.rank??999)-(m[b]?.rank??999));
+ if(title)title.textContent='📚 隊伍資料｜22縣市｜同步 '+ctNow153();if(back){back.style.display='none';back.onclick=ctShowCities153}
+ body.innerHTML=`<div class="cityGrid">${ordered.map(c=>ctCityCardHtml153(c,m)).join('')}</div>`;
+ ctQA153('.cityBtn',body).forEach(b=>b.onclick=()=>ctShowRoster153(b.dataset.city));
+ body.dataset.ctTeamView='cities';ctTeamMode153='cities';ctTeamCity153=null;ctTeamLast153=Date.now();
+}
+function ctPatchCities153(){
+ const body=document.getElementById('mbo'),grid=ctQ153('.cityGrid',body);if(!grid)return ctRenderCities153();
+ const m=ctMeta153(),ordered=Object.keys(R||{}).sort((a,b)=>(m[a]?.rank??999)-(m[b]?.rank??999));
+ for(const city of ordered){
+   const x=m[city];let b=ctQ153(`.cityBtn[data-city="${CSS.escape(city)}"]`,grid);if(!b){const t=document.createElement('div');t.innerHTML=ctCityCardHtml153(city,m);b=t.firstElementChild;b.onclick=()=>ctShowRoster153(city)}
+   const tier=x?.tier||'F',a=ctTeamAvg153(city),rank=x?.rank??x?.powerRank??'—';
+   const n=ctQ153('.ct153CityName',b);ctTxt153(n,city);ctTier153(n,tier);
+   const tg=ctQ153('.ct153Tier',b);ctTxt153(tg,tier);ctTier153(tg,tier);
+   const pw=ctQ153('.ct153Power',b);ctTxt153(pw,(Number(x?.power)||0).toFixed(2));ctTier153(pw,tier);
+   ctTxt153(ctQ153('.ct153Rank',b),rank);ctTxt153(ctQ153('.ct153Floor',b),ctFloor153(city)+'F');
+   ctTxt153(ctQ153('.ct153AvgSpeed',b),a.speed.toFixed(1));ctTxt153(ctQ153('.ct153AvgCrit',b),(a.crit*100).toFixed(1)+'%');
+   ctTxt153(ctQ153('.ct153AvgDodge',b),(a.dodge*100).toFixed(1)+'%');ctTxt153(ctQ153('.ct153AvgCdmg',b),'+'+(a.critDmg*100).toFixed(0)+'%');
+   grid.appendChild(b);
+ }
+ const title=document.getElementById('mt');if(title)title.textContent='📚 隊伍資料｜22縣市｜同步 '+ctNow153();ctTeamLast153=Date.now();
+}
+function ctTreasureHtml153(c){
+ const api=window.__CT_TREASURE;
+ if(api?.rosterSlots)return api.rosterSlots(c);
+ return '<div class="tRosterEquipMulti">'+Array.from({length:5},()=>'<div class="tRosterEquip empty" title="空寶物槽"><span>◇</span><b>空</b></div>').join('')+'</div>'
+}
+function ctRosterCardHtml153(c,idx,g,active){
+ const s=cstats(c),need=xpNeed(c.lv),pct=Math.max(0,Math.min(100,100*(Number(c.xp)||0)/Math.max(1,need))),tier=g?.tier||c.grade||'F';
+ const nd=Number(s.naturalDodge??s.dodge??0),td=Number(s.treasureDodge??0),nc=Number(s.naturalCrit??s.crit??0),tc=Number(s.treasureCrit??0),ncd=Number(s.naturalCritDmg??s.critDmg??0),tcd=Number(s.treasureCritDmg??0);
+ return `<div class="rosterCard ${active?'active':''}" data-char-id="${c.id}"><div class="cardTop"><div><b class="ct153CharName ratingText ${tier}">#${idx} ${c.name}</b><div class="sub ct153CharGrade">目前評級 <span class="ct153CharTier tier tierLetter tierMotion ${tier}">${tier}</span>｜全服角色#<span class="ct153CharRank">${g?.rank??'—'}</span>｜原始階級 <span class="ct153OrigGrade ratingText ${c.grade}">${c.grade}</span>｜原始總分 <span class="ct153OrigTotal">${c.total}</span></div></div><b class="ct153Lv"><span class="ct153LvTier tier tierLetter tierMotion ${tier}" style="font-size:22px">${tier}</span><br>Lv.<span class="ct153LvNum">${c.lv}</span></b></div><div class="xp"><i style="width:${pct.toFixed(2)}%"></i></div><div class="sub ct153PowerLine ratingText ${tier}">EXP <span class="ct153Xp">${c.xp}</span>/<span class="ct153XpNeed">${need}</span>｜個人戰力 <span class="ct153CharPower">${ctPower153(c)}</span></div><div class="stats"><div class="stat">HP<b class="ct153Hp">${s.hp}</b></div><div class="stat">ATK<b class="ct153Atk">${s.atk}</b></div><div class="stat">DEF<b class="ct153Def">${s.def}</b></div><div class="stat">攻速<b class="ct153Speed">${s.speed.toFixed(1)}</b></div><div class="stat">爆率<b class="ct153Crit">${(s.crit*100).toFixed(1)}%</b></div><div class="stat">閃避<b class="ct153Dodge">${(s.dodge*100).toFixed(1)}%</b></div><div class="stat">爆傷<b class="ct153Cdmg">+${(s.critDmg*100).toFixed(0)}%</b></div></div><div class="sub ct153Battle">出場 ${c.deploys}｜攻擊 ${c.attacks}｜暴擊 ${c.crits}</div><div class="ct127Overflow ct153Break">構成｜閃避 ${(nd*100).toFixed(1)}%＋寶物 ${(td*100).toFixed(1)}%＝${(Number(s.dodge||0)*100).toFixed(1)}%｜爆率 ${(nc*100).toFixed(1)}%＋寶物 ${(tc*100).toFixed(1)}%＝${(Number(s.crit||0)*100).toFixed(1)}%｜爆傷 +${(ncd*100).toFixed(0)}%＋寶物 +${(tcd*100).toFixed(0)}%＝+${(Number(s.critDmg||0)*100).toFixed(0)}%</div><div class="ct153TreasureWrap">${ctTreasureHtml153(c)}</div></div>`
+}
+function ctSummaryHtml153(city,m){
+ const x=m[city],a=ctTeamAvg153(city),f=ctFloor153(city),tier=x?.tier||'F',rank=x?.rank??x?.powerRank??'—';
+ return `<div id="ct127TeamSummary"><div class="ct127Head"><b>${city}｜${TEAMN[city]||''}</b><span>評級 <span class="ct153SumTier tier tierLetter tierMotion ${tier}">${tier}</span>｜隊伍戰力 <span class="ct153SumPower ratingText ${tier}">${(Number(x?.power)||0).toFixed(2)}</span>｜全服 #<span class="ct153SumRank">${rank}</span>｜關卡 <b class="ct153SumFloor">${f}F</b><span class="ct153SyncStamp">5秒同步｜<span class="ct153SyncTime">${ctNow153()}</span></span></span></div><div class="ct127StatGrid"><div class="ct127Stat">平均 HP<b class="ct153SumHp">${Math.round(a.hp)}</b></div><div class="ct127Stat">平均 ATK<b class="ct153SumAtk">${Math.round(a.atk)}</b></div><div class="ct127Stat">平均 DEF<b class="ct153SumDef">${Math.round(a.def)}</b></div><div class="ct127Stat">平均攻速<b class="ct153SumSpeed">${a.speed.toFixed(1)}</b></div><div class="ct127Stat">平均爆率<b class="ct153SumCrit">${(a.crit*100).toFixed(1)}%</b></div><div class="ct127Stat">平均閃避<b class="ct153SumDodge">${(a.dodge*100).toFixed(1)}%</b></div><div class="ct127Stat">平均爆傷<b class="ct153SumCdmg">+${(a.critDmg*100).toFixed(0)}%</b></div></div><div class="sub" style="margin-top:7px">上限：自然閃避 50%＋寶物最高 70%｜自然爆率 60%＋寶物可推至 100%｜自然爆傷 +500%＋命運天書 +200%（最高 +700%）｜攻速無上限。自然閃避溢出→HP/DEF；自然爆率超過60%與寶物把總爆率推過100%的部分→ATK/攻速；自然爆傷超過+500%的部分→ATK/攻速。</div></div>`
+}
+function ctRenderRoster153(city){
+ if(!R?.[city])return ctRenderCities153();ctTeamCity153=city;ctTeamMode153='roster';
+ const body=document.getElementById('mbo'),title=document.getElementById('mt'),back=document.getElementById('back');if(!body)return;
+ const m=ctMeta153(),cm=ctCharMeta153(),st=ctState153(city),active=new Set((st?.party||[]).map(p=>p.id)),cs=[...(R[city]||[])].sort((a,b)=>craw(b)-craw(a));
+ if(title)title.textContent='👥 '+city+'｜12人完整資料｜同步 '+ctNow153();if(back){back.style.display='';back.onclick=ctShowCities153}
+ body.innerHTML=ctSummaryHtml153(city,m)+`<div class="roster">${cs.map((c,i)=>ctRosterCardHtml153(c,i+1,cm[c.id],active.has(c.id))).join('')}</div>`;
+ body.dataset.ctTeamView='roster';body.dataset.ctTeamCity=city;ctTeamLast153=Date.now();
+}
+function ctPatchSummary153(city,m){
+ const sum=document.getElementById('ct127TeamSummary'),x=m[city];if(!sum||!x)return;const a=ctTeamAvg153(city),tier=x.tier,rank=x.rank??x.powerRank??'—';
+ const tg=ctQ153('.ct153SumTier',sum);ctTxt153(tg,tier);ctTier153(tg,tier);const pw=ctQ153('.ct153SumPower',sum);ctTxt153(pw,(Number(x.power)||0).toFixed(2));ctTier153(pw,tier);
+ ctTxt153(ctQ153('.ct153SumRank',sum),rank);ctTxt153(ctQ153('.ct153SumFloor',sum),ctFloor153(city)+'F');
+ ctTxt153(ctQ153('.ct153SumHp',sum),Math.round(a.hp));ctTxt153(ctQ153('.ct153SumAtk',sum),Math.round(a.atk));ctTxt153(ctQ153('.ct153SumDef',sum),Math.round(a.def));ctTxt153(ctQ153('.ct153SumSpeed',sum),a.speed.toFixed(1));ctTxt153(ctQ153('.ct153SumCrit',sum),(a.crit*100).toFixed(1)+'%');ctTxt153(ctQ153('.ct153SumDodge',sum),(a.dodge*100).toFixed(1)+'%');ctTxt153(ctQ153('.ct153SumCdmg',sum),'+'+(a.critDmg*100).toFixed(0)+'%');ctTxt153(ctQ153('.ct153SyncTime',sum),ctNow153());
+}
+function ctPatchCard153(card,c,idx,g,active){
+ const s=cstats(c),need=xpNeed(c.lv),pct=Math.max(0,Math.min(100,100*(Number(c.xp)||0)/Math.max(1,need))),tier=g?.tier||c.grade||'F';card.classList.toggle('active',active);
+ const nm=ctQ153('.ct153CharName',card);ctTxt153(nm,`#${idx} ${c.name}`);ctTier153(nm,tier);
+ const tg=ctQ153('.ct153CharTier',card);ctTxt153(tg,tier);ctTier153(tg,tier);ctTxt153(ctQ153('.ct153CharRank',card),g?.rank??'—');
+ const og=ctQ153('.ct153OrigGrade',card);ctTxt153(og,c.grade);ctTier153(og,c.grade);ctTxt153(ctQ153('.ct153OrigTotal',card),c.total);
+ const lt=ctQ153('.ct153LvTier',card);ctTxt153(lt,tier);ctTier153(lt,tier);ctTxt153(ctQ153('.ct153LvNum',card),c.lv);
+ const xi=ctQ153('.xp i',card),w=pct.toFixed(2)+'%';if(xi&&xi.style.width!==w)xi.style.width=w;
+ ctTxt153(ctQ153('.ct153Xp',card),c.xp);ctTxt153(ctQ153('.ct153XpNeed',card),need);ctTxt153(ctQ153('.ct153CharPower',card),ctPower153(c));const pl=ctQ153('.ct153PowerLine',card);ctTier153(pl,tier);
+ ctTxt153(ctQ153('.ct153Hp',card),s.hp);ctTxt153(ctQ153('.ct153Atk',card),s.atk);ctTxt153(ctQ153('.ct153Def',card),s.def);ctTxt153(ctQ153('.ct153Speed',card),s.speed.toFixed(1));ctTxt153(ctQ153('.ct153Crit',card),(s.crit*100).toFixed(1)+'%');ctTxt153(ctQ153('.ct153Dodge',card),(s.dodge*100).toFixed(1)+'%');ctTxt153(ctQ153('.ct153Cdmg',card),'+'+(s.critDmg*100).toFixed(0)+'%');
+ ctTxt153(ctQ153('.ct153Battle',card),`出場 ${c.deploys}｜攻擊 ${c.attacks}｜暴擊 ${c.crits}`);
+ const nd=Number(s.naturalDodge??s.dodge??0),td=Number(s.treasureDodge??0),nc=Number(s.naturalCrit??s.crit??0),tc=Number(s.treasureCrit??0),ncd=Number(s.naturalCritDmg??s.critDmg??0),tcd=Number(s.treasureCritDmg??0);
+ ctTxt153(ctQ153('.ct153Break',card),`構成｜閃避 ${(nd*100).toFixed(1)}%＋寶物 ${(td*100).toFixed(1)}%＝${(Number(s.dodge||0)*100).toFixed(1)}%｜爆率 ${(nc*100).toFixed(1)}%＋寶物 ${(tc*100).toFixed(1)}%＝${(Number(s.crit||0)*100).toFixed(1)}%｜爆傷 +${(ncd*100).toFixed(0)}%＋寶物 +${(tcd*100).toFixed(0)}%＝+${(Number(s.critDmg||0)*100).toFixed(0)}%`);
+ const api=window.__CT_TREASURE,items=api?.itemsForChar?.(c)||[],sig=items.map(x=>x.id+':'+x.tier+':'+x.type).join(','),wrap=ctQ153('.ct153TreasureWrap',card);if(wrap&&wrap.dataset.sig!==sig){wrap.innerHTML=ctTreasureHtml153(c);wrap.dataset.sig=sig}
+}
+function ctPatchRoster153(city){
+ const body=document.getElementById('mbo'),roster=ctQ153('.roster',body);if(!roster||!R?.[city])return ctRenderRoster153(city);
+ const m=ctMeta153(),cm=ctCharMeta153(),st=ctState153(city),active=new Set((st?.party||[]).map(p=>p.id)),cs=[...(R[city]||[])].sort((a,b)=>craw(b)-craw(a));ctPatchSummary153(city,m);
+ for(let i=0;i<cs.length;i++){const c=cs[i];let card=ctQ153(`.rosterCard[data-char-id="${CSS.escape(String(c.id))}"]`,roster);if(!card){const t=document.createElement('div');t.innerHTML=ctRosterCardHtml153(c,i+1,cm[c.id],active.has(c.id));card=t.firstElementChild}ctPatchCard153(card,c,i+1,cm[c.id],active.has(c.id));roster.appendChild(card)}
+ const title=document.getElementById('mt');if(title)title.textContent='👥 '+city+'｜12人完整資料｜同步 '+ctNow153();ctTeamLast153=Date.now();
+}
+function ctRefresh153(){
+ const mb=document.getElementById('mb'),body=document.getElementById('mbo');if(!mb?.classList.contains('open')||!body)return;
+ if(ctQ153('.cityGrid',body)){ctTeamMode153='cities';ctPatchCities153();return}
+ const city=body.dataset.ctTeamCity||ctTeamCity153;if(ctQ153('.roster',body)&&city&&R?.[city]){ctTeamMode153='roster';ctTeamCity153=city;ctPatchRoster153(city)}
+}
+function ctShowCities153(){ctRenderCities153()}
+function ctShowRoster153(city){ctRenderRoster153(city)}
+window.showCities=showCities=ctShowCities153;window.showRoster=showRoster=ctShowRoster153;
+window.__CT_TEAM_UI={showCities:ctShowCities153,showRoster:ctShowRoster153,refresh:ctRefresh153,interval:CT_TEAM_SYNC_MS};
+
+const teamsBtn=document.getElementById('teams'),closeBtn=document.getElementById('close'),backBtn=document.getElementById('back');
+if(teamsBtn)teamsBtn.onclick=()=>{document.getElementById('mb')?.classList.add('open');ctShowCities153()};
+if(backBtn)backBtn.onclick=ctShowCities153;
+if(closeBtn){const oldClose=closeBtn.onclick;closeBtn.onclick=e=>{if(typeof oldClose==='function')oldClose.call(closeBtn,e);else document.getElementById('mb')?.classList.remove('open')}}
+if(window.__CT_TEAM_SYNC_TIMER)clearInterval(window.__CT_TEAM_SYNC_TIMER);
+window.__CT_TEAM_SYNC_TIMER=setInterval(ctRefresh153,CT_TEAM_SYNC_MS);
+// A render-throttled fallback makes the visible team window self-heal even if a browser delays interval callbacks.
+const ctRenderBefore153=window.render;
+window.render=function(){ctRenderBefore153();if(document.getElementById('mb')?.classList.contains('open')&&Date.now()-ctTeamLast153>=CT_TEAM_SYNC_MS)ctRefresh153()};
+
+try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.153');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.153')}catch(e){}
+window.__CT_BUILD='V17.4.153-canonical-team-data-full-5s-sync-unlimited-level';
+})();
+</script>
 
 <script id="ctDesktopGameMode174134">
 (()=>{
