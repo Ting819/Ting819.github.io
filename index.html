@@ -145,7 +145,7 @@ window.ctBattleTreasureInline126=function(c){
 </script>
 <script>
 const SAVE='CITY_TOWER_V17_SAVE';
-const CT_BUILD_VERSION='V17.4.170';
+const CT_BUILD_VERSION='V17.4.172';
 const CT_SAVE_PREUPDATE='CITY_TOWER_V17_PREUPDATE_BACKUP';
 const CT_TREASURE_SAVE_KEY='CITY_TOWER_V1743_TREASURE';
 const CT_TREASURE_PREUPDATE='CITY_TOWER_V1743_TREASURE_PREUPDATE_BACKUP';
@@ -1548,19 +1548,19 @@ if(location.hash==='#treasure')setTimeout(tOpen,80);
 </script>
 <script>
 (()=>{
-const q=id=>document.getElementById(id), clamp=(x,a,b)=>Math.max(a,Math.min(b,x)), rnd=(a,b)=>a+Math.random()*(b-a);let C=null,timer=0,resume=false;
+const q=id=>document.getElementById(id), clamp=(x,a,b)=>Math.max(a,Math.min(b,x)), rnd=(a,b)=>a+Math.random()*(b-a);let C=null,timer=0,resume=false;const MEGA_SKIP_YIELD_MS172=8;
 const api=()=>window.__CT_TREASURE||null;
 function stopTower(forceResume=false){resume=forceResume?true:!!running;window.__CT_RESUME_WANTED=resume;try{running=false;if(raf)cancelAnimationFrame(raf);raf=0}catch(e){try{running=false;if(raf)cancelAnimationFrame(raf);raf=0}catch(_){}}if(q('auto'))q('auto').textContent='▶ 自動'}
 function clearTimer(){if(timer){clearTimeout(timer);timer=0}}
 function ms(v){const s=C?.speed||1;return Math.max(s>=10?32:s>=5?45:s>=2?70:90,v/s)}
 function ctl(){if(!C)return;q('megaAuto').textContent=C.auto?'⏸ 暫停':'▶ 自動';q('megaHit').disabled=C.auto||!C.pending;q('megaBoundary').textContent=C.kind==='boss'?'🌊 手動下一波':'☠️ 手動下一淘汰'}
-function queue(fn,delay=360){if(!C)return;clearTimer();C.pending=fn;C.delay=delay;ctl();if(C.skip){C.auto=true;timer=setTimeout(run,0)}else if(C.auto)timer=setTimeout(run,ms(delay))}
+function queue(fn,delay=360){if(!C)return;clearTimer();C.pending=fn;C.delay=delay;ctl();if(C.skip){C.auto=true;timer=setTimeout(run,MEGA_SKIP_YIELD_MS172)}else if(C.auto)timer=setTimeout(run,ms(delay))}
 function run(){if(!C||!C.pending)return;clearTimer();const f=C.pending;C.pending=null;ctl();try{f()}catch(e){console.error(e);q('megaStage').insertAdjacentHTML('beforeend',`<div class="noteMega">⚠️ ${e.message||e}</div>`)}}
 function boundary(){if(C?.boundary){C.boundary=false;C.auto=false;clearTimer();ctl();return true}return false}
 function ensure(){if(q('megaComp'))return;const st=document.createElement('style');st.textContent=`
 .megaBack{display:none;position:fixed;inset:0;z-index:7600;background:#020611f3;backdrop-filter:blur(8px);padding:9px;align-items:center;justify-content:center}.megaBack.open{display:flex}.mega{width:min(1280px,99vw);height:min(910px,97vh);background:linear-gradient(180deg,#101b2d,#08111e);border:1px solid #526b92;border-radius:18px;display:flex;flex-direction:column;overflow:hidden}.megaHead{padding:10px 12px;border-bottom:1px solid #2d4264;display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}.megaTitle{font-size:18px;font-weight:1000}.megaMode{font-size:10px;color:#9eb1ca}.megaBtns{display:flex;gap:5px;flex-wrap:wrap}.megaBtns button,.megaBtns select{padding:7px 9px;font-size:11px}.megaBody{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(310px,.65fr);gap:8px;padding:9px;min-height:0;flex:1}.megaStage,.megaRank{overflow:auto;background:#0c1727;border:1px solid #2d4264;border-radius:13px;padding:9px}.rankMega{display:grid;grid-template-columns:30px 1fr 70px 72px 72px;gap:5px;padding:6px;border-bottom:1px solid #20324d;font-size:9px;align-items:center}.rankMega.top{background:#2a240d;border:1px solid #806927;border-radius:8px}.num{text-align:right;font-weight:900}.bossFace{text-align:center;font-size:64px;filter:drop-shadow(0 0 22px #ff506888)}.bossPhase{text-align:center;font-size:12px;font-weight:1000;color:#ffd37a;margin:3px}.bossTop{display:flex;justify-content:space-between;font-size:11px;color:#ffc1c9;font-weight:900}.bossBar{height:28px;border:2px solid #96384a;background:#2b1118;border-radius:99px;overflow:hidden}.bossBar i{height:100%;display:block;background:linear-gradient(90deg,#ff344d,#ff7888);transition:none}.actionMega{margin:8px 0;padding:9px;background:#121f34;border:1px solid #334c70;border-radius:11px;text-align:center;font-size:13px;font-weight:900;color:#ffe08b}.duoMega{display:grid;grid-template-columns:1fr 1fr;gap:8px}.cardMega{background:#132139;border:1px solid #314967;border-radius:11px;padding:8px}.hpMega{height:16px;border:1px solid #4b4451;background:#2b1720;border-radius:99px;overflow:hidden;margin:4px 0}.hpMega i{height:100%;display:block;background:#69dda0}.statMega{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:8px}.statMega div{background:#132139;border:1px solid #2b4263;border-radius:9px;padding:7px;text-align:center;font-size:9px}.statMega b{display:block;font-size:13px}.noteMega{padding:8px;background:#142138;border:1px solid #334a69;border-radius:10px;margin-top:8px;font-size:10px;line-height:1.6}.brawlGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.bf{background:#132139;border:1px solid #314967;border-radius:10px;padding:6px;min-width:0}.bf.dead{opacity:.42}.bf .nm{font-weight:900;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.bf .sub{font-size:8px}.stickyMega{position:sticky;top:-9px;z-index:2;background:#0c1727ef;padding:7px;text-align:center;color:#ffe087;font-weight:900}.podMega{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:10px 0}.podMega>div{border:1px solid #3b5275;border-radius:11px;padding:9px;background:#142138;text-align:center}.podMega>div:first-child{border-color:#cda936;box-shadow:0 0 18px #ffd54d30}.rewardMega{display:grid;gap:4px;margin-top:8px}.rewardMega>div{display:grid;grid-template-columns:32px 1fr 1.3fr;gap:6px;background:#121f34;border-radius:8px;padding:6px;font-size:9px}.officialMega{color:#7ee5a8;font-weight:900}.practiceMega{color:#ffcf75;font-weight:900}.genesisDuel{display:grid;grid-template-columns:minmax(0,1fr) 110px minmax(0,1fr);gap:8px;align-items:stretch}.genesisCard{background:#132139;border:1px solid #3b5275;border-radius:12px;padding:10px;min-width:0}.genesisCard.god{border-color:#d2b43a;box-shadow:0 0 18px #ffdf4930}.genesisCard .cityLine{font-size:10px;color:#a9bdd9}.genesisCard .charName{font-size:18px;font-weight:1000;margin:2px 0}.genesisCard .globalRank{font-size:24px;font-weight:1000;color:#fff0a6}.genesisCard .powerLine{font-size:11px;font-weight:900}.genesisVs{display:flex;align-items:center;justify-content:center;flex-direction:column;font-size:22px;font-weight:1000;color:#ffdd7b;text-align:center}.genesisVs small{font-size:9px;color:#9fb2cb}.genesisHpTop{display:flex;justify-content:space-between;font-size:10px;font-weight:900;margin-top:7px}.genesisStats{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:7px}.genesisStats>div{padding:6px;background:#0e1a2b;border:1px solid #283e5d;border-radius:8px;text-align:center;font-size:8px}.genesisStats b{display:block;font-size:11px}.activityTreasureRow{display:grid;grid-template-columns:repeat(5,minmax(34px,46px));gap:5px;margin-top:7px;align-items:center}.activityTreasureImg,.activityTreasureFallback,.activityTreasureEmpty{width:100%;aspect-ratio:1/1;border:1px solid #344e72;border-radius:8px;background:#081321;display:flex;align-items:center;justify-content:center;object-fit:contain;box-sizing:border-box}.activityTreasureImg{padding:2px}.activityTreasureFallback{font-size:15px;font-weight:1000}.activityTreasureEmpty{color:#536986;font-size:18px}.genesisProgress{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:8px 0}.genesisProgress>div{background:#132139;border:1px solid #314967;border-radius:9px;padding:7px;text-align:center;font-size:9px}.genesisProgress b{display:block;font-size:14px}.genesisLog{margin-top:8px;border:1px solid #2d4264;border-radius:10px;overflow:hidden}.genesisLogHead,.genesisLogRow{display:grid;grid-template-columns:44px 1fr 1fr 1fr 70px;gap:5px;padding:5px 7px;font-size:8px;align-items:center}.genesisLogHead{background:#172640;font-weight:1000;color:#bcd0ea;position:sticky;top:0}.genesisLogRow:nth-child(even){background:#0f1b2d}.genesisRewardTitle{font-size:14px;font-weight:1000;color:#ffe289;margin:10px 0 5px}.genesisUnplayed{opacity:.45}@media(max-width:900px){.megaBody{grid-template-columns:1fr}.megaRank{max-height:34vh}.brawlGrid{grid-template-columns:repeat(3,1fr)}}`;
 document.head.appendChild(st);document.body.insertAdjacentHTML('beforeend',`<div class="megaBack" id="megaComp"><div class="mega"><div class="megaHead"><div><div class="megaTitle" id="megaTitle"></div><div class="megaMode" id="megaMode"></div></div><div class="megaBtns"><select id="megaSpeed"><option value="0.7">0.7×</option><option value="1" selected>1×</option><option value="1.5">1.5×</option><option value="2">2×</option><option value="5">5×</option><option value="10">10×</option></select><button id="megaAuto" class="primary">⏸ 暫停</button><button id="megaHit">👆 手動下一擊</button><button id="megaBoundary">🌊 手動下一波</button><button id="megaSkip">⏭ 跳到結果</button><button id="megaClose">✕ 關閉</button></div></div><div class="megaBody"><div class="megaStage" id="megaStage"></div><div class="megaRank"><b>📊 即時戰功排行</b><div id="megaRankList"></div></div></div></div></div>`);
-q('megaSpeed').onchange=e=>{if(C)C.speed=+e.target.value||1};q('megaAuto').onclick=()=>{if(!C)return;C.boundary=false;C.auto=!C.auto;clearTimer();ctl();if(C.auto&&C.pending)timer=setTimeout(run,ms(C.delay||260))};q('megaHit').onclick=()=>{if(C&&!C.auto)run()};q('megaBoundary').onclick=()=>{if(!C)return;C.boundary=true;C.auto=true;clearTimer();ctl();if(C.pending)timer=setTimeout(run,ms(Math.min(C.delay||160,160)))};q('megaSkip').onclick=()=>{if(!C)return;C.skip=true;C.boundary=false;C.auto=true;clearTimer();ctl();if(C.pending)timer=setTimeout(run,0)};q('megaClose').onclick=close}
+q('megaSpeed').onchange=e=>{if(C)C.speed=+e.target.value||1};q('megaAuto').onclick=()=>{if(!C)return;C.boundary=false;C.auto=!C.auto;clearTimer();ctl();if(C.auto&&C.pending)timer=setTimeout(run,ms(C.delay||260))};q('megaHit').onclick=()=>{if(C&&!C.auto)run()};q('megaBoundary').onclick=()=>{if(!C)return;C.boundary=true;C.auto=true;clearTimer();ctl();if(C.pending)timer=setTimeout(run,ms(Math.min(C.delay||160,160)))};q('megaSkip').onclick=()=>{if(!C)return;C.skip=true;C.boundary=false;C.auto=true;clearTimer();ctl();if(C.pending)timer=setTimeout(run,MEGA_SKIP_YIELD_MS172)};q('megaClose').onclick=close}
 function resumeMegaTower17421(should){
   window.__CT_RESUME_WANTED=!!should;
   if(!should)return;
@@ -1675,7 +1675,7 @@ function genesisBattle(){
  function enterGod(){god=genesisFighter(godList[gi],cm)}
  function enterOpp(){oppEntry=opponentQueue[ci];oppCity=oppEntry?.city||null;if(oppCity)played.add(oppCity);opp=oppEntry?genesisFighter(oppEntry.c,cm):null}
  function resetGauges(){if(god)god.g=0;if(opp)opp.g=0}
- function attackOnce(draw=true){
+ function attackOnce(draw=true,schedule=true){
   if(done||!god||!opp)return;
   const pair=[god,opp],dt=Math.min(...pair.map(x=>(100-x.g)/Math.max(1,x.s.speed)));for(const x of pair)x.g+=x.s.speed*Math.max(.001,dt);
   const a=[...pair].filter(x=>x.g>=99.999).sort((x,y)=>y.g-x.g)[0]||pair[0],b=a===god?opp:god;a.g-=100;a.att++;a.c.attacks=(Number(a.c.attacks)||0)+1;
@@ -1683,11 +1683,11 @@ function genesisBattle(){
   let d=dodged?0:Math.max(1,Math.round(a.s.atk*2.15*100/(100+b.s.def)*rnd(.86,1.14)*(crit?(1+(a.s.critDmg||.50)):1)*(1-shield(b.c)))),ex=dodged?0:extra(a.c,d,crit);d+=ex;const eff=dodged?0:Math.min(b.hp,d);b.hp-=eff;a.g+=wing(a.c,a.att);
   if(a===opp&&eff>0)damage[oppCity]=(damage[oppCity]||0)+eff;
   if(b.hp<=0){b.hp=0;a.c.kills=(Number(a.c.kills)||0)+1;charKills.set(a.c.id,(charKills.get(a.c.id)||0)+1);const godWon=a===god;record(godWon?'god':'opp');
-   if(godWon){currentStreak++;defeatedOpp++;ci++;if(ci>=opponentQueue.length){if(draw){render();ctCombatAttackFx(q('genesisArena')?.querySelector('.genesisCard.god'))}queue(()=>finish(true,null),240);return}enterOpp();if(opp)opp.g=0;}
-   else{currentStreak=0;gi++;if(gi>=godList.length){godslayer=oppCity;if(draw){render();ctCombatAttackFx(q('genesisArena')?.querySelector('.genesisCard:not(.god)'))}queue(()=>finish(false,godslayer),240);return}enterGod();resetGauges();}
-   if(boundary()){render();queue(step,250);return}
+   if(godWon){currentStreak++;defeatedOpp++;ci++;if(ci>=opponentQueue.length){if(draw){render();ctCombatAttackFx(q('genesisArena')?.querySelector('.genesisCard.god'))}if(schedule)queue(()=>finish(true,null),240);else finish(true,null);return}enterOpp();if(opp)opp.g=0;}
+   else{currentStreak=0;gi++;if(gi>=godList.length){godslayer=oppCity;if(draw){render();ctCombatAttackFx(q('genesisArena')?.querySelector('.genesisCard:not(.god)'))}if(schedule)queue(()=>finish(false,godslayer),240);else finish(false,godslayer);return}enterGod();resetGauges();}
+   if(boundary()){render();if(schedule)queue(step,250);return}
   }
-  if(draw){render();const ga164=q('genesisArena');ctCombatAttackFx(ga164?.querySelector(a===god?'.genesisCard.god':'.genesisCard:not(.god)'));if(dodged)ctCombatDodgeFx(ga164?.querySelector(b===god?'.genesisCard.god':'.genesisCard:not(.god)'))}queue(step,300)
+  if(draw){render();const ga164=q('genesisArena');ctCombatAttackFx(ga164?.querySelector(a===god?'.genesisCard.god':'.genesisCard:not(.god)'));if(dodged)ctCombatDodgeFx(ga164?.querySelector(b===god?'.genesisCard.god':'.genesisCard:not(.god)'))}if(schedule)queue(step,300)
  }
  function rewardBase(r){return r===1?[520,.016]:r===2?[450,.014]:r===3?[400,.012]:r<=5?[340,.010]:r<=10?[270,.0075]:r<=16?[200,.005]:[140,.003]}
  function rewardTreasure(city,r,boost,origin){const A=api();if(!A)return null;try{const ss=states.find(z=>z.city===city),f=ss?.floor||1;let tier=A.compTier(f,r,boost,city);if(['X','U','S'].includes(tier))tier='A';return A.award(city,tier,origin,f,false)}catch(e){console.error('genesis treasure',e);return null}}
@@ -1708,7 +1708,17 @@ function genesisBattle(){
   rankBox.innerHTML=rows.map((x,i)=>`<div class="rankMega ${i<3&&x.damage>0?'top':''} ${x.played?'':'genesisUnplayed'}"><b>#${i+1}</b><span>${x.city}${x.city===killer?'｜⚔️弒神者':''}</span><span class="num">${x.played?'已出過角色':'未出場'}</span><span class="num">傷 ${Math.round(x.damage)}</span><span class="num">${godTotalHp?((x.damage/godTotalHp)*100).toFixed(2):'0.00'}%</span></div>`).join('');
   if(C)C.pending=null;ctl();autoCloseMega17419(success?'創世神挑戰賽｜創世神守擂成功':'創世神挑戰賽｜弒神者誕生')
  }
- function step(){if(done)return;if(C?.skip){let guard=0;while(!done&&guard++<200000){const oldAuto=C.auto;C.auto=false;const oldBoundary=C.boundary;C.boundary=false;attackOnce(false);clearTimer();C.pending=null;C.auto=oldAuto;C.boundary=oldBoundary}if(!done){q('genesisArena')?.insertAdjacentHTML('beforeend','<div class="noteMega">⚠️ 快速結算達安全上限，請再按一次跳到結果。</div>')}return}attackOnce(true)}
+ let genesisSkipBusy172=false,genesisSkipLastPaint172=0;
+ function genesisFastChunk172(){
+  if(done){genesisSkipBusy172=false;return}
+  if(!C?.skip){genesisSkipBusy172=false;attackOnce(true);return}
+  const started=performance.now();let n=0;
+  while(!done&&C?.skip&&n<320&&performance.now()-started<8){attackOnce(false,false);n++}
+  if(done){genesisSkipBusy172=false;return}
+  const now=performance.now();if(now-genesisSkipLastPaint172>70){genesisSkipLastPaint172=now;render();ctl()}
+  timer=setTimeout(genesisFastChunk172,MEGA_SKIP_YIELD_MS172)
+ }
+ function step(){if(done)return;if(C?.skip){if(!genesisSkipBusy172){genesisSkipBusy172=true;genesisFastChunk172()}return}attackOnce(true)}
  render();queue(step,450)
 }
 function tryGenesisAuto(){if(!genesisAutoPending||!genesisCanOpen())return;genesisAutoPending=false;openGenesis(true,'auto')}
@@ -4540,8 +4550,8 @@ window.render=function(){
  }catch(e){console.warn('CT164 tower combat fx',e)}
  return out
 };
-try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.171');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.171')}catch(e){}
-window.__CT_BUILD='V17.4.171-drag-scroll-ui';
+try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.173');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.173')}catch(e){}
+window.__CT_BUILD='V17.4.173-activity-scroll-unlock';
 })();
 </script>
 
@@ -4563,48 +4573,77 @@ window.__CT_BUILD='V17.4.171-drag-scroll-ui';
 
 
 
-<style id="ctDragScroll171Style">
-.ctSettleScroll166,.compStage,.compSide,.ev173body,.modalBody,.ctAIBody155,.megaStage{
-  cursor:grab;
-  overscroll-behavior:contain;
-  -webkit-overflow-scrolling:touch;
-}
-.ctSettleScroll166.ctDrag171,.compStage.ctDrag171,.compSide.ctDrag171,.ev173body.ctDrag171,.modalBody.ctDrag171,.ctAIBody155.ctDrag171,.megaStage.ctDrag171{
-  cursor:grabbing!important;
-  user-select:none!important;
-  -webkit-user-select:none!important;
-}
+<style id="ctActivityScroll173Style">
+/* V17.4.173: one vertical activity scroller; settlement tables may scroll horizontally without trapping vertical movement. */
+.comp1748Body,.megaBody{min-height:0!important}
+.compStage,.compSide,.megaStage,.megaRank{min-height:0!important;max-height:100%!important;overflow:auto!important;-webkit-overflow-scrolling:touch;overscroll-behavior:auto;touch-action:pan-x pan-y}
+.ev173body,.modalBody,.ctAIBody155{overflow:auto!important;-webkit-overflow-scrolling:touch;overscroll-behavior:auto;touch-action:pan-x pan-y}
+.ctSettleScroll166{overflow-x:auto!important;overflow-y:hidden!important;max-width:100%;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;overscroll-behavior-y:auto;touch-action:pan-x pan-y}
+.compStage,.compSide,.megaStage,.megaRank,.ev173body,.modalBody,.ctAIBody155,.ctSettleScroll166{cursor:grab}
+.ctDrag173{cursor:grabbing!important;user-select:none!important;-webkit-user-select:none!important}
 </style>
-<script id="ctDragScroll171">
+<script id="ctActivityScroll173">
 (()=>{
- const selector='.ctSettleScroll166,.compStage,.compSide,.ev173body,.modalBody,.ctAIBody155,.megaStage';
+ const directSelector='.compStage,.compSide,.megaStage,.megaRank,.ev173body,.modalBody,.ctAIBody155';
  const interactive='button,input,select,textarea,a,[contenteditable="true"],[role="button"],.tAssign';
  let drag=null;
- function canDrag(el){return !!el&&(el.scrollWidth>el.clientWidth+1||el.scrollHeight>el.clientHeight+1)}
+ const canX=el=>!!el&&el.scrollWidth>el.clientWidth+1;
+ const canY=el=>!!el&&el.scrollHeight>el.clientHeight+1;
+ const verticalParent=el=>{
+   for(let p=el?.parentElement;p;p=p.parentElement){
+     if(p.matches?.(directSelector)&&canY(p))return p;
+   }
+   return null;
+ };
  function down(e){
-   if(e.button!==0||e.pointerType==='touch')return;
-   const box=e.target.closest?.(selector);if(!box||!canDrag(box)||e.target.closest?.(interactive))return;
-   drag={box,id:e.pointerId,x:e.clientX,y:e.clientY,left:box.scrollLeft,top:box.scrollTop,moved:false};
+   if(e.button!==0||e.pointerType==='touch'||e.target.closest?.(interactive))return;
+   const settle=e.target.closest?.('.ctSettleScroll166');
+   if(settle){
+     const vp=verticalParent(settle);
+     if(!canX(settle)&&!vp)return;
+     drag={id:e.pointerId,startX:e.clientX,startY:e.clientY,inner:settle,vp,mode:null,left:settle.scrollLeft,top:vp?.scrollTop||0,box:null,moved:false};
+     try{settle.setPointerCapture(e.pointerId)}catch(_){}
+     return;
+   }
+   const box=e.target.closest?.(directSelector);if(!box||(!canX(box)&&!canY(box)))return;
+   drag={id:e.pointerId,startX:e.clientX,startY:e.clientY,box,mode:'direct',left:box.scrollLeft,top:box.scrollTop,moved:false};
    try{box.setPointerCapture(e.pointerId)}catch(_){}
  }
  function move(e){
    if(!drag||e.pointerId!==drag.id)return;
-   const dx=e.clientX-drag.x,dy=e.clientY-drag.y;
+   const dx=e.clientX-drag.startX,dy=e.clientY-drag.startY;
    if(!drag.moved&&Math.hypot(dx,dy)<4)return;
-   drag.moved=true;drag.box.classList.add('ctDrag171');
-   drag.box.scrollLeft=drag.left-dx;drag.box.scrollTop=drag.top-dy;
+   drag.moved=true;
+   if(drag.mode===null){
+     drag.mode=(Math.abs(dy)>Math.abs(dx)&&drag.vp)?'vertical':'horizontal';
+   }
+   const target=drag.mode==='vertical'?drag.vp:(drag.mode==='horizontal'?drag.inner:drag.box);
+   if(!target)return;
+   target.classList.add('ctDrag173');
+   if(drag.mode==='vertical')target.scrollTop=drag.top-dy;
+   else if(drag.mode==='horizontal')target.scrollLeft=drag.left-dx;
+   else{target.scrollLeft=drag.left-dx;target.scrollTop=drag.top-dy}
    e.preventDefault();
  }
  function end(e){
    if(!drag||e.pointerId!==drag.id)return;
-   drag.box.classList.remove('ctDrag171');
-   try{drag.box.releasePointerCapture(e.pointerId)}catch(_){}
+   [drag.box,drag.inner,drag.vp].filter(Boolean).forEach(x=>x.classList.remove('ctDrag173'));
+   try{(drag.inner||drag.box)?.releasePointerCapture(e.pointerId)}catch(_){}
    drag=null;
+ }
+ function wheel(e){
+   const settle=e.target.closest?.('.ctSettleScroll166');if(!settle)return;
+   if(Math.abs(e.deltaY)<Math.abs(e.deltaX))return;
+   const vp=verticalParent(settle);if(!vp)return;
+   const before=vp.scrollTop;
+   vp.scrollTop+=e.deltaY;
+   if(vp.scrollTop!==before)e.preventDefault();
  }
  document.addEventListener('pointerdown',down,true);
  document.addEventListener('pointermove',move,{capture:true,passive:false});
  document.addEventListener('pointerup',end,true);
  document.addEventListener('pointercancel',end,true);
+ document.addEventListener('wheel',wheel,{capture:true,passive:false});
 })();
 </script>
 
