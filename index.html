@@ -134,7 +134,7 @@ window.ctBattleTreasureInline126=function(c){
 </script>
 <script>
 const SAVE='CITY_TOWER_V17_SAVE';
-const CT_BUILD_VERSION='V17.4.148';
+const CT_BUILD_VERSION='V17.4.151';
 const CT_SAVE_PREUPDATE='CITY_TOWER_V17_PREUPDATE_BACKUP';
 const CT_TREASURE_SAVE_KEY='CITY_TOWER_V1743_TREASURE';
 const CT_TREASURE_PREUPDATE='CITY_TOWER_V1743_TREASURE_PREUPDATE_BACKUP';
@@ -177,7 +177,7 @@ function meta(){
  let z=a[a.length-1],p=a[a.length-2];if(z.power<3.3&&z.power<=p.power*.92)z.tier='Z';
  return Object.fromEntries(a.map(x=>[x.city,x]));
 }
-function gain(c,n){c.xp+=n;while(c.xp>=xpNeed(c.lv)&&c.lv<200){c.xp-=xpNeed(c.lv);c.lv++}}
+function gain(c,n){c.xp+=n;while(c.xp>=xpNeed(c.lv)){c.xp-=xpNeed(c.lv);c.lv++}}
 function pick4(city){let a=[...R[city]];for(let i=a.length-1;i;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a.slice(0,4).map(c=>{c.deploys++;let s=cstats(c);return {id:c.id,name:c.name,lv:c.lv,max:s.hp,hp:s.hp,atk:s.atk,def:s.def,speed:s.speed,crit:s.crit,dodge:s.dodge,critDmg:s.critDmg,g:0,alive:true}})}
 function etype(f){return f%50===0?['chapter','章節Boss',6]:f%25===0?['big','大Boss',4]:f%10===0?['small','小Boss',2.6]:f%5===0?['elite','精英',1.8]:['normal','一般怪',1]}
 function enemy(f){let [key,name,m]=etype(f),hp=Math.round((1500+f*125)*m*rnd(.94,1.06));return {key,name:name+' '+f+'F',max:hp,hp,atk:(42+f*2.1)*Math.sqrt(m),def:55+f*1.8,speed:clamp(10+f*.13+(m-1)*2,10,29),g:0}}
@@ -2431,7 +2431,7 @@ td,th,.ev173row,.rankMega,.rewardMega>div,.bf .nm,.compChar b,.compChar .sub{
   function teamTierNow(city){ try{return meta()[city]?.tier||'Z';}catch(e){return 'Z';} }
   window.gain = gain = function(c,n){
     c.xp=(Number(c.xp)||0)+(Number(n)||0);
-    while(c.xp>=xpNeed(c.lv) && c.lv<200){
+    while(c.xp>=xpNeed(c.lv)){
       const tier=teamTierNow(c.city), g=TEAM_LV_GROWTH[tier]||TEAM_LV_GROWTH.Z;
       c.xp-=xpNeed(c.lv); c.lv++;
       c.ctAtkGrowth=(Number(c.ctAtkGrowth)||0)+g.atk;
@@ -3006,8 +3006,8 @@ try{
 // Refresh active parties without changing current HP percentage.
 try{for(const st of states||[])for(const p of st.party||[]){const c=R[st.city]?.find(x=>x.id===p.id);if(!c)continue;const om=Math.max(1,Number(p.max)||1),r=Math.max(0,Math.min(1,(Number(p.hp)||0)/om)),s=cstats(c);p.max=s.hp;p.hp=p.alive===false?0:Math.max(1,Math.round(s.hp*r));p.atk=s.atk;p.def=s.def;p.speed=s.speed;p.crit=s.crit;p.dodge=s.dodge;p.critDmg=s.critDmg}}catch(e){console.warn('CT131 party refresh',e)}
 
-let ctTeamDataRaf=0,ctTeamDataCity=null,ctTeamDataLast=0;
-function ctStopRosterLiveSync(){if(ctTeamDataRaf){cancelAnimationFrame(ctTeamDataRaf);ctTeamDataRaf=0}ctTeamDataCity=null;ctTeamDataLast=0}
+let ctTeamDataHeartbeat=0,ctTeamDataCity=null;
+function ctStopRosterLiveSync(){if(ctTeamDataHeartbeat){clearInterval(ctTeamDataHeartbeat);ctTeamDataHeartbeat=0}ctTeamDataCity=null}
 function ctSetText(el,text){if(el&&el.textContent!==String(text))el.textContent=String(text)}
 function ctSetHtml(el,html){if(el&&el.innerHTML!==html)el.innerHTML=html}
 function ctSetTierClass(el,tier){if(!el)return;for(const g of ['X','U','S','A','B','C','D','E','F','Z'])el.classList.remove(g);el.classList.add(tier)}
@@ -3059,13 +3059,26 @@ function ctPatchRoster(city){
   const cs=[...(R[city]||[])].sort((a,b)=>craw(b)-craw(a)),active=new Set(((states||[]).find(x=>x.city===city)?.party||[]).map(p=>p.id)),roster=box.querySelector('.roster'),cm=charMetaV173();
   for(let i=0;i<cs.length;i++){const c=cs[i];let card=[...roster.querySelectorAll('.rosterCard')].find(x=>x.dataset.charId===c.id);if(!card){ctBindRosterCards(city);card=[...roster.querySelectorAll('.rosterCard')].find(x=>x.dataset.charId===c.id)}if(!card)continue;ctPatchRosterCard(card,c,cm[c.id],i+1,active.has(c.id));roster.appendChild(card)}
 }
-function ctTeamDataLoop(ts){
-  const mb=document.getElementById('mb'),back=document.getElementById('back'),body=document.getElementById('mbo');
-  if(!mb?.classList.contains('open')){ctStopRosterLiveSync();return}
-  if(ts-ctTeamDataLast>=250){ctTeamDataLast=ts;try{if(back?.style.display==='none')ctPatchCityOverview();else if(ctTeamDataCity&&body?.querySelector('.roster'))ctPatchRoster(ctTeamDataCity)}catch(e){console.warn('CT147 smooth team sync',e)}}
-  ctTeamDataRaf=requestAnimationFrame(ctTeamDataLoop)
+function ctDetectRosterCity(){
+  if(ctTeamDataCity&&R?.[ctTeamDataCity])return ctTeamDataCity;
+  const head=document.querySelector('#ct127TeamSummary .ct127Head>b');
+  if(head){const city=(head.textContent||'').split('｜')[0].trim();if(R?.[city])return city}
+  const mt=document.getElementById('mt');
+  if(mt){const m=(mt.textContent||'').match(/👥\s*([^｜]+)｜/);if(m&&R?.[m[1].trim()])return m[1].trim()}
+  return null;
 }
-function ctStartRosterLiveSync(){if(!ctTeamDataRaf)ctTeamDataRaf=requestAnimationFrame(ctTeamDataLoop)}
+function ctTeamDataTick(){
+  const mb=document.getElementById('mb'),body=document.getElementById('mbo');
+  if(!mb?.classList.contains('open')||!body)return;
+  try{
+    if(body.querySelector('.cityGrid')){ctTeamDataCity=null;ctPatchCityOverview();return}
+    if(body.querySelector('.roster')){const city=ctDetectRosterCity();if(city){ctTeamDataCity=city;ctPatchRoster(city)}}
+  }catch(e){console.warn('CT151 team 5s sync',e)}
+}
+function ctStartRosterLiveSync(){
+  if(!ctTeamDataHeartbeat)ctTeamDataHeartbeat=setInterval(ctTeamDataTick,5000);
+  requestAnimationFrame(()=>requestAnimationFrame(ctTeamDataTick));
+}
 const prevCities147=window.showCities;
 if(typeof prevCities147==='function'){window.showCities=showCities=function(){prevCities147();ctTeamDataCity=null;ctStartRosterLiveSync()}}
 const prevRoster131=window.showRoster;
@@ -3075,12 +3088,18 @@ if(typeof prevRoster131==='function'){window.showRoster=showRoster=function(city
     ctBindRosterCards(city);ctPatchRoster(city);
     const note=[...document.querySelectorAll('#ct127TeamSummary .sub')].find(el=>el.textContent.includes('上限：'));
     if(note)note.textContent='上限：自然閃避 50%＋寶物最高 70%｜自然爆率 60%＋寶物可推至 100%｜自然爆傷 +500%＋命運天書 +200%（最高 +700%）｜攻速無上限。自然閃避溢出→HP/DEF；自然爆率超過60%與寶物把總爆率推過100%的部分→ATK/攻速；自然爆傷超過+500%的部分→ATK/攻速。';
-  }catch(e){console.warn('CT147 roster init',e)}}));
+  }catch(e){console.warn('CT151 roster init',e)}}));
 };}
-try{document.getElementById('close')?.addEventListener('click',ctStopRosterLiveSync)}catch(e){console.warn('CT147 roster sync controls',e)}
+// Reliability hooks: start/refresh from the actual UI events even if an older onclick closure bypasses the wrapped functions.
+try{
+  document.getElementById('teams')?.addEventListener('click',()=>{ctTeamDataCity=null;setTimeout(ctStartRosterLiveSync,0)},true);
+  document.getElementById('back')?.addEventListener('click',()=>{ctTeamDataCity=null;setTimeout(ctStartRosterLiveSync,0)},true);
+  document.getElementById('mbo')?.addEventListener('click',e=>{const b=e.target?.closest?.('.cityBtn');if(!b)return;ctTeamDataCity=b.dataset.city||null;setTimeout(ctStartRosterLiveSync,0)},true);
+  document.getElementById('close')?.addEventListener('click',ctStopRosterLiveSync);
+}catch(e){console.warn('CT151 roster sync controls',e)}
 
 try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.131');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.131')}catch(e){}
-window.__CT_BUILD='V17.4.147-smooth-team-live-sync';
+window.__CT_BUILD='V17.4.151-reliable-team-5s-sync-unlimited-level';
 try{if(typeof render==='function')render();if(typeof save==='function')save(true)}catch(e){console.warn('CT131 final render',e)}
 })();
 </script>
