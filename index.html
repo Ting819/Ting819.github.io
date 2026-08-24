@@ -145,7 +145,7 @@ window.ctBattleTreasureInline126=function(c){
 </script>
 <script>
 const SAVE='CITY_TOWER_V17_SAVE';
-const CT_BUILD_VERSION='V17.4.194';
+const CT_BUILD_VERSION='V17.4.195';
 const CT_SAVE_PREUPDATE='CITY_TOWER_V17_PREUPDATE_BACKUP';
 const CT_TREASURE_SAVE_KEY='CITY_TOWER_V1743_TREASURE';
 const CT_TREASURE_PREUPDATE='CITY_TOWER_V1743_TREASURE_PREUPDATE_BACKUP';
@@ -170,7 +170,7 @@ function ctPrepareUpdateSave(){
 ctPrepareUpdateSave();
 let R={},states=[],turn=0,selected='臺北市',running=false,raf=0,last=0,acc=0,lastPaint=0,nextEvent=160,lastEvent=null,initialTop=1;
 const $=id=>document.getElementById(id), clamp=(x,a,b)=>Math.max(a,Math.min(b,x)), rnd=(a,b)=>a+Math.random()*(b-a);
-// V17.4.194 — formal displayed/rating power uses 0.5-power compression. Combat stats and damage are unchanged.
+// V17.4.195 — formal displayed/rating power uses 0.5-power compression. Combat stats and damage are unchanged.
 window.ctPowerCompress194=function(ratio){ratio=Math.max(0,Number(ratio)||0);return 10*Math.sqrt(ratio)};
 const safeGet=k=>{try{return localStorage.getItem(k)}catch(_){return null}};
 let ctDisposableStorageCleaned184=false;
@@ -185,7 +185,7 @@ function ctCombatAttackFx(el){ctCombatPulse164(el,'activityAttackFlash174163',22
 function ctCombatDodgeFx(el){ctCombatPulse164(el,'activityDodgeFx174164',900)}
 function ctCombatEnemyFx(el){ctCombatPulse164(el,'enemyAttackFx174164',240)}
 window.__CT_COMBAT_FX={attack:ctCombatAttackFx,dodge:ctCombatDodgeFx,enemyAttack:ctCombatEnemyFx};
-// V17.4.194 — League 100x speed option; V17.4.190 root performance fix retained.
+// V17.4.195 — League 100x speed option; V17.4.190 root performance fix retained.
 const CT_ELEMENT180={
  water:{name:'水',icon:'💧',cls:'elWater180'},
  fire:{name:'火',icon:'🔥',cls:'elFire180'},
@@ -279,7 +279,7 @@ function tick(draw=true){turn++;for(const s of states)round(s);if(turn>=nextEven
 function rank(){let m=meta();return [...states].sort((a,b)=>b.floor-a.floor||a.enemy.hp/a.enemy.max-b.enemy.hp/b.enemy.max||m[b.city].power-m[a.city].power)}
 function render(){
  let m=meta(),rr=rank(),lead=rr[0],sel=states.find(x=>x.city===selected)||rr[0];$('kt').textContent=turn;$('kl').textContent=lead.city.replace(/[縣市]$/,'');$('kf').textContent=lead.floor+'F';$('kr').innerHTML='<span class="selectedTierAnchor"><span class="tier tierLetter tierMotion '+m[sel.city].tier+'">'+m[sel.city].tier+'</span></span>';$('kp').textContent=m[sel.city].power.toFixed(2);$('kp').className='ratingText '+m[sel.city].tier;
- $('rank').innerHTML=rr.map((s,i)=>`<tr class="team ${s.city===selected?'sel':''}" data-city="${s.city}"><td>${i+1}</td><td class="teamTint ${m[s.city].tier}"><div class="city">${s.city}</div><div class="sub">${TEAMN[s.city]||''}</div></td><td class="rankTierCell"><span class="rankTierAnchor"><span class="tier tierLetter tierMotion ${m[s.city].tier}">${m[s.city].tier}</span></span></td><td class="powerTint ${m[s.city].tier}">${m[s.city].power.toFixed(2)}</td><td><b>${s.floor}F</b><div class="sub">${s.ft}T｜敵剩${Math.round(s.enemy.hp/s.enemy.max*100)}%</div></td><td><div class="partyMini">${s.party.map(p=>`<div><div class="miniName">${ctElementBadge180(R[s.city].find(c=>c.id===p.id)?.element,true)} ${p.name} Lv.${R[s.city].find(c=>c.id===p.id).lv}</div><div class="bar"><i style="width:${100*p.hp/p.max}%"></i></div><div class="sub">${Math.round(p.hp)}/${p.max}</div></div>`).join('')}</div></td><td class="ctMonsterRank184"><div>${ctElementBadge180(s.enemy.element)} <b>${s.enemy.name}</b></div><div class="sub">HP ${Math.round(s.enemy.hp)} / ${s.enemy.max}</div></td></tr>`).join('');
+ $('rank').innerHTML=rr.map((s,i)=>`<tr class="team ${s.city===selected?'sel':''}" data-city="${s.city}"><td>${i+1}</td><td class="teamTint ${m[s.city].tier}"><div class="city">${s.city}</div><div class="sub">${TEAMN[s.city]||''}</div></td><td class="rankTierCell"><span class="rankTierAnchor"><span class="tier tierLetter tierMotion ${m[s.city].tier}">${m[s.city].tier}</span></span></td><td class="powerTint ${m[s.city].tier}">${m[s.city].power.toFixed(2)}</td><td><b>${s.floor}F</b><div class="sub">${s.ft}T｜敵剩${Math.round(s.enemy.hp/s.enemy.max*100)}%</div></td><td><div class="partyMini">${s.party.map(p=>`<div class="${window.__CT_RANK_ATTACK_FLASH_ACTIVE?.(p.id)?'miniGaugeFiredCT':''}"><div class="miniName">${ctElementBadge180(R[s.city].find(c=>c.id===p.id)?.element,true)} ${p.name} Lv.${R[s.city].find(c=>c.id===p.id).lv}</div><div class="bar"><i style="width:${100*p.hp/p.max}%"></i></div><div class="sub">${Math.round(p.hp)}/${p.max}</div></div>`).join('')}</div></td><td class="ctMonsterRank184"><div>${ctElementBadge180(s.enemy.element)} <b>${s.enemy.name}</b></div><div class="sub">HP ${Math.round(s.enemy.hp)} / ${s.enemy.max}</div></td></tr>`).join('');
  document.querySelectorAll('tr.team').forEach(x=>x.onclick=()=>{selected=x.dataset.city;render()});
  let e=sel.enemy;$('arena').innerHTML=`<div class="enemy"><div class="cardTop"><div><b class="ctMonsterTitle184">${ctElementBadge180(e.element)} <span>${e.name}</span></b><div class="sub">屬性 ${ctElementInfo180(e.element).name}｜ATK ${e.atk.toFixed(0)}｜DEF ${e.def.toFixed(0)}｜攻速 ${e.speed.toFixed(1)}</div></div><b>${Math.round(e.hp)} / ${e.max}</b></div><div class="monsterHp174"><div class="mh174top"><span>❤️ ${ctElementBadge180(e.element,true)} ${ctElementInfo180(e.element).name}｜怪物 HP</span><span class="mh174num">${Math.round(e.hp)} / ${e.max}</span></div><div class="mh174track"><div class="mh174fill" style="width:${Math.max(0,Math.min(100,100*e.hp/e.max))}%"></div></div><div class="mh174pct">剩餘 ${Math.round(Math.max(0,Math.min(100,100*e.hp/e.max)))}%</div></div><div class="gbar" style="margin-top:5px"><i style="width:${e.g}%"></i></div></div><div class="cards">${sel.party.map(p=>{let c=R[sel.city].find(x=>x.id===p.id),ss=cstats(c);return `<div class="card ${p.alive?'':'dead'}"><div class="cardTop"><div><div class="name">${ctElementBadge180(c.element)} ${p.name}</div></div><b>${Math.round(p.hp)}/${p.max}</b></div><div class="ctExpRowFinal"><span class="ctLvFinal">Lv.${c.lv}</span><span class="ctExpValueFinal">EXP ${c.xp}/${xpNeed(c.lv)}</span></div><div class="xp173" aria-label="EXP進度"><i style="width:${Math.max(0,Math.min(100,100*c.xp/xpNeed(c.lv)))}%"></i></div><div class="bar"><i style="width:${100*p.hp/p.max}%"></i></div><div class="gbar" style="margin-top:5px"><i style="width:${p.g}%"></i></div>${window.ctBattleTreasureInline126(c)}<div class="stats"><div class="stat">ATK<b>${p.atk}</b></div><div class="stat">DEF<b>${p.def}</b></div><div class="stat">攻速<b>${p.speed.toFixed(1)}</b></div><div class="stat">爆擊<b>${Math.round(p.crit*100)}%</b></div><div class="stat">閃避<b>${Math.round((p.dodge||0)*100)}%</b></div><div class="stat">爆傷<b>+${Math.round((p.critDmg||.50)*100)}%</b></div><div class="stat ct182PenStat">穿透<b>${((ss.penetration||0)*100).toFixed(1)}%</b></div><div class="stat ct182ComboStat">連擊<b>${((ss.combo||0)*100).toFixed(1)}%</b></div></div></div>`}).join('')}</div>`;
  $('log').innerHTML=sel.log.map(x=>'<div>'+x+'</div>').join('')||'<span class="sub">尚無戰鬥紀錄</span>';
@@ -2013,6 +2013,20 @@ const wb=q('manualWB'),br=q('manualBrawl');if(wb)wb.onclick=()=>open('boss',fals
   // intentionally capped to 4 paints/sec to avoid wasting iPad Safari frame time.
   let lastMiniGaugePaint17496=0;
   const rankGaugeSeenCT=new Map();
+  const rankGaugeFlashUntilCT=new Map();
+  function rankGaugeFlashMsCT(){
+    const sp=Math.max(1,+(q('speed')?.value||1));
+    return sp>=100?1200:sp>=25?900:sp>=10?700:500;
+  }
+  window.__CT_MARK_RANK_ATTACK_FLASH=function(id,ms){
+    if(!id)return 0;
+    const until=performance.now()+Math.max(220,Number(ms)||rankGaugeFlashMsCT());
+    rankGaugeFlashUntilCT.set(id,until);
+    return until;
+  };
+  window.__CT_RANK_ATTACK_FLASH_ACTIVE=function(id){
+    return !!id&&(Number(rankGaugeFlashUntilCT.get(id))||0)>performance.now();
+  };
   let ctOptStatesRef=null,ctOptStateMap=null,ctOptRRef=null,ctOptCharMap=null;
   function fastStateByCity174OPT(city){
     if(ctOptStatesRef!==states){ctOptStatesRef=states;ctOptStateMap=new Map((states||[]).map(s=>[s.city,s]));}
@@ -2046,11 +2060,14 @@ const wb=q('manualWB'),br=q('manualBrawl');if(wb)wb.onclick=()=>open('boss',fals
             const attacks=Number(c.attacks)||0, prev=rankGaugeSeenCT.get(c.id);
             const fired=!force&&Number.isFinite(prev)&&attacks>prev;
             rankGaugeSeenCT.set(c.id,attacks);
-            if(fired){
-              box.classList.add('miniGaugeFiredCT');
+            if(fired)window.__CT_MARK_RANK_ATTACK_FLASH?.(c.id);
+            const activeFlash=window.__CT_RANK_ATTACK_FLASH_ACTIVE?.(c.id);
+            box.classList.toggle('miniGaugeFiredCT',!!activeFlash);
+            if(activeFlash){
               const seq=String((Number(box.dataset.miniGaugeSeqCT)||0)+1);
               box.dataset.miniGaugeSeqCT=seq;
-              setTimeout(()=>{if(box.dataset.miniGaugeSeqCT===seq)box.classList.remove('miniGaugeFiredCT')},180);
+              const remain=Math.max(40,(Number(rankGaugeFlashUntilCT.get(c.id))||performance.now())-performance.now()+25);
+              setTimeout(()=>{if(box.dataset.miniGaugeSeqCT===seq&&!window.__CT_RANK_ATTACK_FLASH_ACTIVE?.(c.id))box.classList.remove('miniGaugeFiredCT')},remain);
             }
           }
           const nm=box.querySelector('.miniName');if(nm){const nk=`${p.id}|${c?.lv||0}|${c?.element||''}|${p.name}`;if(nm.dataset.ct189Key!==nk){nm.dataset.ct189Key=nk;nm.innerHTML=`${c?ctElementBadge180(c.element,true)+' ':''}${p.name}${c?` Lv.${c.lv}`:''}`;}}
@@ -2680,7 +2697,7 @@ td,th,.ev173row,.rankMega,.rewardMega>div,.bf .nm,.compChar b,.compChar .sub{
       const floorCell=tr.children[4];
       floorCell.querySelector('b').textContent=s.floor+'F';
       floorCell.querySelector('.sub').textContent=s.ft+'T｜敵剩'+Math.round(s.enemy.hp/s.enemy.max*100)+'%';
-      tr.children[5].innerHTML='<div class="partyMini">'+s.party.map(p=>{const c=(window.__CT_FAST_CHAR_BY_ID?.(s.city,p.id)||R[s.city].find(x=>x.id===p.id));return `<div><div class="miniName">${ctElementBadge180(c.element,true)} ${p.name} Lv.${c.lv}</div><div class="bar"><i style="width:${100*p.hp/p.max}%"></i></div><div class="sub">${Math.round(p.hp)}/${p.max}｜👟 ${Math.round(p.g)}/100</div><div class="miniGauge17425" aria-label="攻擊條"><i style="width:${Math.max(0,Math.min(100,Number(p.g)||0))}%"></i></div></div>`}).join('')+'</div>';
+      tr.children[5].innerHTML='<div class="partyMini">'+s.party.map(p=>{const c=(window.__CT_FAST_CHAR_BY_ID?.(s.city,p.id)||R[s.city].find(x=>x.id===p.id));return `<div class="${window.__CT_RANK_ATTACK_FLASH_ACTIVE?.(p.id)?'miniGaugeFiredCT':''}"><div class="miniName">${ctElementBadge180(c.element,true)} ${p.name} Lv.${c.lv}</div><div class="bar"><i style="width:${100*p.hp/p.max}%"></i></div><div class="sub">${Math.round(p.hp)}/${p.max}｜👟 ${Math.round(p.g)}/100</div><div class="miniGauge17425" aria-label="攻擊條"><i style="width:${Math.max(0,Math.min(100,Number(p.g)||0))}%"></i></div></div>`}).join('')+'</div>';
       {const ep=Math.max(0,Math.min(100,100*s.enemy.hp/Math.max(1,s.enemy.max)));tr.children[6].innerHTML=`<div class="rankEnemy174"><div class="reh174name">${ctElementBadge180(s.enemy.element,true)} ${s.enemy.name}</div><div class="reh174top"><span>${Math.round(s.enemy.hp)} / ${s.enemy.max}</span><span>${Math.round(ep)}%</span></div><div class="reh174track"><div class="reh174fill" style="width:${ep}%"></div></div></div>`;}
       rows.push(tr);
       oldRows.delete(s.city);
@@ -4685,8 +4702,8 @@ window.render=function(){
  }catch(e){console.warn('CT164 tower combat fx',e)}
  return out
 };
-try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.194');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.194')}catch(e){}
-window.__CT_BUILD='V17.4.194-power-compression-05';
+try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.195');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.195')}catch(e){}
+window.__CT_BUILD='V17.4.195-power-compression-05';
 })();
 </script>
 
@@ -5099,8 +5116,8 @@ window.hit=hit=function(s,p){
 // UI is rendered canonically in V17.4.184 CLEAN; no post-render DOM patch is needed.
 
 try{render()}catch(e){console.warn('CT182 initial render',e)}
-try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.194')}catch(_e){}
-window.__CT_BUILD='V17.4.194-power-compression-05';
+try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.195')}catch(_e){}
+window.__CT_BUILD='V17.4.195-power-compression-05';
 })();
 </script>
 
@@ -5126,7 +5143,7 @@ window.__CT_BUILD='V17.4.194-power-compression-05';
 <script id="ct174190RootPerformance">
 (()=>{
 'use strict';
-/* V17.4.194: V17.4.190 root performance fix retained; league adds 100x speed.
+/* V17.4.195: V17.4.190 root performance fix retained; league adds 100x speed.
    No visual/effect/gameplay multiplier is changed here.
    The expensive full-server rating calculations are memoized within one tower turn,
    and derived character stats are memoized until their actual stat inputs change. */
@@ -5218,8 +5235,8 @@ try{
   if(bad)bad.remove();
 }catch(_e){}
 
-try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.194')}catch(_e){}
-window.__CT_BUILD='V17.4.194-power-compression-05';
+try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.195')}catch(_e){}
+window.__CT_BUILD='V17.4.195-power-compression-05';
 })();
 </script>
 
@@ -5227,7 +5244,7 @@ window.__CT_BUILD='V17.4.194-power-compression-05';
 <script id="ct174192ElementPowerNormalization">
 (()=>{
 'use strict';
-/* V17.4.194 — canonical attribute power coefficients + 0.5 power compression.
+/* V17.4.195 — canonical attribute power coefficients + 0.5 power compression.
    These coefficients affect displayed character/team power only; combat element multipliers remain unchanged.
    New-game baseline is recalculated AFTER fixed character elements are assigned; visible/rating power then uses 10*sqrt(raw/baseline), so the strongest opening TEAM is exactly 10.00. */
 const ELEMENT_POWER_192=Object.freeze({water:1.00,fire:1.00,wood:1.00,light:1.20,dark:1.19,thunder:1.70});
@@ -5290,8 +5307,8 @@ window.CT_POWER_RULE_192={
   xThresholdUnchanged:true
 };
 try{if(window.CT_TEAM_PR_RATING?.u)window.CT_TEAM_PR_RATING.u.minPower=10}catch(_e){}
-try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.194')}catch(_e){}
-window.__CT_BUILD='V17.4.194-power-compression-05';
+try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.195')}catch(_e){}
+window.__CT_BUILD='V17.4.195-power-compression-05';
 })();
 </script>
 
@@ -5299,7 +5316,7 @@ window.__CT_BUILD='V17.4.194-power-compression-05';
 <script id="ct174193FairKoTowerFx">
 (()=>{
 'use strict';
-/* V17.4.194
+/* V17.4.195
    1) Every team gets the same one-turn KO hold before entering the next floor.
    2) The watched tower battle keeps the KO attack gold flash.
    3) Tower enemy attacks have their own attack FX.
@@ -5347,7 +5364,14 @@ function flashKoGold193(s,id){
 const prevHit193=window.hit;
 if(typeof prevHit193==='function'){
   window.hit=hit=function(s,p){
+    const c=(s&&p?.id)?R[s.city]?.find(x=>x.id===p.id):null;
+    const attacksBefore=Number(c?.attacks)||0;
     const killed=prevHit193(s,p);
+    const attacksAfter=Number(c?.attacks)||0;
+    // Every team's real tower attack marks a cheap visual expiry state. The rank
+    // painter consumes it later, so 25x/100x keeps V190 performance and never
+    // depends on the city being selected.
+    if(c&&attacksAfter>attacksBefore)window.__CT_MARK_RANK_ATTACK_FLASH?.(c.id,killed?1200:undefined);
     if(killed&&s?.city===selected&&p?.id)flashKoGold193(s,p.id);
     return killed;
   };
@@ -5383,9 +5407,15 @@ if(typeof prevEhit193==='function'){
 
 // Recover old saves that happened to be stored on a pre-193 KO frame.
 try{for(const s of states||[])if(s)delete s.ctKoHoldTurn193}catch(_e){}
-try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.194');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.194')}catch(_e){}
-window.__CT_BUILD='V17.4.194-fair-ko-tower-fx';
+try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.195');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.195')}catch(_e){}
+window.__CT_BUILD='V17.4.195-fair-ko-tower-fx';
 })();
 </script>
 
+<script id="ct174195RankAttackFlashAllTeamsMarker">
+(()=>{
+'use strict';
+window.__CT_BUILD='V17.4.195-rank-attack-flash-all-teams';
+})();
+</script>
 </body></html>
