@@ -145,7 +145,7 @@ window.ctBattleTreasureInline126=function(c){
 </script>
 <script>
 const SAVE='CITY_TOWER_V17_SAVE';
-const CT_BUILD_VERSION='V17.4.202';
+const CT_BUILD_VERSION='V17.4.203';
 const CT_SAVE_PREUPDATE='CITY_TOWER_V17_PREUPDATE_BACKUP';
 const CT_TREASURE_SAVE_KEY='CITY_TOWER_V1743_TREASURE';
 const CT_TREASURE_PREUPDATE='CITY_TOWER_V1743_TREASURE_PREUPDATE_BACKUP';
@@ -170,7 +170,7 @@ function ctPrepareUpdateSave(){
 ctPrepareUpdateSave();
 let R={},states=[],turn=0,selected='臺北市',running=false,raf=0,last=0,acc=0,lastPaint=0,nextEvent=160,lastEvent=null,initialTop=1;
 const $=id=>document.getElementById(id), clamp=(x,a,b)=>Math.max(a,Math.min(b,x)), rnd=(a,b)=>a+Math.random()*(b-a);
-// V17.4.202 — formal displayed/rating power uses 0.5-power compression. Combat stats and damage are unchanged.
+// V17.4.203 — formal displayed/rating power uses 0.5-power compression. Combat stats and damage are unchanged.
 window.ctPowerCompress194=function(ratio){ratio=Math.max(0,Number(ratio)||0);return 10*Math.sqrt(ratio)};
 const safeGet=k=>{try{return localStorage.getItem(k)}catch(_){return null}};
 let ctDisposableStorageCleaned184=false;
@@ -185,7 +185,7 @@ function ctCombatAttackFx(el){ctCombatPulse164(el,'activityAttackFlash174163',22
 function ctCombatDodgeFx(el){ctCombatPulse164(el,'activityDodgeFx174164',900)}
 function ctCombatEnemyFx(el){ctCombatPulse164(el,'enemyAttackFx174164',240)}
 window.__CT_COMBAT_FX={attack:ctCombatAttackFx,dodge:ctCombatDodgeFx,enemyAttack:ctCombatEnemyFx};
-// V17.4.202 — League 100x speed option; V17.4.190 root performance fix retained.
+// V17.4.203 — League 100x speed option; V17.4.190 root performance fix retained.
 const CT_ELEMENT180={
  water:{name:'水',icon:'💧',cls:'elWater180'},
  fire:{name:'火',icon:'🔥',cls:'elFire180'},
@@ -1230,6 +1230,7 @@ if(location.hash==='#treasure')setTimeout(tOpen,80);
       // Rebuild the authoritative roster/states from BASE, then clear the treasure module's
       // in-memory inventory against that freshly-created roster.
       init();
+      if(typeof window.__CT_RESET_GENESIS_TRIGGER203==='function')window.__CT_RESET_GENESIS_TRIGGER203();
       treasureApi.resetAll();
 
       // Persist the new empty game only after both systems are reset.
@@ -1692,7 +1693,7 @@ function stopTower(forceResume=false){resume=forceResume?true:!!running;window._
 function clearTimer(){if(timer){clearTimeout(timer);timer=0}}
 function ms(v){
  const s=C?.speed||1;
- // V17.4.202: Genesis 100× follows League's responsive acceleration style:
+ // V17.4.203: Genesis 100× follows League's responsive acceleration style:
  // keep a tiny event-loop slice so Pause/buttons can always interrupt it.
  if(C?.kind==='genesis'&&s>=100)return Math.max(8,v/Math.max(1,s));
  return Math.max(s>=10?32:s>=5?45:s>=2?70:90,v/s)
@@ -1798,11 +1799,19 @@ const GENESIS_AUTO_KEY='CITY_TOWER_GENESIS_AUTO_V174162';
 const GENESIS_MAX_ROUNDS202=10;
 const GENESIS_DIRECT_REWARD_ROUNDS202=10; // 10-round hard cap: creator reward max 2U
 let genesisAutoBucket=0,genesisAutoPending=false;
+function genesisBucket203(v=turn){return Math.max(0,Math.floor((Number(v)||0)/10000))}
+function genesisPersistBucket203(){try{localStorage.setItem(GENESIS_AUTO_KEY,String(genesisAutoBucket))}catch(e){}}
+function genesisResetTrigger203(){
+ genesisAutoBucket=0;genesisAutoPending=false;genesisPersistBucket203();
+}
+window.__CT_RESET_GENESIS_TRIGGER203=genesisResetTrigger203;
 try{
- const raw=localStorage.getItem(GENESIS_AUTO_KEY);
- genesisAutoBucket=raw===null?Math.floor((Number(turn)||0)/10000):Math.max(0,Number(raw)||0);
- if(raw===null)localStorage.setItem(GENESIS_AUTO_KEY,String(genesisAutoBucket));
-}catch(e){genesisAutoBucket=Math.floor((Number(turn)||0)/10000)}
+ const cur=genesisBucket203(turn), raw=localStorage.getItem(GENESIS_AUTO_KEY), stored=raw===null?cur:Math.max(0,Math.floor(Number(raw)||0));
+ // A stale bucket from a previous/newer run must never suppress this save's 10k event.
+ genesisAutoBucket=Math.min(stored,cur);
+ genesisAutoPending=cur>genesisAutoBucket;
+ genesisPersistBucket203();
+}catch(e){genesisAutoBucket=genesisBucket203(turn);genesisAutoPending=false}
 function genesisTeamOrder(){
  let mm={};try{mm=(typeof meta==='function'?meta():{})||{}}catch(e){}
  return [...(states||[])].sort((a,b)=>{
@@ -1877,7 +1886,7 @@ function genesisBattle(){
    const creatorItems=[];if(completedRounds>0){for(let i=0;i<plan.u;i++)creatorItems.push(rewardTreasure(godCity,1,0,`👑 創世神挑戰賽｜守住${completedRounds}輪｜U ${i+1}/${plan.u}`,'U'));for(let i=0;i<plan.s;i++)creatorItems.push(rewardTreasure(godCity,1,0,`👑 創世神挑戰賽｜守住${completedRounds}輪｜S ${i+1}/${plan.s}`,'S'))}else creatorItems.push(rewardTreasure(godCity,Math.max(1,Math.min(21,22-Math.floor(currentProgress*20))),Math.round(currentProgress*18),'👑 創世神挑戰賽｜未滿1輪進度獎勵'));
    rewards.push({city:godCity,label:completedRounds?`創世神守住 ${completedRounds} 輪`:'創世神未滿1輪',xp,g,items:creatorItems,it:creatorItems[0]||null,special:true,plan,towerRank:1});
 
-   // V17.4.202: trailing treasure count is based on the main tower rank, not damage rank.
+   // V17.4.203: trailing treasure count is based on the main tower rank, not damage rank.
    // #2–3: 5, #4–5: 4, #6–10: 3, #11–15: 2, #16–22: 1.
    // 1U guarantees one S for #2; 2U guarantees one S for #2 and #3.
    teamRows.slice(1).forEach((teamPos,idx)=>{
@@ -1907,7 +1916,7 @@ function genesisBattle(){
  }
  function genesisFastChunk172(){
   if(done){genesisSkipBusy172=false;return}
-  // Crucial V17.4.202 fix: Pause/next-elimination can interrupt skip immediately.
+  // Crucial V17.4.203 retained fix: Pause/next-elimination can interrupt skip immediately.
   // Never execute an extra attack when skip has been cancelled.
   if(!C?.skip||!C?.auto){genesisParkAfterSkip200();return}
   const started=performance.now();let n=0;
@@ -1922,9 +1931,24 @@ function genesisBattle(){
  C.onSkipStop=genesisParkAfterSkip200;
  render();queue(step,450)
 }
-function tryGenesisAuto(){if(!genesisAutoPending||!genesisCanOpen())return;genesisAutoPending=false;openGenesis(true,'auto')}
+function tryGenesisAuto(){
+ const due=genesisBucket203(turn);
+ if(due<=genesisAutoBucket){genesisAutoPending=false;return false}
+ genesisAutoPending=true;
+ if(!genesisCanOpen())return false;
+ // Mark a 10k bucket as consumed only AFTER the official challenge actually opens.
+ // If another activity blocks it, or the page reloads, the due challenge remains pending.
+ const nextBucket=genesisAutoBucket+1;
+ const opened=openGenesis(true,'auto');
+ if(opened){genesisAutoBucket=nextBucket;genesisPersistBucket203();genesisAutoPending=due>genesisAutoBucket;return true}
+ return false
+}
 window.__CT_GENESIS_TICK=function(curTurn){
- const b=Math.floor((Number(curTurn)||0)/10000);if(b>genesisAutoBucket){genesisAutoBucket=b;genesisAutoPending=true;try{localStorage.setItem(GENESIS_AUTO_KEY,String(b))}catch(e){};tryGenesisAuto()}else if(genesisAutoPending)tryGenesisAuto()
+ const b=genesisBucket203(curTurn);
+ // New game / older cloud save can move the turn counter backwards. Auto-heal stale scheduler state.
+ if(b<genesisAutoBucket){genesisAutoBucket=b;genesisAutoPending=false;genesisPersistBucket203()}
+ if(b>genesisAutoBucket)genesisAutoPending=true;
+ if(genesisAutoPending)tryGenesisAuto()
 };
 window.__CT_OPEN_GENESIS=(official=true,source='manual')=>openGenesis(official,source);
 const genesisBtn=q('manualGenesis');if(genesisBtn)genesisBtn.onclick=()=>openGenesis(false,'manual');
@@ -3724,7 +3748,7 @@ html,body{padding-top:0!important}
       if(p>=0 && c>=0 && c<p)cur.tier=prev.tier;
     }
 
-    // V17.4.202：U 改為「同梯隊斷層」判定。
+    // V17.4.203：U 改為「同梯隊斷層」判定。
     // 規則：
     // 1) 只看主排行榜前 3 名中的最強非 X 集團。
     // 2) 戰力皆需 >= 10.00。
@@ -4789,8 +4813,6 @@ window.render=function(){
  }catch(e){console.warn('CT164 tower combat fx',e)}
  return out
 };
-try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.202');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.202')}catch(e){}
-window.__CT_BUILD='V17.4.202-power-compression-05';
 })();
 </script>
 
@@ -5203,8 +5225,6 @@ window.hit=hit=function(s,p){
 // UI is rendered canonically in V17.4.184 CLEAN; no post-render DOM patch is needed.
 
 try{render()}catch(e){console.warn('CT182 initial render',e)}
-try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.202')}catch(_e){}
-window.__CT_BUILD='V17.4.202-power-compression-05';
 })();
 </script>
 
@@ -5230,7 +5250,7 @@ window.__CT_BUILD='V17.4.202-power-compression-05';
 <script id="ct174190RootPerformance">
 (()=>{
 'use strict';
-/* V17.4.202: V17.4.190 root performance fix retained; league adds 100x speed.
+/* V17.4.203: V17.4.190 root performance fix retained; league adds 100x speed.
    No visual/effect/gameplay multiplier is changed here.
    The expensive full-server rating calculations are memoized within one tower turn,
    and derived character stats are memoized until their actual stat inputs change. */
@@ -5321,9 +5341,6 @@ try{
   const bad=document.getElementById('ct189TierCompositorHints');
   if(bad)bad.remove();
 }catch(_e){}
-
-try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.202')}catch(_e){}
-window.__CT_BUILD='V17.4.202-power-compression-05';
 })();
 </script>
 
@@ -5331,7 +5348,7 @@ window.__CT_BUILD='V17.4.202-power-compression-05';
 <script id="ct174192ElementPowerNormalization">
 (()=>{
 'use strict';
-/* V17.4.202 — canonical attribute power coefficients + 0.5 power compression.
+/* V17.4.203 — canonical attribute power coefficients + 0.5 power compression.
    These coefficients affect displayed character/team power only; combat element multipliers remain unchanged.
    New-game baseline is recalculated AFTER fixed character elements are assigned; visible/rating power then uses 10*sqrt(raw/baseline), so the strongest opening TEAM is exactly 10.00. */
 const ELEMENT_POWER_192=Object.freeze({water:1.00,fire:1.00,wood:1.00,light:1.20,dark:1.19,thunder:1.70});
@@ -5394,8 +5411,6 @@ window.CT_POWER_RULE_192={
   xThresholdUnchanged:true
 };
 try{if(window.CT_TEAM_PR_RATING?.u)window.CT_TEAM_PR_RATING.u.minPower=10}catch(_e){}
-try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.202')}catch(_e){}
-window.__CT_BUILD='V17.4.202-power-compression-05';
 })();
 </script>
 
@@ -5403,7 +5418,7 @@ window.__CT_BUILD='V17.4.202-power-compression-05';
 <script id="ct174193FairKoTowerFx">
 (()=>{
 'use strict';
-/* V17.4.202
+/* V17.4.203
    1) Every team gets the same one-turn KO hold before entering the next floor.
    2) The watched tower battle keeps the KO attack gold flash.
    3) Tower enemy attacks have their own attack FX.
@@ -5494,27 +5509,18 @@ if(typeof prevEhit193==='function'){
 
 // Recover old saves that happened to be stored on a pre-193 KO frame.
 try{for(const s of states||[])if(s)delete s.ctKoHoldTurn193}catch(_e){}
-try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.202');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.202')}catch(_e){}
-window.__CT_BUILD='V17.4.202-fair-ko-tower-fx';
 })();
 </script>
 
-<script id="ct174195RankAttackFlashAllTeamsMarker">
+
+<script id="ct174203BuildMarker">
 (()=>{
-'use strict';
-window.__CT_BUILD='V17.4.202-rank-attack-flash-all-teams';
+ try{
+  document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.203');
+  const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.203');
+ }catch(e){}
+ window.__CT_BUILD='V17.4.203-cleanup-genesis-trigger-fix';
+ window.CT_GENESIS_RULE_203={interval:10000,maxRounds:10,maxCreatorTreasure:'2U',manualPracticeNoReward:true,guaranteedS:{oneU:[2],twoU:[2,3]},treasureCountByTowerRank:{'2-3':5,'4-5':4,'6-10':3,'11-15':2,'16-22':1}};
 })();
-</script>
-
-<script id="ct174196UTierClusterMarker">
-(()=>{
-  try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.202')}catch(_e){}
-  window.__CT_BUILD='V17.4.202-u-tier-cluster';
-})();
-</script>
-<script id="ct174202BuildMarker">(()=>{try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.202');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.202')}catch(e){}window.__CT_BUILD='V17.4.202-genesis-cap10-multi-reward-league-s';})();</script>
-
-<script id="ct174201GenesisCaps">
-(()=>{window.__CT_BUILD='V17.4.202-genesis-cap10-multi-reward-league-s';window.CT_GENESIS_RULE_202={maxRounds:10,maxCreatorTreasure:'2U',manualPracticeNoReward:true,guaranteedS:{oneU:[2],twoU:[2,3]},treasureCountByTowerRank:{'2-3':5,'4-5':4,'6-10':3,'11-15':2,'16-22':1}};})();
 </script>
 </body></html>
