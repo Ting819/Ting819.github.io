@@ -145,7 +145,7 @@ window.ctBattleTreasureInline126=function(c){
 </script>
 <script>
 const SAVE='CITY_TOWER_V17_SAVE';
-const CT_BUILD_VERSION='V17.4.191';
+const CT_BUILD_VERSION='V17.4.192';
 const CT_SAVE_PREUPDATE='CITY_TOWER_V17_PREUPDATE_BACKUP';
 const CT_TREASURE_SAVE_KEY='CITY_TOWER_V1743_TREASURE';
 const CT_TREASURE_PREUPDATE='CITY_TOWER_V1743_TREASURE_PREUPDATE_BACKUP';
@@ -183,7 +183,7 @@ function ctCombatAttackFx(el){ctCombatPulse164(el,'activityAttackFlash174163',22
 function ctCombatDodgeFx(el){ctCombatPulse164(el,'activityDodgeFx174164',900)}
 function ctCombatEnemyFx(el){ctCombatPulse164(el,'enemyAttackFx174164',240)}
 window.__CT_COMBAT_FX={attack:ctCombatAttackFx,dodge:ctCombatDodgeFx,enemyAttack:ctCombatEnemyFx};
-// V17.4.191 — League 100x speed option; V17.4.190 root performance fix retained.
+// V17.4.192 — League 100x speed option; V17.4.190 root performance fix retained.
 const CT_ELEMENT180={
  water:{name:'水',icon:'💧',cls:'elWater180'},
  fire:{name:'火',icon:'🔥',cls:'elFire180'},
@@ -257,7 +257,7 @@ function baseInitialTop(){return Math.max(...Object.keys(R).map(city=>R[city].re
 function meta(){
  let a=Object.keys(R).map(city=>({city,power:10*teamRaw(city)/initialTop})).sort((x,y)=>y.power-x.power);a.forEach((x,i)=>x.rank=i+1);
  for(const x of a){let v=x.power,r=x.rank;x.tier=v>=9&&r<=3?'S':v>=8&&r<=7?'A':v>=7&&r<=11?'B':v>=6&&r<=15?'C':v>=4.5&&r<=18?'D':v>=4?'E':'F'}
- if(a[0].power>=20&&a[0].power>=a[1].power*1.08)a[0].tier='U'; else if(a[1].power>=20&&a[1].power>=a[2].power*1.08)a[1].tier='U';
+ if(a[0].power>=10&&a[0].power>=a[1].power*1.08)a[0].tier='U'; else if(a[1].power>=10&&a[1].power>=a[2].power*1.08)a[1].tier='U';
  if(a[0].power>=50&&a[0].power>=a[1].power*1.15)a[0].tier='X';
  let z=a[a.length-1],p=a[a.length-2];if(z.power<3.3&&z.power<=p.power*.92)z.tier='Z';
  return Object.fromEntries(a.map(x=>[x.city,x]));
@@ -411,7 +411,7 @@ let eventWasRunning=false,eventTimer=0,eventSecs=0;
 // ---- Character dynamic rating ----
 function charMetaV173(){
   // V17.4.112：角色評級直接使用畫面可見的「個人戰力」數字：10*craw(c)/initialTop。
-  // 因此畫面 20.00+ 就是 U 絕對門檻；50.00+ 且全服第1才可 X。
+  // 因此畫面 10.00+ 就是 U 絕對門檻；50.00+ 且全服第1才可 X。
   let a=Object.values(R).flat().map(c=>({id:c.id,power:10*craw(c)/initialTop})).sort((x,y)=>y.power-x.power||String(x.id).localeCompare(String(y.id),'zh-Hant'));
   const n=a.length,EPS=1e-9;
   a.forEach((x,i)=>x.rank=i+1);
@@ -427,7 +427,7 @@ function charMetaV173(){
   for(const x of a){
     if(uCount>=3)break;
     if(x.tier==='X')continue;
-    if(x.power>=20){x.tier='U';uCount++;}
+    if(x.power>=10){x.tier='U';uCount++;}
     else break;
   }
   return Object.fromEntries(a.map(x=>[x.id,x]));
@@ -2705,8 +2705,8 @@ td,th,.ev173row,.rankMega,.rewardMega>div,.bf .nm,.compChar b,.compChar .sub{
     let a=Object.keys(R).map(city=>({city,power:10*teamRaw(city)/initialTop})).sort((x,y)=>y.power-x.power);
     a.forEach((x,i)=>x.rank=i+1);
     for(const x of a){let v=x.power,r=x.rank;x.tier=v>=9&&r<=3?'S':v>=8&&r<=7?'A':v>=7&&r<=11?'B':v>=6&&r<=15?'C':v>=4.5&&r<=18?'D':v>=4?'E':'F'}
-    if(a[0]&&a[1]&&a[0].power>=20&&a[0].power>=a[1].power*1.12)a[0].tier='U';
-    else if(a[1]&&a[2]&&a[1].power>=20&&a[1].power>=a[2].power*1.12)a[1].tier='U';
+    if(a[0]&&a[1]&&a[0].power>=10&&a[0].power>=a[1].power*1.12)a[0].tier='U';
+    else if(a[1]&&a[2]&&a[1].power>=10&&a[1].power>=a[2].power*1.12)a[1].tier='U';
     if(a[0]&&a[1]&&a[0].power>=50&&a[0].power>=a[1].power*1.25)a[0].tier='X';
     let z=a[a.length-1],p=a[a.length-2];if(z&&p&&z.power<3.3&&z.power<=p.power*.92)z.tier='Z';
     return Object.fromEntries(a.map(x=>[x.city,x]));
@@ -2730,7 +2730,7 @@ td,th,.ev173row,.rankMega,.rewardMega>div,.bf .nm,.compChar b,.compChar .sub{
     for(const x of a){
       if(uCount>=3)break;
       if(x.tier==='X')continue;
-      if(x.power>=20){x.tier='U';uCount++;} else break;
+      if(x.power>=10){x.tier='U';uCount++;} else break;
     }
     return Object.fromEntries(a.map(x=>[x.id,x]));
   };
@@ -3065,8 +3065,8 @@ window.meta=meta=function(){
   let a=Object.keys(R).map(city=>({city,power:10*teamRaw(city)/initialTop})).sort((x,y)=>y.power-x.power);
   a.forEach((x,i)=>x.rank=i+1);
   for(const x of a){let v=x.power,r=x.rank;x.tier=v>=9&&r<=3?'S':v>=8&&r<=7?'A':v>=7&&r<=11?'B':v>=6&&r<=15?'C':v>=4.5&&r<=18?'D':v>=4?'E':'F'}
-  if(a[0]&&a[1]&&a[0].power>=20&&a[0].power>=a[1].power*1.12)a[0].tier='U';
-  else if(a[1]&&a[2]&&a[1].power>=20&&a[1].power>=a[2].power*1.12)a[1].tier='U';
+  if(a[0]&&a[1]&&a[0].power>=10&&a[0].power>=a[1].power*1.12)a[0].tier='U';
+  else if(a[1]&&a[2]&&a[1].power>=10&&a[1].power>=a[2].power*1.12)a[1].tier='U';
   if(a[0]&&a[1]&&a[0].power>=50&&a[0].power>=a[1].power*1.25)a[0].tier='X';
   const z=a[a.length-1],p=a[a.length-2];if(z&&p&&z.power<3.3&&z.power<=p.power*.92)z.tier='Z';
   return Object.fromEntries(a.map(x=>[x.city,x]));
@@ -3444,7 +3444,7 @@ html,body{padding-top:0!important}
     for(let i=0;i<nonX.length-1;i++){
       const cur=nonX[i], next=nonX[i+1];
       if(cur.rank>3)break;
-      if(cur.power>=20 && cur.power>=next.power*1.12){
+      if(cur.power>=10 && cur.power>=next.power*1.12){
         cur.tier='U';
         break;
       }
@@ -3551,7 +3551,7 @@ html,body{padding-top:0!important}
     Team rating:
     - X: max 1 team, only current #1 by team power, absolute power >= 50,
          and >= 25% above #2.
-    - U: max 1 team, only the strongest non-X team, absolute power >= 20,
+    - U: max 1 team, only the strongest non-X team, absolute power >= 10,
          and >= 12% above the next non-X team.
     - Everyone else uses power percentile rank (PR) among all 22 teams:
       S >= 85, A >= 70, B >= 55, C >= 40,
@@ -3614,7 +3614,7 @@ html,body{padding-top:0!important}
     }
     const nonX=data.filter(x=>x.tier!=='X');
     if(nonX[0] && nonX[1] &&
-       nonX[0].power>=20 &&
+       nonX[0].power>=10 &&
        nonX[0].power>=nonX[1].power*1.12){
       nonX[0].tier='U';
     }
@@ -3652,7 +3652,7 @@ html,body{padding-top:0!important}
   // Expose thresholds for team-data / future UI descriptions.
   window.CT_TEAM_PR_RATING={
     x:{maxTeams:1,minPower:50,gap:1.25},
-    u:{maxTeams:1,minPower:20,gap:1.12},
+    u:{maxTeams:1,minPower:10,gap:1.12},
     rankLock:'main-progress-rank-high-first',
     updateSafe:true,
     build:CT_BUILD_VERSION,
@@ -4683,8 +4683,8 @@ window.render=function(){
  }catch(e){console.warn('CT164 tower combat fx',e)}
  return out
 };
-try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.191');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.191')}catch(e){}
-window.__CT_BUILD='V17.4.191-league-100x';
+try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.192');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.192')}catch(e){}
+window.__CT_BUILD='V17.4.192-league-100x';
 })();
 </script>
 
@@ -5097,8 +5097,8 @@ window.hit=hit=function(s,p){
 // UI is rendered canonically in V17.4.184 CLEAN; no post-render DOM patch is needed.
 
 try{render()}catch(e){console.warn('CT182 initial render',e)}
-try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.191')}catch(_e){}
-window.__CT_BUILD='V17.4.191-league-100x';
+try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.192')}catch(_e){}
+window.__CT_BUILD='V17.4.192-league-100x';
 })();
 </script>
 
@@ -5124,7 +5124,7 @@ window.__CT_BUILD='V17.4.191-league-100x';
 <script id="ct174190RootPerformance">
 (()=>{
 'use strict';
-/* V17.4.191: V17.4.190 root performance fix retained; league adds 100x speed.
+/* V17.4.192: V17.4.190 root performance fix retained; league adds 100x speed.
    No visual/effect/gameplay multiplier is changed here.
    The expensive full-server rating calculations are memoized within one tower turn,
    and derived character stats are memoized until their actual stat inputs change. */
@@ -5216,8 +5216,78 @@ try{
   if(bad)bad.remove();
 }catch(_e){}
 
-try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.191')}catch(_e){}
-window.__CT_BUILD='V17.4.191-league-100x';
+try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.192')}catch(_e){}
+window.__CT_BUILD='V17.4.192-league-100x';
+})();
+</script>
+
+
+<script id="ct174192ElementPowerNormalization">
+(()=>{
+'use strict';
+/* V17.4.192 — canonical attribute power coefficients.
+   These coefficients affect displayed character/team power only; combat element multipliers remain unchanged.
+   New-game baseline is recalculated AFTER fixed character elements are assigned, so the strongest opening TEAM is always exactly 10.00. */
+const ELEMENT_POWER_192=Object.freeze({water:1.00,fire:1.00,wood:1.00,light:1.20,dark:1.19,thunder:1.70});
+window.CT_ELEMENT_POWER_192=ELEMENT_POWER_192;
+window.ctElementPower192=function(element){return Number(ELEMENT_POWER_192[element])||1};
+
+const rawCraw192=window.craw;
+if(typeof rawCraw192==='function'){
+  window.craw=craw=function(c){
+    const base=Number(rawCraw192(c))||0;
+    return base*window.ctElementPower192(c?.element);
+  };
+}
+
+function baseClone192(c){
+  return {...c,lv:1,xp:0,bonus:0,ctAtkGrowth:0,ctHpGrowth:0,ctRatingXp:0,treasureIds:[],treasureId:null};
+}
+function openingBaseline192(){
+  let top=1;
+  for(const city of Object.keys(R||{})){
+    const a=R[city]||[];if(!a.length)continue;
+    const avg=a.reduce((sum,c)=>sum+craw(baseClone192(c)),0)/a.length;
+    if(Number.isFinite(avg)&&avg>top)top=avg;
+  }
+  return top;
+}
+window.__CT_REBASELINE_192=function(){
+  const b=openingBaseline192();
+  if(Number.isFinite(b)&&b>0)initialTop=b;
+  try{localStorage.setItem('CITY_TOWER_POWER_BASELINE_192',String(initialTop))}catch(_e){}
+  return initialTop;
+};
+
+// Replace new-game init so element assignment happens first, then the opening baseline is normalized.
+window.init=init=function(){
+  makeRoster();
+  ctAssignElements180(true); // ranking is determined before any element is assigned, so no circular element advantage.
+  window.__CT_REBASELINE_192();
+  turn=0;nextEvent=160+Math.floor(Math.random()*100);lastEvent=null;
+  states=Object.keys(R).map(city=>({city,floor:1,party:null,enemy:null,ft:0,log:[]}));
+  for(const st of states)nb(st);
+  render();save(true);
+};
+
+// Existing saves keep their already-persisted elements; only the power ruler is recalibrated once on this build.
+try{
+  window.__CT_REBASELINE_192();
+  if(typeof render==='function')render();
+  if(typeof save==='function')save(true);
+}catch(e){console.warn('CT192 element-power migration',e)}
+
+// Public rule metadata for help/review UI.
+window.CT_POWER_RULE_192={
+  openingTopTeam:10.00,
+  elementCoefficients:{...ELEMENT_POWER_192},
+  teamU:{minPower:10,gap:1.12,maxTeams:1},
+  characterU:{minPower:10,maxCharacters:3},
+  xThresholdUnchanged:true
+};
+try{if(window.CT_TEAM_PR_RATING?.u)window.CT_TEAM_PR_RATING.u.minPower=10}catch(_e){}
+try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.192')}catch(_e){}
+window.__CT_BUILD='V17.4.192-element-power-u10';
 })();
 </script>
 
