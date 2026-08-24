@@ -145,7 +145,7 @@ window.ctBattleTreasureInline126=function(c){
 </script>
 <script>
 const SAVE='CITY_TOWER_V17_SAVE';
-const CT_BUILD_VERSION='V17.4.185';
+const CT_BUILD_VERSION='V17.4.186';
 const CT_SAVE_PREUPDATE='CITY_TOWER_V17_PREUPDATE_BACKUP';
 const CT_TREASURE_SAVE_KEY='CITY_TOWER_V1743_TREASURE';
 const CT_TREASURE_PREUPDATE='CITY_TOWER_V1743_TREASURE_PREUPDATE_BACKUP';
@@ -183,7 +183,7 @@ function ctCombatAttackFx(el){ctCombatPulse164(el,'activityAttackFlash174163',22
 function ctCombatDodgeFx(el){ctCombatPulse164(el,'activityDodgeFx174164',900)}
 function ctCombatEnemyFx(el){ctCombatPulse164(el,'enemyAttackFx174164',240)}
 window.__CT_COMBAT_FX={attack:ctCombatAttackFx,dodge:ctCombatDodgeFx,enemyAttack:ctCombatEnemyFx};
-// V17.4.181 — Fixed character elements + enemy elements + thunder mirror burst.
+// V17.4.186 — Fixed monster floor-element rotation; character elements + thunder mirror burst retained.
 const CT_ELEMENT180={
  water:{name:'水',icon:'💧',cls:'elWater180'},
  fire:{name:'火',icon:'🔥',cls:'elFire180'},
@@ -226,9 +226,22 @@ function ctAssignElements180(force=false){
 }
 function ctEnsureElements180(){ctAssignElements180(false)}
 function ctEnemyElement180(f,key){
- if(key==='chapter')return 'thunder';
- if(key==='big')return (Math.floor((Number(f)||1)/25)%2===0)?'light':'dark';
- const z=['water','fire','wood'];return z[Math.abs(Math.floor(Number(f)||1))%3];
+ // V17.4.186: deterministic floor rotation. Special floors do not consume the base water/fire/wood sequence.
+ f=Math.max(1,Math.floor(Number(f)||1));
+ // Every 100F is always 神雷.
+ if(f%100===0)return 'thunder';
+ // Every 25F is a high-tier Boss. Ignore 100F thunder slots when continuing the light/dark alternation:
+ // 25光, 50暗, 75光, 100雷, 125暗, 150光, 175暗, 200雷 ...
+ if(f%25===0){
+  const bossNo=Math.floor(f/25);
+  const nonThunderBossNo=bossNo-Math.floor(bossNo/4);
+  return nonThunderBossNo%2===1?'light':'dark';
+ }
+ // Every other 5F special enemy alternates 光/暗: 5光, 10暗, 15光, 20暗, 30暗 ...
+ if(f%5===0)return Math.floor(f/5)%2===1?'light':'dark';
+ // Normal floors rotate 水→火→木, skipping special 5F floors so they do not consume a base slot.
+ const baseNo=f-Math.floor(f/5);
+ return ['water','fire','wood'][(baseNo-1)%3];
 }
 window.__CT_ELEMENT180={info:ctElementInfo180,badge:ctElementBadge180,mult:ctElementMultiplier180,assign:ctAssignElements180};
 const XP_K={normal:12,elite:18,small:25,big:40,chapter:60};
@@ -364,7 +377,7 @@ function load(){
    if(party.length!==4)party=pick4(city);
    let en=o.enemy;
    if(!en||!Number.isFinite(en.hp)||!Number.isFinite(en.max)||en.max<=0)en=enemy(floor);
-   else en={...en,element:(CT_ELEMENT180[en.element]?en.element:ctEnemyElement180(floor,en.key)),hp:Math.max(0,en.hp),max:Math.max(1,en.max),g:clamp(Number.isFinite(en.g)?en.g:0,0,100)};
+   else en={...en,element:ctEnemyElement180(floor,en.key),hp:Math.max(0,en.hp),max:Math.max(1,en.max),g:clamp(Number.isFinite(en.g)?en.g:0,0,100)};
    return {city,floor,party,enemy:en,ft:Number.isFinite(o.ft)?o.ft:0,log:Array.isArray(o.log)?o.log.slice(0,80):[],failsAtFloor:Number.isFinite(o.failsAtFloor)?o.failsAtFloor:0};
   });
   render();save(true);$('ks').innerHTML='<span class="saveDot"></span>已修復並接續 T'+turn;return true;
@@ -425,7 +438,7 @@ window.charMeta=charMetaV173;
 window.etype=f=>f%50===0?['chapter','章節Boss',3.6]:f%25===0?['big','大Boss',2.6]:f%10===0?['small','小Boss',1.85]:f%5===0?['elite','精英',1.4]:['normal','一般怪',1];
 const atkMul=k=>k==='chapter'?1.42:k==='big'?1.28:k==='small'?1.16:k==='elite'?1.08:1;
 const speedAdd=k=>k==='chapter'?2.5:k==='big'?1.8:k==='small'?1.2:k==='elite'?.7:0;
-window.enemy=(f,fails=0)=>{let [key,name,m]=etype(f),fat=key==='normal'?1:Math.max(.75,1-(fails||0)*.035),hp=Math.round((1500+f*125)*m*fat*rnd(.94,1.06));return{key,name:name+' '+f+'F',max:hp,hp,atk:(42+f*2.1)*atkMul(key)*Math.sqrt(fat),def:55+f*1.8,speed:clamp2(10+f*.13+speedAdd(key),10,27),g:0,fatigue:fat}};
+window.enemy=(f,fails=0)=>{let [key,name,m]=etype(f),fat=key==='normal'?1:Math.max(.75,1-(fails||0)*.035),hp=Math.round((1500+f*125)*m*fat*rnd(.94,1.06));return{key,name:name+' '+f+'F',element:ctEnemyElement180(f,key),max:hp,hp,atk:(42+f*2.1)*atkMul(key)*Math.sqrt(fat),def:55+f*1.8,speed:clamp2(10+f*.13+speedAdd(key),10,27),g:0,fatigue:fat}};
 window.nb=s=>{s.failsAtFloor=s.failsAtFloor||0;s.party=pick4(s.city);s.enemy=enemy(s.floor,s.failsAtFloor);s.ft=0};
 window.round=s=>{
   // V17.4.133: a KO must be painted with the attacking character still lit before
@@ -4645,8 +4658,8 @@ window.render=function(){
  }catch(e){console.warn('CT164 tower combat fx',e)}
  return out
 };
-try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.185');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.185')}catch(e){}
-window.__CT_BUILD='V17.4.185-tower-element-display-fix';
+try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.186');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.186')}catch(e){}
+window.__CT_BUILD='V17.4.186-fixed-monster-element-rotation';
 })();
 </script>
 
@@ -5059,8 +5072,8 @@ window.hit=hit=function(s,p){
 // UI is rendered canonically in V17.4.184 CLEAN; no post-render DOM patch is needed.
 
 try{render()}catch(e){console.warn('CT182 initial render',e)}
-try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.185')}catch(_e){}
-window.__CT_BUILD='V17.4.185-tower-element-display-fix';
+try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.186')}catch(_e){}
+window.__CT_BUILD='V17.4.186-fixed-monster-element-rotation';
 })();
 </script>
 
