@@ -145,7 +145,7 @@ window.ctBattleTreasureInline126=function(c){
 </script>
 <script>
 const SAVE='CITY_TOWER_V17_SAVE';
-const CT_BUILD_VERSION='V17.4.199';
+const CT_BUILD_VERSION='V17.4.200';
 const CT_SAVE_PREUPDATE='CITY_TOWER_V17_PREUPDATE_BACKUP';
 const CT_TREASURE_SAVE_KEY='CITY_TOWER_V1743_TREASURE';
 const CT_TREASURE_PREUPDATE='CITY_TOWER_V1743_TREASURE_PREUPDATE_BACKUP';
@@ -170,7 +170,7 @@ function ctPrepareUpdateSave(){
 ctPrepareUpdateSave();
 let R={},states=[],turn=0,selected='臺北市',running=false,raf=0,last=0,acc=0,lastPaint=0,nextEvent=160,lastEvent=null,initialTop=1;
 const $=id=>document.getElementById(id), clamp=(x,a,b)=>Math.max(a,Math.min(b,x)), rnd=(a,b)=>a+Math.random()*(b-a);
-// V17.4.199 — formal displayed/rating power uses 0.5-power compression. Combat stats and damage are unchanged.
+// V17.4.200 — formal displayed/rating power uses 0.5-power compression. Combat stats and damage are unchanged.
 window.ctPowerCompress194=function(ratio){ratio=Math.max(0,Number(ratio)||0);return 10*Math.sqrt(ratio)};
 const safeGet=k=>{try{return localStorage.getItem(k)}catch(_){return null}};
 let ctDisposableStorageCleaned184=false;
@@ -185,7 +185,7 @@ function ctCombatAttackFx(el){ctCombatPulse164(el,'activityAttackFlash174163',22
 function ctCombatDodgeFx(el){ctCombatPulse164(el,'activityDodgeFx174164',900)}
 function ctCombatEnemyFx(el){ctCombatPulse164(el,'enemyAttackFx174164',240)}
 window.__CT_COMBAT_FX={attack:ctCombatAttackFx,dodge:ctCombatDodgeFx,enemyAttack:ctCombatEnemyFx};
-// V17.4.199 — League 100x speed option; V17.4.190 root performance fix retained.
+// V17.4.200 — League 100x speed option; V17.4.190 root performance fix retained.
 const CT_ELEMENT180={
  water:{name:'水',icon:'💧',cls:'elWater180'},
  fire:{name:'火',icon:'🔥',cls:'elFire180'},
@@ -1688,15 +1688,28 @@ const q=id=>document.getElementById(id), clamp=(x,a,b)=>Math.max(a,Math.min(b,x)
 const api=()=>window.__CT_TREASURE||null;
 function stopTower(forceResume=false){resume=forceResume?true:!!running;window.__CT_RESUME_WANTED=resume;try{running=false;if(raf)cancelAnimationFrame(raf);raf=0}catch(e){try{running=false;if(raf)cancelAnimationFrame(raf);raf=0}catch(_){}}if(q('auto'))q('auto').textContent='▶ 自動'}
 function clearTimer(){if(timer){clearTimeout(timer);timer=0}}
-function ms(v){const s=C?.speed||1;return Math.max(s>=10?32:s>=5?45:s>=2?70:90,v/s)}
-function ctl(){if(!C)return;q('megaAuto').textContent=C.auto?'⏸ 暫停':'▶ 自動';q('megaHit').disabled=C.auto||!C.pending;q('megaHit').textContent=C.kind==='boss'?'👆 手動跑1波':'👆 手動下一擊';q('megaBoundary').textContent=C.kind==='boss'?'🌊 下一波後暫停':'☠️ 手動下一淘汰'}
+function ms(v){
+ const s=C?.speed||1;
+ // V17.4.200: Genesis 100× follows League's responsive acceleration style:
+ // keep a tiny event-loop slice so Pause/buttons can always interrupt it.
+ if(C?.kind==='genesis'&&s>=100)return Math.max(8,v/Math.max(1,s));
+ return Math.max(s>=10?32:s>=5?45:s>=2?70:90,v/s)
+}
+function ctl(){if(!C)return;const a=q('megaAuto'),sk=q('megaSkip');if(a)a.textContent=C.skip&&C.auto?'⏸ 暫停快轉':(C.auto?'⏸ 暫停':'▶ 自動');if(sk)sk.textContent=C.skip?'⏩ 快轉中':'⏭ 跳到結果';q('megaHit').disabled=C.auto||!C.pending;q('megaHit').textContent=C.kind==='boss'?'👆 手動跑1波':'👆 手動下一擊';q('megaBoundary').textContent=C.kind==='boss'?'🌊 下一波後暫停':'☠️ 手動下一淘汰'}
 function queue(fn,delay=360){if(!C)return;clearTimer();C.pending=fn;C.delay=delay;ctl();if(C.skip){C.auto=true;timer=setTimeout(run,MEGA_SKIP_YIELD_MS172)}else if(C.auto)timer=setTimeout(run,ms(delay))}
 function run(){if(!C||!C.pending)return;clearTimer();const f=C.pending;C.pending=null;ctl();try{f()}catch(e){console.error(e);q('megaStage').insertAdjacentHTML('beforeend',`<div class="noteMega">⚠️ ${e.message||e}</div>`)}}
 function boundary(){if(C?.boundary){C.boundary=false;C.auto=false;clearTimer();ctl();return true}return false}
 function ensure(){if(q('megaComp'))return;const st=document.createElement('style');st.textContent=`
 .megaBack{display:none;position:fixed;inset:0;z-index:7600;background:#020611f3;backdrop-filter:blur(8px);padding:9px;align-items:center;justify-content:center}.megaBack.open{display:flex}.mega{width:min(1280px,99vw);height:min(910px,97vh);background:linear-gradient(180deg,#101b2d,#08111e);border:1px solid #526b92;border-radius:18px;display:flex;flex-direction:column;overflow:hidden}.megaHead{padding:10px 12px;border-bottom:1px solid #2d4264;display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}.megaTitle{font-size:18px;font-weight:1000}.megaMode{font-size:10px;color:#9eb1ca}.megaBtns{display:flex;gap:5px;flex-wrap:wrap}.megaBtns button,.megaBtns select{padding:7px 9px;font-size:11px}.megaBody{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(310px,.65fr);gap:8px;padding:9px;min-height:0;flex:1}.megaStage,.megaRank{overflow:auto;background:#0c1727;border:1px solid #2d4264;border-radius:13px;padding:9px}.rankMega{display:grid;grid-template-columns:30px 1fr 70px 72px 72px;gap:5px;padding:6px;border-bottom:1px solid #20324d;font-size:9px;align-items:center}.rankMega.top{background:#2a240d;border:1px solid #806927;border-radius:8px}.num{text-align:right;font-weight:900}.bossFace{text-align:center;font-size:64px;filter:drop-shadow(0 0 22px #ff506888)}.bossPhase{text-align:center;font-size:12px;font-weight:1000;color:#ffd37a;margin:3px}.bossTop{display:flex;justify-content:space-between;font-size:11px;color:#ffc1c9;font-weight:900}.bossBar{height:28px;border:2px solid #96384a;background:#2b1118;border-radius:99px;overflow:hidden}.bossBar i{height:100%;display:block;background:linear-gradient(90deg,#ff344d,#ff7888);transition:none}.actionMega{margin:8px 0;padding:9px;background:#121f34;border:1px solid #334c70;border-radius:11px;text-align:center;font-size:13px;font-weight:900;color:#ffe08b}.duoMega{display:grid;grid-template-columns:1fr 1fr;gap:8px}.cardMega{background:#132139;border:1px solid #314967;border-radius:11px;padding:8px}.hpMega{height:16px;border:1px solid #4b4451;background:#2b1720;border-radius:99px;overflow:hidden;margin:4px 0}.hpMega i{height:100%;display:block;background:#69dda0}.statMega{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:8px}.statMega div{background:#132139;border:1px solid #2b4263;border-radius:9px;padding:7px;text-align:center;font-size:9px}.statMega b{display:block;font-size:13px}.noteMega{padding:8px;background:#142138;border:1px solid #334a69;border-radius:10px;margin-top:8px;font-size:10px;line-height:1.6}.brawlGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.bf{background:#132139;border:1px solid #314967;border-radius:10px;padding:6px;min-width:0}.bf.dead{opacity:.42}.bf .nm{font-weight:900;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.bf .sub{font-size:8px}.stickyMega{position:sticky;top:-9px;z-index:2;background:#0c1727ef;padding:7px;text-align:center;color:#ffe087;font-weight:900}.podMega{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:10px 0}.podMega>div{border:1px solid #3b5275;border-radius:11px;padding:9px;background:#142138;text-align:center}.podMega>div:first-child{border-color:#cda936;box-shadow:0 0 18px #ffd54d30}.rewardMega{display:grid;gap:4px;margin-top:8px}.rewardMega>div{display:grid;grid-template-columns:32px 1fr 1.3fr;gap:6px;background:#121f34;border-radius:8px;padding:6px;font-size:9px}.officialMega{color:#7ee5a8;font-weight:900}.practiceMega{color:#ffcf75;font-weight:900}.genesisDuel{display:grid;grid-template-columns:minmax(0,1fr) 110px minmax(0,1fr);gap:8px;align-items:stretch}.genesisCard{background:#132139;border:1px solid #3b5275;border-radius:12px;padding:10px;min-width:0}.genesisCard.god{border-color:#d2b43a;box-shadow:0 0 18px #ffdf4930}.genesisCard .cityLine{font-size:10px;color:#a9bdd9}.genesisCard .charName{font-size:18px;font-weight:1000;margin:2px 0}.genesisCard .globalRank{font-size:24px;font-weight:1000;color:#fff0a6}.genesisCard .powerLine{font-size:11px;font-weight:900}.genesisVs{display:flex;align-items:center;justify-content:center;flex-direction:column;font-size:22px;font-weight:1000;color:#ffdd7b;text-align:center}.genesisVs small{font-size:9px;color:#9fb2cb}.genesisHpTop{display:flex;justify-content:space-between;font-size:10px;font-weight:900;margin-top:7px}.genesisStats{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:7px}.genesisStats>div{padding:6px;background:#0e1a2b;border:1px solid #283e5d;border-radius:8px;text-align:center;font-size:8px}.genesisStats b{display:block;font-size:11px}.activityTreasureRow{display:grid;grid-template-columns:repeat(5,minmax(34px,46px));gap:5px;margin-top:7px;align-items:center}.activityTreasureImg,.activityTreasureFallback,.activityTreasureEmpty{width:100%;aspect-ratio:1/1;border:1px solid #344e72;border-radius:8px;background:#081321;display:flex;align-items:center;justify-content:center;object-fit:contain;box-sizing:border-box}.activityTreasureImg{padding:2px}.activityTreasureFallback{font-size:15px;font-weight:1000}.activityTreasureEmpty{color:#536986;font-size:18px}.activityTreasureSlot179{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0}.activityTreasureSlot179 .activityTreasureImg,.activityTreasureSlot179 .activityTreasureFallback,.activityTreasureSlot179 .activityTreasureEmpty{width:100%}.activityTreasureTier179{font-size:9px;line-height:1;font-weight:1000;min-height:10px}.activityTreasureSlot179.empty .activityTreasureTier179{color:#61738e}.genesisProgress{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:8px 0}.genesisProgress>div{background:#132139;border:1px solid #314967;border-radius:9px;padding:7px;text-align:center;font-size:9px}.genesisProgress b{display:block;font-size:14px}.genesisLog{margin-top:8px;border:1px solid #2d4264;border-radius:10px;overflow:hidden}.genesisLogHead,.genesisLogRow{display:grid;grid-template-columns:44px 1fr 1fr 1fr 70px;gap:5px;padding:5px 7px;font-size:8px;align-items:center}.genesisLogHead{background:#172640;font-weight:1000;color:#bcd0ea;position:sticky;top:0}.genesisLogRow:nth-child(even){background:#0f1b2d}.genesisRewardTitle{font-size:14px;font-weight:1000;color:#ffe289;margin:10px 0 5px}.genesisUnplayed{opacity:.45}@media(max-width:900px){.megaBody{grid-template-columns:1fr}.megaRank{max-height:34vh}.brawlGrid{grid-template-columns:repeat(3,1fr)}}`;
-document.head.appendChild(st);document.body.insertAdjacentHTML('beforeend',`<div class="megaBack" id="megaComp"><div class="mega"><div class="megaHead"><div><div class="megaTitle" id="megaTitle"></div><div class="megaMode" id="megaMode"></div></div><div class="megaBtns"><select id="megaSpeed"><option value="0.7">0.7×</option><option value="1" selected>1×</option><option value="1.5">1.5×</option><option value="2">2×</option><option value="5">5×</option><option value="10">10×</option></select><button id="megaAuto" class="primary">⏸ 暫停</button><button id="megaHit">👆 手動下一擊</button><button id="megaBoundary">🌊 手動下一波</button><button id="megaSkip">⏭ 跳到結果</button><button id="megaClose">✕ 關閉</button></div></div><div class="megaBody"><div class="megaStage" id="megaStage"></div><div class="megaRank"><b>📊 即時戰功排行</b><div id="megaRankList"></div></div></div></div></div>`);
-q('megaSpeed').onchange=e=>{if(C)C.speed=+e.target.value||1};q('megaAuto').onclick=()=>{if(!C)return;C.boundary=false;C.auto=!C.auto;clearTimer();ctl();if(C.auto&&C.pending)timer=setTimeout(run,ms(C.delay||260))};q('megaHit').onclick=()=>{if(C&&!C.auto)run()};q('megaBoundary').onclick=()=>{if(!C)return;C.boundary=true;C.auto=true;clearTimer();ctl();if(C.pending)timer=setTimeout(run,ms(Math.min(C.delay||160,160)))};q('megaSkip').onclick=()=>{if(!C)return;C.skip=true;C.boundary=false;C.auto=true;clearTimer();ctl();if(C.pending)timer=setTimeout(run,MEGA_SKIP_YIELD_MS172)};q('megaClose').onclick=close}
+document.head.appendChild(st);document.body.insertAdjacentHTML('beforeend',`<div class="megaBack" id="megaComp"><div class="mega"><div class="megaHead"><div><div class="megaTitle" id="megaTitle"></div><div class="megaMode" id="megaMode"></div></div><div class="megaBtns"><select id="megaSpeed"><option value="0.7">0.7×</option><option value="1" selected>1×</option><option value="1.5">1.5×</option><option value="2">2×</option><option value="5">5×</option><option value="10">10×</option><option value="100" id="megaSpeed100Genesis200" hidden>100×｜創世神極速</option></select><button id="megaAuto" class="primary">⏸ 暫停</button><button id="megaHit">👆 手動下一擊</button><button id="megaBoundary">🌊 手動下一波</button><button id="megaSkip">⏭ 跳到結果</button><button id="megaClose">✕ 關閉</button></div></div><div class="megaBody"><div class="megaStage" id="megaStage"></div><div class="megaRank"><b>📊 即時戰功排行</b><div id="megaRankList"></div></div></div></div></div>`);
+q('megaSpeed').onchange=e=>{if(C)C.speed=+e.target.value||1};q('megaAuto').onclick=()=>{if(!C)return;C.boundary=false;
+ // Same behavior as League: pressing Pause during skip exits skip mode first.
+ if(C.skip&&C.auto){C.skip=false;C.auto=false;clearTimer();try{if(typeof C.onSkipStop==='function')C.onSkipStop()}catch(e){console.warn('mega skip pause recovery',e)}ctl();return}
+ C.auto=!C.auto;clearTimer();ctl();if(C.auto&&C.pending)timer=setTimeout(run,ms(C.delay||260))};q('megaHit').onclick=()=>{if(C&&!C.auto)run()};q('megaBoundary').onclick=()=>{if(!C)return;C.boundary=true;C.auto=true;clearTimer();ctl();if(C.pending)timer=setTimeout(run,ms(Math.min(C.delay||160,160)))};q('megaSkip').onclick=()=>{if(!C)return;C.skip=true;C.boundary=false;C.auto=true;clearTimer();ctl();if(C.pending)timer=setTimeout(run,MEGA_SKIP_YIELD_MS172)};q('megaClose').onclick=close}
+function megaSpeedMode200(kind){
+ const sel=q('megaSpeed'),opt=q('megaSpeed100Genesis200');if(opt)opt.hidden=kind!=='genesis';
+ if(sel&&kind!=='genesis'&&Number(sel.value)>=100)sel.value='1';
+}
 function resumeMegaTower17421(should){
   window.__CT_RESUME_WANTED=!!should;
   if(!should)return;
@@ -1737,7 +1750,7 @@ function gear(c){
 function nextSchedule(){nextEvent=turn+900+Math.floor(Math.random()*601)}
 function treasureAward(x,rank,kind,type){const A=api();if(!A)return null;try{const s=states.find(z=>z.city===x.city),f=s?s.floor:1;let tier=A.compTier(f,rank,0,x.city);if((kind==='boss'||kind==='brawl')&&tier==='A')tier='B';return A.award(x.city,tier,type+'｜#'+rank,f,false)}catch(e){return null}}
 function pod(rows,kind,official){return `<div class="podMega">${rows.slice(0,3).map((x,i)=>`<div><b>${i===0?'🥇冠軍':i===1?'🥈亞軍':'🥉季軍'}</b><div>${x.city}</div><div class="sub">${kind==='boss'?`傷害 ${x.pct.toFixed(2)}%`:`${x.c.name}｜${x.kills}殺｜傷 ${Math.round(x.damage)}`}</div></div>`).join('')}</div><div class="${official?'officialMega':'practiceMega'}">${official?'✅ 正式競賽：名次主獎勵＋戰功額外獎勵；本模式寶物最高B。':'🧪 練習模式：不給EXP、不加永久成長、不掉寶。'}</div>`}
-function open(kind,official){ensure();stopTower(!!official);C={kind,official,auto:true,speed:+q('megaSpeed').value||1,pending:null,delay:300,skip:false,boundary:false};q('megaTitle').textContent=kind==='boss'?'🌐 世界 Boss':'⚔️ 22隊大混鬥';q('megaMode').innerHTML=official?'<span class="officialMega">正式大型競賽｜有完整名次與戰功獎勵</span>':'<span class="practiceMega">手動練習｜只看過程、不發獎勵</span>';q('megaComp').classList.add('open');q('megaSkip').style.display='';ctl();kind==='boss'?worldBoss():brawl()}
+function open(kind,official){ensure();megaSpeedMode200(kind);stopTower(!!official);C={kind,official,auto:true,speed:+q('megaSpeed').value||1,pending:null,delay:300,skip:false,boundary:false};q('megaTitle').textContent=kind==='boss'?'🌐 世界 Boss':'⚔️ 22隊大混鬥';q('megaMode').innerHTML=official?'<span class="officialMega">正式大型競賽｜有完整名次與戰功獎勵</span>':'<span class="practiceMega">手動練習｜只看過程、不發獎勵</span>';q('megaComp').classList.add('open');q('megaSkip').style.display='';ctl();kind==='boss'?worldBoss():brawl()}
 function phase(p){return p>75?['Ⅰ・甦醒',1]:p>50?['Ⅱ・狂怒',1.2]:p>25?['Ⅲ・暴走',1.45]:['Ⅳ・終焉',1.75]}
 function worldBoss(){
 const teams=Object.keys(R).map(city=>({city,cs:randChars(city,4),score:0,mvp:0,chars:null}));
@@ -1801,9 +1814,9 @@ function genesisCanOpen(){return !q('megaComp')?.classList.contains('open')&&!q(
 function openGenesis(official=true,source='manual'){
  ensure();
  if(!genesisCanOpen()){if(source==='manual')alert('目前另有活動進行中，請先結束或關閉目前活動。');else genesisAutoPending=true;return false}
- stopTower(!!official);C={kind:'genesis',official,auto:true,speed:+q('megaSpeed').value||1,pending:null,delay:300,skip:false,boundary:false,source};
+ megaSpeedMode200('genesis');stopTower(!!official);C={kind:'genesis',official,auto:true,speed:+q('megaSpeed').value||1,pending:null,delay:300,skip:false,boundary:false,source};
  q('megaTitle').textContent='👑 創世神挑戰賽';
- q('megaMode').innerHTML=`<span class="officialMega">${source==='auto'?'每 10000 回正式觸發':'手動正式挑戰'}</span>`;
+ q('megaMode').innerHTML=`<span class="officialMega">${source==='auto'?'每 10000 回正式觸發':'手動正式挑戰'}｜100×可用｜跳到結果可隨時暫停</span>`;
  q('megaComp').classList.add('open');q('megaSkip').style.display='';
  const rankTitle=q('megaRank')?.querySelector(':scope>b');if(rankTitle)rankTitle.textContent='📊 對創世神傷害排行';
  ctl();genesisBattle();return true;
@@ -1871,8 +1884,25 @@ function genesisBattle(){
   rankBox.innerHTML=rows.map((x,i)=>`<div class="rankMega ${i<3&&x.damage>0?'top':''} ${x.played?'':'genesisUnplayed'}"><b>#${i+1}</b><span>${x.city}${x.city===killer?'｜⚔️弒神者':''}</span><span class="num">${x.played?'已出過角色':'未出場'}</span><span class="num">傷 ${Math.round(x.damage)}</span><span class="num">${godTotalHp?((x.damage/godTotalHp)*100).toFixed(2):'0.00'}%</span></div>`).join('');if(C)C.pending=null;ctl();autoCloseMega17419(`創世神挑戰賽｜守住 ${completedRounds} 輪後失守`)
  }
  let genesisSkipBusy172=false,genesisSkipLastPaint172=0;
- function genesisFastChunk172(){if(done){genesisSkipBusy172=false;return}if(!C?.skip){genesisSkipBusy172=false;attackOnce(true);return}const started=performance.now();let n=0;while(!done&&C?.skip&&n<320&&performance.now()-started<8){attackOnce(false,false);n++}if(done){genesisSkipBusy172=false;return}const now=performance.now();if(now-genesisSkipLastPaint172>70){genesisSkipLastPaint172=now;render();ctl()}timer=setTimeout(genesisFastChunk172,MEGA_SKIP_YIELD_MS172)}
+ function genesisParkAfterSkip200(){
+  genesisSkipBusy172=false;if(done||!C)return;
+  C.skip=false;C.auto=false;C.pending=step;C.delay=300;render();ctl();
+ }
+ function genesisFastChunk172(){
+  if(done){genesisSkipBusy172=false;return}
+  // Crucial V17.4.200 fix: Pause/next-elimination can interrupt skip immediately.
+  // Never execute an extra attack when skip has been cancelled.
+  if(!C?.skip||!C?.auto){genesisParkAfterSkip200();return}
+  const started=performance.now();let n=0;
+  while(!done&&C?.skip&&C?.auto&&n<320&&performance.now()-started<8){attackOnce(false,false);n++}
+  if(done){genesisSkipBusy172=false;return}
+  if(!C?.skip||!C?.auto){genesisParkAfterSkip200();return}
+  const now=performance.now();if(now-genesisSkipLastPaint172>70){genesisSkipLastPaint172=now;render();ctl()}
+  timer=setTimeout(genesisFastChunk172,MEGA_SKIP_YIELD_MS172)
+ }
  function step(){if(done)return;if(C?.skip){if(!genesisSkipBusy172){genesisSkipBusy172=true;genesisFastChunk172()}return}attackOnce(true)}
+ // Generic Mega pause button calls this when "jump to result" is interrupted.
+ C.onSkipStop=genesisParkAfterSkip200;
  render();queue(step,450)
 }
 function tryGenesisAuto(){if(!genesisAutoPending||!genesisCanOpen())return;genesisAutoPending=false;openGenesis(true,'auto')}
@@ -3677,7 +3707,7 @@ html,body{padding-top:0!important}
       if(p>=0 && c>=0 && c<p)cur.tier=prev.tier;
     }
 
-    // V17.4.199：U 改為「同梯隊斷層」判定。
+    // V17.4.200：U 改為「同梯隊斷層」判定。
     // 規則：
     // 1) 只看主排行榜前 3 名中的最強非 X 集團。
     // 2) 戰力皆需 >= 10.00。
@@ -4742,8 +4772,8 @@ window.render=function(){
  }catch(e){console.warn('CT164 tower combat fx',e)}
  return out
 };
-try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.199');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.199')}catch(e){}
-window.__CT_BUILD='V17.4.199-power-compression-05';
+try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.200');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.200')}catch(e){}
+window.__CT_BUILD='V17.4.200-power-compression-05';
 })();
 </script>
 
@@ -5156,8 +5186,8 @@ window.hit=hit=function(s,p){
 // UI is rendered canonically in V17.4.184 CLEAN; no post-render DOM patch is needed.
 
 try{render()}catch(e){console.warn('CT182 initial render',e)}
-try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.199')}catch(_e){}
-window.__CT_BUILD='V17.4.199-power-compression-05';
+try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.200')}catch(_e){}
+window.__CT_BUILD='V17.4.200-power-compression-05';
 })();
 </script>
 
@@ -5183,7 +5213,7 @@ window.__CT_BUILD='V17.4.199-power-compression-05';
 <script id="ct174190RootPerformance">
 (()=>{
 'use strict';
-/* V17.4.199: V17.4.190 root performance fix retained; league adds 100x speed.
+/* V17.4.200: V17.4.190 root performance fix retained; league adds 100x speed.
    No visual/effect/gameplay multiplier is changed here.
    The expensive full-server rating calculations are memoized within one tower turn,
    and derived character stats are memoized until their actual stat inputs change. */
@@ -5275,8 +5305,8 @@ try{
   if(bad)bad.remove();
 }catch(_e){}
 
-try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.199')}catch(_e){}
-window.__CT_BUILD='V17.4.199-power-compression-05';
+try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.200')}catch(_e){}
+window.__CT_BUILD='V17.4.200-power-compression-05';
 })();
 </script>
 
@@ -5284,7 +5314,7 @@ window.__CT_BUILD='V17.4.199-power-compression-05';
 <script id="ct174192ElementPowerNormalization">
 (()=>{
 'use strict';
-/* V17.4.199 — canonical attribute power coefficients + 0.5 power compression.
+/* V17.4.200 — canonical attribute power coefficients + 0.5 power compression.
    These coefficients affect displayed character/team power only; combat element multipliers remain unchanged.
    New-game baseline is recalculated AFTER fixed character elements are assigned; visible/rating power then uses 10*sqrt(raw/baseline), so the strongest opening TEAM is exactly 10.00. */
 const ELEMENT_POWER_192=Object.freeze({water:1.00,fire:1.00,wood:1.00,light:1.20,dark:1.19,thunder:1.70});
@@ -5347,8 +5377,8 @@ window.CT_POWER_RULE_192={
   xThresholdUnchanged:true
 };
 try{if(window.CT_TEAM_PR_RATING?.u)window.CT_TEAM_PR_RATING.u.minPower=10}catch(_e){}
-try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.199')}catch(_e){}
-window.__CT_BUILD='V17.4.199-power-compression-05';
+try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.200')}catch(_e){}
+window.__CT_BUILD='V17.4.200-power-compression-05';
 })();
 </script>
 
@@ -5356,7 +5386,7 @@ window.__CT_BUILD='V17.4.199-power-compression-05';
 <script id="ct174193FairKoTowerFx">
 (()=>{
 'use strict';
-/* V17.4.199
+/* V17.4.200
    1) Every team gets the same one-turn KO hold before entering the next floor.
    2) The watched tower battle keeps the KO attack gold flash.
    3) Tower enemy attacks have their own attack FX.
@@ -5447,23 +5477,23 @@ if(typeof prevEhit193==='function'){
 
 // Recover old saves that happened to be stored on a pre-193 KO frame.
 try{for(const s of states||[])if(s)delete s.ctKoHoldTurn193}catch(_e){}
-try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.199');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.199')}catch(_e){}
-window.__CT_BUILD='V17.4.199-fair-ko-tower-fx';
+try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.200');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.200')}catch(_e){}
+window.__CT_BUILD='V17.4.200-fair-ko-tower-fx';
 })();
 </script>
 
 <script id="ct174195RankAttackFlashAllTeamsMarker">
 (()=>{
 'use strict';
-window.__CT_BUILD='V17.4.199-rank-attack-flash-all-teams';
+window.__CT_BUILD='V17.4.200-rank-attack-flash-all-teams';
 })();
 </script>
 
 <script id="ct174196UTierClusterMarker">
 (()=>{
-  try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.199')}catch(_e){}
-  window.__CT_BUILD='V17.4.199-u-tier-cluster';
+  try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.200')}catch(_e){}
+  window.__CT_BUILD='V17.4.200-u-tier-cluster';
 })();
 </script>
-<script id="ct174199BuildMarker">(()=>{try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.199');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.199')}catch(e){}window.__CT_BUILD='V17.4.199-genesis-god-no-reset';})();</script>
+<script id="ct174200BuildMarker">(()=>{try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.200');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.200')}catch(e){}window.__CT_BUILD='V17.4.200-genesis-100x-pausable-skip';})();</script>
 </body></html>
