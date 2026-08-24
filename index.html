@@ -145,7 +145,7 @@ window.ctBattleTreasureInline126=function(c){
 </script>
 <script>
 const SAVE='CITY_TOWER_V17_SAVE';
-const CT_BUILD_VERSION='V17.4.190';
+const CT_BUILD_VERSION='V17.4.191';
 const CT_SAVE_PREUPDATE='CITY_TOWER_V17_PREUPDATE_BACKUP';
 const CT_TREASURE_SAVE_KEY='CITY_TOWER_V1743_TREASURE';
 const CT_TREASURE_PREUPDATE='CITY_TOWER_V1743_TREASURE_PREUPDATE_BACKUP';
@@ -183,7 +183,7 @@ function ctCombatAttackFx(el){ctCombatPulse164(el,'activityAttackFlash174163',22
 function ctCombatDodgeFx(el){ctCombatPulse164(el,'activityDodgeFx174164',900)}
 function ctCombatEnemyFx(el){ctCombatPulse164(el,'enemyAttackFx174164',240)}
 window.__CT_COMBAT_FX={attack:ctCombatAttackFx,dodge:ctCombatDodgeFx,enemyAttack:ctCombatEnemyFx};
-// V17.4.190 — Combat/cache performance root fix; visuals and gameplay effects retained.
+// V17.4.191 — League 100x speed option; V17.4.190 root performance fix retained.
 const CT_ELEMENT180={
  water:{name:'水',icon:'💧',cls:'elWater180'},
  fire:{name:'火',icon:'🔥',cls:'elFire180'},
@@ -1245,7 +1245,8 @@ if(location.hash==='#treasure')setTimeout(tOpen,80);
   }
   function compDelayMs(ms){
     const s=compState&&Number(compState.speed)||1;
-    const floor=s>=10?40:s>=5?55:s>=2?75:90;
+    // 100× is league-only. Keep a tiny event-loop slice so buttons/score/animations remain responsive.
+    const floor=s>=100?8:s>=10?40:s>=5?55:s>=2?75:90;
     return Math.max(floor,ms/Math.max(.35,s));
   }
   function updateCompControls(){
@@ -1310,7 +1311,7 @@ if(location.hash==='#treasure')setTimeout(tOpen,80);
     .podium1748{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:10px 0}.pod1748{border-radius:12px;padding:10px;text-align:center;background:#142138;border:1px solid #304563}.pod1748:nth-child(1){border-color:#d0ab34;box-shadow:0 0 18px #ffd34c30}.pod1748 b{display:block;font-size:12px}.pod1748 strong{font-size:18px}.compFootNote{font-size:10px;color:#9fb0c9;line-height:1.5;margin-top:7px}.official1748{color:#7ee7aa;font-weight:900}.practice1748{color:#ffcf79;font-weight:900}
     @media(max-width:850px){.comp1748Body{grid-template-columns:1fr}.compSide{max-height:34vh}.duelBoard{grid-template-columns:1fr 54px 1fr}.seriesScore{font-size:18px}.fighterName{font-size:12px}.podium1748{grid-template-columns:repeat(2,1fr)}}
     `;document.head.appendChild(st);
-    document.body.insertAdjacentHTML('beforeend',`<div class="comp1748Back" id="comp1748"><div class="comp1748"><div class="comp1748Head"><div><div class="comp1748Title" id="compTitle1748">競賽</div><div class="comp1748Mode" id="compMode1748"></div></div><div class="comp1748Btns"><select id="compSpeed1748"><option value="0.7">慢速 0.7×</option><option value="1" selected>1×</option><option value="1.5">1.5×</option><option value="2">2×</option><option value="5">5×</option><option value="10">10×</option></select><button id="compAuto1748" class="primary">⏸ 暫停競賽</button><button id="compNext1748" disabled>👆 手動下一擊</button><button id="compNextBO17414">🎯 手動下一BO</button><button id="compNextMatch17413">⏯ 手動下一場</button><button id="compSkip1748">⏭ 跳到結果</button><button id="compClose1748">✕ 關閉</button></div></div><div class="comp1748Body"><div class="compStage" id="compStage1748"></div><div class="compSide"><b>📊 即時排名</b><div id="compRank1748"></div></div></div></div></div>`);
+    document.body.insertAdjacentHTML('beforeend',`<div class="comp1748Back" id="comp1748"><div class="comp1748"><div class="comp1748Head"><div><div class="comp1748Title" id="compTitle1748">競賽</div><div class="comp1748Mode" id="compMode1748"></div></div><div class="comp1748Btns"><select id="compSpeed1748"><option value="0.7">慢速 0.7×</option><option value="1" selected>1×</option><option value="1.5">1.5×</option><option value="2">2×</option><option value="5">5×</option><option value="10">10×</option><option value="100" id="compSpeed100x1748" hidden>100×｜聯賽極速</option></select><button id="compAuto1748" class="primary">⏸ 暫停競賽</button><button id="compNext1748" disabled>👆 手動下一擊</button><button id="compNextBO17414">🎯 手動下一BO</button><button id="compNextMatch17413">⏯ 手動下一場</button><button id="compSkip1748">⏭ 跳到結果</button><button id="compClose1748">✕ 關閉</button></div></div><div class="comp1748Body"><div class="compStage" id="compStage1748"></div><div class="compSide"><b>📊 即時排名</b><div id="compRank1748"></div></div></div></div></div>`);
     q('compSpeed1748').onchange=e=>{if(compState)compState.speed=Number(e.target.value)||1};
     q('compAuto1748').onclick=()=>setCompAuto(!compState?.auto);
     q('compNext1748').onclick=()=>{if(compState&&!compState.auto)runPending()};
@@ -1450,8 +1451,11 @@ if(location.hash==='#treasure')setTimeout(tOpen,80);
     const type=kind==='boss'?'🌐 世界 Boss':'🏆 城市聯賽・完整賽季';
     q('compTitle1748').textContent=type;q('compMode1748').innerHTML=official?'<span class="official1748">正式競賽｜有排名獎勵</span>':'<span class="practice1748">手動練習｜不發放獎勵，但結束會顯示完整獎勵預覽</span>';
     q('comp1748').classList.add('open');q('compSkip1748').style.display='';
+    const speedSel=q('compSpeed1748'),speed100=q('compSpeed100x1748');
+    if(speed100)speed100.hidden=kind!=='league';
+    if(kind!=='league'&&speedSel&&Number(speedSel.value)>=100)speedSel.value='10';
     const teams=Object.keys(R).map(city=>{const cs=pickEvent4(city);return{city,cs,base:teamEventPower(cs),score:0,wins:0,losses:0,gf:0,ga:0,diff:0,played:0,seed:0}});
-    compState={kind,official,teams,skip:false,auto:true,speed:Number(q('compSpeed1748')?.value)||1,pending:null,pendingDelay:650,finish:null,currentMatch:null,nextBOOnce:false,pauseAfterBO:false,nextMatchOnce:false,pauseAfterSeries:false,lastSeries:null};updateCompControls();
+    compState={kind,official,teams,skip:false,auto:true,speed:Number(speedSel?.value)||1,pending:null,pendingDelay:650,finish:null,currentMatch:null,nextBOOnce:false,pauseAfterBO:false,nextMatchOnce:false,pauseAfterSeries:false,lastSeries:null};updateCompControls();
     if(kind==='boss')runWorldBoss1748(type,teams,official);else runLeague1748(type,teams,official);
   }
 
@@ -4679,8 +4683,8 @@ window.render=function(){
  }catch(e){console.warn('CT164 tower combat fx',e)}
  return out
 };
-try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.190');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.189')}catch(e){}
-window.__CT_BUILD='V17.4.190-root-performance';
+try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.191');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.191')}catch(e){}
+window.__CT_BUILD='V17.4.191-league-100x';
 })();
 </script>
 
@@ -5093,8 +5097,8 @@ window.hit=hit=function(s,p){
 // UI is rendered canonically in V17.4.184 CLEAN; no post-render DOM patch is needed.
 
 try{render()}catch(e){console.warn('CT182 initial render',e)}
-try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.190')}catch(_e){}
-window.__CT_BUILD='V17.4.190-root-performance';
+try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.191')}catch(_e){}
+window.__CT_BUILD='V17.4.191-league-100x';
 })();
 </script>
 
@@ -5120,7 +5124,7 @@ window.__CT_BUILD='V17.4.190-root-performance';
 <script id="ct174190RootPerformance">
 (()=>{
 'use strict';
-/* V17.4.190: root performance fix.
+/* V17.4.191: V17.4.190 root performance fix retained; league adds 100x speed.
    No visual/effect/gameplay multiplier is changed here.
    The expensive full-server rating calculations are memoized within one tower turn,
    and derived character stats are memoized until their actual stat inputs change. */
@@ -5212,8 +5216,8 @@ try{
   if(bad)bad.remove();
 }catch(_e){}
 
-try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.190')}catch(_e){}
-window.__CT_BUILD='V17.4.190-root-performance';
+try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.191')}catch(_e){}
+window.__CT_BUILD='V17.4.191-league-100x';
 })();
 </script>
 
