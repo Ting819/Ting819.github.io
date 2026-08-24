@@ -145,7 +145,7 @@ window.ctBattleTreasureInline126=function(c){
 </script>
 <script>
 const SAVE='CITY_TOWER_V17_SAVE';
-const CT_BUILD_VERSION='V17.4.179';
+const CT_BUILD_VERSION='V17.4.185';
 const CT_SAVE_PREUPDATE='CITY_TOWER_V17_PREUPDATE_BACKUP';
 const CT_TREASURE_SAVE_KEY='CITY_TOWER_V1743_TREASURE';
 const CT_TREASURE_PREUPDATE='CITY_TOWER_V1743_TREASURE_PREUPDATE_BACKUP';
@@ -171,11 +171,66 @@ ctPrepareUpdateSave();
 let R={},states=[],turn=0,selected='臺北市',running=false,raf=0,last=0,acc=0,lastPaint=0,nextEvent=160,lastEvent=null,initialTop=1;
 const $=id=>document.getElementById(id), clamp=(x,a,b)=>Math.max(a,Math.min(b,x)), rnd=(a,b)=>a+Math.random()*(b-a);
 const safeGet=k=>{try{return localStorage.getItem(k)}catch(_){return null}};
+let ctDisposableStorageCleaned184=false;
+function ctCleanupDisposableStorage184(){
+ if(ctDisposableStorageCleaned184)return;
+ ctDisposableStorageCleaned184=true;
+ // These are migration/background leftovers only; never delete the current game, treasure, cloud auth, or review data.
+ [CT_SAVE_PREUPDATE,CT_TREASURE_PREUPDATE,'CITY_TOWER_V174_BACKGROUND_RUN','CITY_TOWER_V17_PREUPDATE_BACKUP_OLD'].forEach(k=>{try{localStorage.removeItem(k)}catch(_){}});
+}
 function ctCombatPulse164(el,cls,ms){if(!el)return;el.classList.remove(cls);void el.offsetWidth;el.classList.add(cls);const key='ctFx'+cls,seq=String((Number(el.dataset[key])||0)+1);el.dataset[key]=seq;setTimeout(()=>{if(el.dataset[key]===seq)el.classList.remove(cls)},ms)}
 function ctCombatAttackFx(el){ctCombatPulse164(el,'activityAttackFlash174163',220)}
 function ctCombatDodgeFx(el){ctCombatPulse164(el,'activityDodgeFx174164',900)}
 function ctCombatEnemyFx(el){ctCombatPulse164(el,'enemyAttackFx174164',240)}
 window.__CT_COMBAT_FX={attack:ctCombatAttackFx,dodge:ctCombatDodgeFx,enemyAttack:ctCombatEnemyFx};
+// V17.4.181 — Fixed character elements + enemy elements + thunder mirror burst.
+const CT_ELEMENT180={
+ water:{name:'水',icon:'💧',cls:'elWater180'},
+ fire:{name:'火',icon:'🔥',cls:'elFire180'},
+ wood:{name:'木',icon:'🌿',cls:'elWood180'},
+ light:{name:'光',icon:'☀️',cls:'elLight180'},
+ dark:{name:'暗',icon:'🌑',cls:'elDark180'},
+ thunder:{name:'神雷',icon:'⚡',cls:'elThunder180'}
+};
+function ctElementInfo180(k){return CT_ELEMENT180[k]||CT_ELEMENT180.water}
+function ctElementBadge180(k,compact=false){const x=ctElementInfo180(k);return `<span class="ctElementBadge180 ${x.cls}" title="屬性：${x.name}">${x.icon}${compact?'':x.name}</span>`}
+function ctElementMultiplier180(a,d){
+ if(!a||!d)return 1;
+ if(a==='thunder'&&d==='thunder')return 3.00;
+ if(a===d)return 1;
+ const base=['water','fire','wood'],ab=base.includes(a),db=base.includes(d);
+ if(a==='thunder')return db?2.00:1.50;
+ if(d==='thunder')return .70;
+ if(a==='light'&&d==='dark')return 1.30;
+ if(a==='dark'&&d==='light')return 1.30;
+ if(a==='light'&&db)return 1.30;
+ if(ab&&d==='light')return .90;
+ if(a==='dark'&&db)return 1.20;
+ if(ab&&d==='dark')return .85;
+ if(ab&&db){
+  if((a==='water'&&d==='fire')||(a==='fire'&&d==='wood')||(a==='wood'&&d==='water'))return 1.10;
+  if((d==='water'&&a==='fire')||(d==='fire'&&a==='wood')||(d==='wood'&&a==='water'))return .90;
+ }
+ return 1;
+}
+function ctElementText180(a,d){const m=ctElementMultiplier180(a,d);return m===1?'':`｜屬性×${m.toFixed(2)}`}
+function ctAssignElements180(force=false){
+ const all=Object.values(R||{}).flat().sort((a,b)=>craw(b)-craw(a)||String(a.id).localeCompare(String(b.id),'zh-Hant'));
+ all.forEach((c,i)=>{
+  if(!force&&CT_ELEMENT180[c.element])return;
+  const rank=i+1;
+  if(rank<=5)c.element='thunder';
+  else if(rank<=35)c.element=Math.random()<.5?'light':'dark';
+  else{const z=['water','fire','wood'];c.element=z[Math.floor(Math.random()*z.length)]}
+ });
+}
+function ctEnsureElements180(){ctAssignElements180(false)}
+function ctEnemyElement180(f,key){
+ if(key==='chapter')return 'thunder';
+ if(key==='big')return (Math.floor((Number(f)||1)/25)%2===0)?'light':'dark';
+ const z=['water','fire','wood'];return z[Math.abs(Math.floor(Number(f)||1))%3];
+}
+window.__CT_ELEMENT180={info:ctElementInfo180,badge:ctElementBadge180,mult:ctElementMultiplier180,assign:ctAssignElements180};
 const XP_K={normal:12,elite:18,small:25,big:40,chapter:60};
 function xpNeed(l){return 80+l*12}
 function makeRoster(){
@@ -197,21 +252,21 @@ function meta(){
 function gain(c,n){c.xp+=n;while(c.xp>=xpNeed(c.lv)){c.xp-=xpNeed(c.lv);c.lv++}}
 function pick4(city){let a=[...R[city]];for(let i=a.length-1;i;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a.slice(0,4).map(c=>{c.deploys++;let s=cstats(c);return {id:c.id,name:c.name,lv:c.lv,max:s.hp,hp:s.hp,atk:s.atk,def:s.def,speed:s.speed,crit:s.crit,dodge:s.dodge,critDmg:s.critDmg,g:0,alive:true}})}
 function etype(f){return f%50===0?['chapter','章節Boss',6]:f%25===0?['big','大Boss',4]:f%10===0?['small','小Boss',2.6]:f%5===0?['elite','精英',1.8]:['normal','一般怪',1]}
-function enemy(f){let [key,name,m]=etype(f),hp=Math.round((1500+f*125)*m*rnd(.94,1.06));return {key,name:name+' '+f+'F',max:hp,hp,atk:(42+f*2.1)*Math.sqrt(m),def:55+f*1.8,speed:clamp(10+f*.13+(m-1)*2,10,29),g:0}}
+function enemy(f){let [key,name,m]=etype(f),hp=Math.round((1500+f*125)*m*rnd(.94,1.06));return {key,name:name+' '+f+'F',element:ctEnemyElement180(f,key),max:hp,hp,atk:(42+f*2.1)*Math.sqrt(m),def:55+f*1.8,speed:clamp(10+f*.13+(m-1)*2,10,29),g:0}}
 function nb(s){s.party=pick4(s.city);s.enemy=enemy(s.floor);s.ft=0}
-function init(){makeRoster();turn=0;nextEvent=160+Math.floor(Math.random()*100);lastEvent=null;states=Object.keys(R).map(city=>({city,floor:1,party:null,enemy:null,ft:0,log:[]}));for(const s of states)nb(s);render();save(true)}
+function init(){makeRoster();ctAssignElements180(true);turn=0;nextEvent=160+Math.floor(Math.random()*100);lastEvent=null;states=Object.keys(R).map(city=>({city,floor:1,party:null,enemy:null,ft:0,log:[]}));for(const s of states)nb(s);render();save(true)}
 function log(s,t){s.log.unshift('T'+turn+'｜'+t);if(s.log.length>80)s.log.length=80}
-function hit(s,p){let c=R[s.city].find(x=>x.id===p.id),crit=Math.random()<p.crit,dmg=Math.max(1,Math.round(p.atk*2.15*100/(100+s.enemy.def)*rnd(.85,1.15)*(crit?(1+(p.critDmg||.50)):1)));s.enemy.hp=Math.max(0,s.enemy.hp-dmg);c.attacks++;if(crit)c.crits++;gain(c,2+(crit?1:0));log(s,(crit?'✨ ':'')+p.name+' → -'+dmg+'｜EXP +'+(2+(crit?1:0)));if(s.enemy.hp<=0){c.kills++;let k=XP_K[s.enemy.key];gain(c,k);log(s,'🎯 '+p.name+' 擊殺｜額外 EXP +'+k);return true}return false}
-function ehit(s){let living=s.party.filter(p=>p.alive);if(!living.length)return;let p=living[Math.floor(Math.random()*living.length)];s._ctEnemyAttackSeq164=(Number(s._ctEnemyAttackSeq164)||0)+1;if(Math.random()<(p.dodge||0)){s._ctDodgeSeq164=(Number(s._ctDodgeSeq164)||0)+1;s._ctDodgeId164=p.id;log(s,'💨 '+p.name+' 閃避怪物攻擊');return}let dmg=Math.max(1,Math.round(s.enemy.atk*2*100/(100+p.def)*rnd(.85,1.15)));p.hp=Math.max(0,p.hp-dmg);if(!p.hp){p.alive=false;log(s,'☠️ '+p.name+' 被擊倒')}}
+function hit(s,p){let c=R[s.city].find(x=>x.id===p.id),crit=Math.random()<p.crit,em=ctElementMultiplier180(c.element,s.enemy.element),dmg=Math.max(1,Math.round(p.atk*2.15*100/(100+s.enemy.def)*rnd(.85,1.15)*(crit?(1+(p.critDmg||.50)):1)*em));s.enemy.hp=Math.max(0,s.enemy.hp-dmg);c.attacks++;if(crit)c.crits++;gain(c,2+(crit?1:0));log(s,(crit?'✨ ':'')+p.name+' → -'+dmg+ctElementText180(c.element,s.enemy.element)+'｜EXP +'+(2+(crit?1:0)));if(s.enemy.hp<=0){c.kills++;let k=XP_K[s.enemy.key];gain(c,k);log(s,'🎯 '+p.name+' 擊殺｜額外 EXP +'+k);return true}return false}
+function ehit(s){let living=s.party.filter(p=>p.alive);if(!living.length)return;let p=living[Math.floor(Math.random()*living.length)];s._ctEnemyAttackSeq164=(Number(s._ctEnemyAttackSeq164)||0)+1;if(Math.random()<(p.dodge||0)){s._ctDodgeSeq164=(Number(s._ctDodgeSeq164)||0)+1;s._ctDodgeId164=p.id;log(s,'💨 '+p.name+' 閃避怪物攻擊');return}let c=R[s.city].find(x=>x.id===p.id),dmg=Math.max(1,Math.round(s.enemy.atk*2*100/(100+p.def)*rnd(.85,1.15)*ctElementMultiplier180(s.enemy.element,c&&c.element)));p.hp=Math.max(0,p.hp-dmg);if(!p.hp){p.alive=false;log(s,'☠️ '+p.name+' 被擊倒')}}
 function round(s){s.ft++;for(const p of s.party){if(!p.alive||s.enemy.hp<=0)continue;p.g+=p.speed;while(p.g>=100&&s.enemy.hp>0){p.g-=100;if(hit(s,p))break}}if(s.enemy.hp>0){s.enemy.g+=s.enemy.speed;while(s.enemy.g>=100&&s.party.some(p=>p.alive)){s.enemy.g-=100;ehit(s)}}if(s.enemy.hp<=0){for(const p of s.party)gain(R[s.city].find(c=>c.id===p.id),6+(p.alive?2:0));s.floor++;nb(s)}else if(!s.party.some(p=>p.alive)){log(s,'❌ 全滅，重新抽4人挑戰 '+s.floor+'F');nb(s)}}
 function eventRun(){let type=Math.random()<.5?'🌐 世界Boss':'🏆 城市聯賽',arr=Object.keys(R).map(city=>{let cs=[...R[city]].sort(()=>Math.random()-.5).slice(0,4),score=cs.reduce((a,c)=>a+craw(c),0)*rnd(.94,1.06);return {city,cs,score}}).sort((a,b)=>b.score-a.score);arr.forEach((x,i)=>x.cs.forEach(c=>{gain(c,i<1?70:i<4?45:i<8?28:12);if(i<8)c.bonus+=i<1?.006:i<4?.003:.001}));lastEvent={type,top:arr.slice(0,5)};nextEvent=turn+140+Math.floor(Math.random()*121)}
 function tick(draw=true){turn++;for(const s of states)round(s);if(turn>=nextEvent)eventRun();if(typeof window.__CT_GENESIS_TICK==='function')window.__CT_GENESIS_TICK(turn);if(draw)render()}
 function rank(){let m=meta();return [...states].sort((a,b)=>b.floor-a.floor||a.enemy.hp/a.enemy.max-b.enemy.hp/b.enemy.max||m[b.city].power-m[a.city].power)}
 function render(){
  let m=meta(),rr=rank(),lead=rr[0],sel=states.find(x=>x.city===selected)||rr[0];$('kt').textContent=turn;$('kl').textContent=lead.city.replace(/[縣市]$/,'');$('kf').textContent=lead.floor+'F';$('kr').innerHTML='<span class="selectedTierAnchor"><span class="tier tierLetter tierMotion '+m[sel.city].tier+'">'+m[sel.city].tier+'</span></span>';$('kp').textContent=m[sel.city].power.toFixed(2);$('kp').className='ratingText '+m[sel.city].tier;
- $('rank').innerHTML=rr.map((s,i)=>`<tr class="team ${s.city===selected?'sel':''}" data-city="${s.city}"><td>${i+1}</td><td class="teamTint ${m[s.city].tier}"><div class="city">${s.city}</div><div class="sub">${TEAMN[s.city]||''}</div></td><td class="rankTierCell"><span class="rankTierAnchor"><span class="tier tierLetter tierMotion ${m[s.city].tier}">${m[s.city].tier}</span></span></td><td class="powerTint ${m[s.city].tier}">${m[s.city].power.toFixed(2)}</td><td><b>${s.floor}F</b><div class="sub">${s.ft}T｜敵剩${Math.round(s.enemy.hp/s.enemy.max*100)}%</div></td><td><div class="partyMini">${s.party.map(p=>`<div><div class="miniName">${p.name} Lv.${R[s.city].find(c=>c.id===p.id).lv}</div><div class="bar"><i style="width:${100*p.hp/p.max}%"></i></div><div class="sub">${Math.round(p.hp)}/${p.max}</div></div>`).join('')}</div></td><td>${Math.round(s.enemy.hp)} / ${s.enemy.max}</td></tr>`).join('');
+ $('rank').innerHTML=rr.map((s,i)=>`<tr class="team ${s.city===selected?'sel':''}" data-city="${s.city}"><td>${i+1}</td><td class="teamTint ${m[s.city].tier}"><div class="city">${s.city}</div><div class="sub">${TEAMN[s.city]||''}</div></td><td class="rankTierCell"><span class="rankTierAnchor"><span class="tier tierLetter tierMotion ${m[s.city].tier}">${m[s.city].tier}</span></span></td><td class="powerTint ${m[s.city].tier}">${m[s.city].power.toFixed(2)}</td><td><b>${s.floor}F</b><div class="sub">${s.ft}T｜敵剩${Math.round(s.enemy.hp/s.enemy.max*100)}%</div></td><td><div class="partyMini">${s.party.map(p=>`<div><div class="miniName">${ctElementBadge180(R[s.city].find(c=>c.id===p.id)?.element,true)} ${p.name} Lv.${R[s.city].find(c=>c.id===p.id).lv}</div><div class="bar"><i style="width:${100*p.hp/p.max}%"></i></div><div class="sub">${Math.round(p.hp)}/${p.max}</div></div>`).join('')}</div></td><td class="ctMonsterRank184"><div>${ctElementBadge180(s.enemy.element)} <b>${s.enemy.name}</b></div><div class="sub">HP ${Math.round(s.enemy.hp)} / ${s.enemy.max}</div></td></tr>`).join('');
  document.querySelectorAll('tr.team').forEach(x=>x.onclick=()=>{selected=x.dataset.city;render()});
- let e=sel.enemy;$('arena').innerHTML=`<div class="enemy"><div class="cardTop"><div><b>${e.name}</b><div class="sub">ATK ${e.atk.toFixed(0)}｜DEF ${e.def.toFixed(0)}｜攻速 ${e.speed.toFixed(1)}</div></div><b>${Math.round(e.hp)} / ${e.max}</b></div><div class="monsterHp174"><div class="mh174top"><span>❤️ 怪物 HP</span><span class="mh174num">${Math.round(e.hp)} / ${e.max}</span></div><div class="mh174track"><div class="mh174fill" style="width:${Math.max(0,Math.min(100,100*e.hp/e.max))}%"></div></div><div class="mh174pct">剩餘 ${Math.round(Math.max(0,Math.min(100,100*e.hp/e.max)))}%</div></div><div class="gbar" style="margin-top:5px"><i style="width:${e.g}%"></i></div></div><div class="cards">${sel.party.map(p=>{let c=R[sel.city].find(x=>x.id===p.id);return `<div class="card ${p.alive?'':'dead'}"><div class="cardTop"><div><div class="name">${p.name}</div></div><b>${Math.round(p.hp)}/${p.max}</b></div><div class="ctExpRowFinal"><span class="ctLvFinal">Lv.${c.lv}</span><span class="ctExpValueFinal">EXP ${c.xp}/${xpNeed(c.lv)}</span></div><div class="xp173" aria-label="EXP進度"><i style="width:${Math.max(0,Math.min(100,100*c.xp/xpNeed(c.lv)))}%"></i></div><div class="bar"><i style="width:${100*p.hp/p.max}%"></i></div><div class="gbar" style="margin-top:5px"><i style="width:${p.g}%"></i></div>${window.ctBattleTreasureInline126(c)}<div class="stats"><div class="stat">ATK<b>${p.atk}</b></div><div class="stat">DEF<b>${p.def}</b></div><div class="stat">攻速<b>${p.speed.toFixed(1)}</b></div><div class="stat">爆擊<b>${Math.round(p.crit*100)}%</b></div><div class="stat">閃避<b>${Math.round((p.dodge||0)*100)}%</b></div><div class="stat">爆傷<b>+${Math.round((p.critDmg||.50)*100)}%</b></div></div></div>`}).join('')}</div>`;
+ let e=sel.enemy;$('arena').innerHTML=`<div class="enemy"><div class="cardTop"><div><b class="ctMonsterTitle184">${ctElementBadge180(e.element)} <span>${e.name}</span></b><div class="sub">屬性 ${ctElementInfo180(e.element).name}｜ATK ${e.atk.toFixed(0)}｜DEF ${e.def.toFixed(0)}｜攻速 ${e.speed.toFixed(1)}</div></div><b>${Math.round(e.hp)} / ${e.max}</b></div><div class="monsterHp174"><div class="mh174top"><span>❤️ ${ctElementBadge180(e.element,true)} ${ctElementInfo180(e.element).name}｜怪物 HP</span><span class="mh174num">${Math.round(e.hp)} / ${e.max}</span></div><div class="mh174track"><div class="mh174fill" style="width:${Math.max(0,Math.min(100,100*e.hp/e.max))}%"></div></div><div class="mh174pct">剩餘 ${Math.round(Math.max(0,Math.min(100,100*e.hp/e.max)))}%</div></div><div class="gbar" style="margin-top:5px"><i style="width:${e.g}%"></i></div></div><div class="cards">${sel.party.map(p=>{let c=R[sel.city].find(x=>x.id===p.id),ss=cstats(c);return `<div class="card ${p.alive?'':'dead'}"><div class="cardTop"><div><div class="name">${ctElementBadge180(c.element)} ${p.name}</div></div><b>${Math.round(p.hp)}/${p.max}</b></div><div class="ctExpRowFinal"><span class="ctLvFinal">Lv.${c.lv}</span><span class="ctExpValueFinal">EXP ${c.xp}/${xpNeed(c.lv)}</span></div><div class="xp173" aria-label="EXP進度"><i style="width:${Math.max(0,Math.min(100,100*c.xp/xpNeed(c.lv)))}%"></i></div><div class="bar"><i style="width:${100*p.hp/p.max}%"></i></div><div class="gbar" style="margin-top:5px"><i style="width:${p.g}%"></i></div>${window.ctBattleTreasureInline126(c)}<div class="stats"><div class="stat">ATK<b>${p.atk}</b></div><div class="stat">DEF<b>${p.def}</b></div><div class="stat">攻速<b>${p.speed.toFixed(1)}</b></div><div class="stat">爆擊<b>${Math.round(p.crit*100)}%</b></div><div class="stat">閃避<b>${Math.round((p.dodge||0)*100)}%</b></div><div class="stat">爆傷<b>+${Math.round((p.critDmg||.50)*100)}%</b></div><div class="stat ct182PenStat">穿透<b>${((ss.penetration||0)*100).toFixed(1)}%</b></div><div class="stat ct182ComboStat">連擊<b>${((ss.combo||0)*100).toFixed(1)}%</b></div></div></div>`}).join('')}</div>`;
  $('log').innerHTML=sel.log.map(x=>'<div>'+x+'</div>').join('')||'<span class="sub">尚無戰鬥紀錄</span>';
  $('event').innerHTML=lastEvent?'<b>'+lastEvent.type+'</b><br>'+lastEvent.top.map((x,i)=>(i+1)+'. '+x.city+'｜'+x.score.toFixed(0)).join('<br>'):'尚未觸發。';
 }
@@ -222,12 +277,12 @@ function dump(){
  const compactR={};
  for(const city of Object.keys(R||{}))compactR[city]=(R[city]||[]).map(c=>({
   id:c.id,lv:c.lv,xp:c.xp,bonus:c.bonus,kills:c.kills,attacks:c.attacks,crits:c.crits,deploys:c.deploys,
-  ctAtkGrowth:Number(c.ctAtkGrowth)||0,ctHpGrowth:Number(c.ctHpGrowth)||0,ctRatingXp:Number(c.ctRatingXp)||0
+  ctAtkGrowth:Number(c.ctAtkGrowth)||0,ctHpGrowth:Number(c.ctHpGrowth)||0,ctRatingXp:Number(c.ctRatingXp)||0,element:CT_ELEMENT180[c.element]?c.element:'water'
  }));
  const compactStates=(states||[]).map(st=>({
   city:st.city,floor:st.floor,ft:st.ft,failsAtFloor:Number(st.failsAtFloor)||0,
   party:(st.party||[]).map(x=>({id:x.id,max:x.max,hp:x.hp,g:x.g,alive:x.alive!==false})),
-  enemy:st.enemy?{key:st.enemy.key,name:st.enemy.name,max:st.enemy.max,hp:st.enemy.hp,atk:st.enemy.atk,def:st.enemy.def,speed:st.enemy.speed,g:st.enemy.g}:null,
+  enemy:st.enemy?{key:st.enemy.key,name:st.enemy.name,element:st.enemy.element,max:st.enemy.max,hp:st.enemy.hp,atk:st.enemy.atk,def:st.enemy.def,speed:st.enemy.speed,g:st.enemy.g}:null,
   log:Array.isArray(st.log)?st.log.slice(0,80):[]
  }));
  let compactEvent=null;
@@ -239,13 +294,34 @@ function dump(){
  }
  return {v:17,turn,selected,nextEvent,lastEvent:compactEvent,R:compactR,states:compactStates,initialTop,savedAt:Date.now()}
 }
-function save(silent=false){try{
- const cur=JSON.parse(safeGet(SAVE)||'null');
- const curTurn=Number(cur&&cur.turn);
- // Never let an older Safari tab / old Home-Screen instance roll a newer run backward.
- if(Number.isFinite(curTurn)&&curTurn>turn){$('ks').innerHTML='<span class="saveDot"></span>保留較新存檔 T'+curTurn;return false}
- const d=dump();localStorage.setItem(SAVE,JSON.stringify(d));$('ks').innerHTML='<span class="saveDot"></span>已儲存 T'+turn;if(!silent)alert('已儲存');return true
- }catch(e){$('ks').textContent='⚠️ 儲存失敗';return false}}
+function save(silent=false){
+ try{
+  const cur=JSON.parse(safeGet(SAVE)||'null');
+  const curTurn=Number(cur&&cur.turn);
+  // Never let an older tab / old Home-Screen instance roll a newer run backward.
+  if(Number.isFinite(curTurn)&&curTurn>turn){$('ks').innerHTML='<span class="saveDot"></span>保留較新存檔 T'+curTurn;return false}
+  const raw=JSON.stringify(dump());
+  const write=()=>{localStorage.setItem(SAVE,raw);return true};
+  try{write()}catch(firstErr){
+   // V17.4.184: if browser storage is tight, remove ONLY disposable update/background backups, never current game or treasure data.
+   try{
+    [CT_SAVE_PREUPDATE,CT_TREASURE_PREUPDATE,'CITY_TOWER_V174_BACKGROUND_RUN','CITY_TOWER_V17_PREUPDATE_BACKUP_OLD'].forEach(k=>{try{localStorage.removeItem(k)}catch(_){}});
+    write();
+   }catch(secondErr){
+    console.error('CT184 SAVE FAILED',secondErr,firstErr);
+    throw secondErr;
+   }
+  }
+  ctCleanupDisposableStorage184();
+  $('ks').innerHTML='<span class="saveDot"></span>已儲存 T'+turn;
+  if(!silent)alert('已儲存');
+  return true;
+ }catch(e){
+  console.error('CT184 save()',e);
+  $('ks').textContent='⚠️ 儲存失敗';
+  return false;
+ }
+}
 function load(){
  try{
   let d=null;
@@ -265,11 +341,13 @@ function load(){
    for(const c of R[city]){
     const o=byId.get(c.id);if(!o)continue;
     for(const k of ['lv','xp','bonus','kills','attacks','crits','deploys','ctAtkGrowth','ctHpGrowth','ctRatingXp'])if(Number.isFinite(o[k]))c[k]=o[k];
+    if(typeof o.element==='string'&&CT_ELEMENT180[o.element])c.element=o.element;
     if(Array.isArray(o.treasureIds))c.treasureIds=o.treasureIds.slice(0,5);
     if(typeof o.treasureId==='string'||o.treasureId===null)c.treasureId=o.treasureId;
    }
   }
   initialTop=(Number.isFinite(d.initialTop)&&d.initialTop>0)?d.initialTop:baseInitialTop();
+  ctEnsureElements180();
   turn=Number.isFinite(d.turn)?d.turn:0;selected=(typeof d.selected==='string'&&R[d.selected])?d.selected:Object.keys(R)[0];
   nextEvent=Number.isFinite(d.nextEvent)?d.nextEvent:turn+320;lastEvent=d.lastEvent||null;
   const oldStates=Array.isArray(d.states)?d.states:[];
@@ -286,7 +364,7 @@ function load(){
    if(party.length!==4)party=pick4(city);
    let en=o.enemy;
    if(!en||!Number.isFinite(en.hp)||!Number.isFinite(en.max)||en.max<=0)en=enemy(floor);
-   else en={...en,hp:Math.max(0,en.hp),max:Math.max(1,en.max),g:clamp(Number.isFinite(en.g)?en.g:0,0,100)};
+   else en={...en,element:(CT_ELEMENT180[en.element]?en.element:ctEnemyElement180(floor,en.key)),hp:Math.max(0,en.hp),max:Math.max(1,en.max),g:clamp(Number.isFinite(en.g)?en.g:0,0,100)};
    return {city,floor,party,enemy:en,ft:Number.isFinite(o.ft)?o.ft:0,log:Array.isArray(o.log)?o.log.slice(0,80):[],failsAtFloor:Number.isFinite(o.failsAtFloor)?o.failsAtFloor:0};
   });
   render();save(true);$('ks').innerHTML='<span class="saveDot"></span>已修復並接續 T'+turn;return true;
@@ -297,7 +375,7 @@ function showRoster(city){return window.__CT_TEAM_UI?.showRoster?.(city)}
 $('step').onclick=()=>tick();$('auto').onclick=start;$('teams').onclick=()=>{$('mb').classList.add('open');showCities()};$('close').onclick=()=>$('mb').classList.remove('open');$('back').onclick=showCities;$('save').onclick=()=>save(false);
 
 $('install').onclick=()=>alert('iPad：請用 Safari 開啟本頁 → 點「分享」→「加入主畫面」→ 名稱 Taiwan City Tower → 加入。之後請從桌面 Taiwan City Tower 圖示開啟。');
-document.addEventListener('visibilitychange',()=>{if(document.hidden)save(true)});window.addEventListener('pagehide',()=>{save(true)});window.addEventListener('freeze',()=>{save(true)});setInterval(()=>{if(turn&&!document.hidden)save(true)},1000);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)save(true)});window.addEventListener('pagehide',()=>{save(true)});window.addEventListener('freeze',()=>{save(true)});setInterval(()=>{if(turn&&running&&!document.hidden)save(true)},5000);
 if(!load())init();
 </script><script>
 (()=>{
@@ -397,9 +475,9 @@ nextEvent=Math.max(nextEvent||0,turn+160);
 
 // ---- UI enrichment: bars, gauges, dynamic grades ----
 function patchUI(){let cm=charMetaV173(),sel=states.find(x=>x.city===selected)||states[0];if(!sel)return;
-  document.querySelectorAll('#rank tr.team').forEach(tr=>{let s=states.find(x=>x.city===tr.dataset.city);if(!s)return;tr.querySelectorAll('.partyMini>div').forEach((d,i)=>{let p=s.party[i],c=R[s.city].find(x=>x.id===p.id);if(!p||!c)return;let nm=d.querySelector('.miniName'),cg=cm[c.id];if(nm&&cg){nm.classList.remove('X','U','S','A','B','C','D','E','F','Z');nm.classList.add('ratingText',cg.tier)}let sub=d.querySelector('.sub');if(sub)sub.textContent=`${Math.round(p.hp)}/${p.max}｜⚡ ${Math.round(p.g)}/100`;let mg=d.querySelector('.miniGauge17425');if(!mg){d.insertAdjacentHTML('beforeend',`<div class="miniGauge17425" aria-label="攻擊條"><i></i></div>`);mg=d.querySelector('.miniGauge17425')}if(mg&&mg.firstElementChild)mg.firstElementChild.style.width=Math.max(0,Math.min(100,Number(p.g)||0))+'%';let xp=d.querySelector('.xp173');if(xp)xp.style.display='none'})});
-  let e=sel.enemy,enemyBox=document.querySelector('#arena .enemy');if(enemyBox){let hpPct=Math.max(0,Math.min(100,100*e.hp/e.max)),mh=enemyBox.querySelector('.monsterHp174');if(!mh){let anchor=enemyBox.querySelector('.cardTop')||enemyBox.firstElementChild;anchor.insertAdjacentHTML('afterend',`<div class="monsterHp174"><div class="mh174top"><span>❤️ 怪物 HP</span><span class="mh174num"></span></div><div class="mh174track"><div class="mh174fill"></div></div><div class="mh174pct"></div></div>`);mh=enemyBox.querySelector('.monsterHp174')}if(mh){mh.querySelector('.mh174num').textContent=`${Math.round(e.hp)} / ${e.max}`;mh.querySelector('.mh174fill').style.width=hpPct+'%';mh.querySelector('.mh174pct').textContent=`剩餘 ${Math.round(hpPct)}%`}let gb=enemyBox.querySelector('.gbar');if(gb&&!enemyBox.querySelector('.gnum173'))gb.insertAdjacentHTML('afterend',`<div class="gnum173">⚡ 怪物攻擊條 ${Math.round(e.g)}/100</div>`);else if(enemyBox.querySelector('.gnum173'))enemyBox.querySelector('.gnum173').textContent=`⚡ 怪物攻擊條 ${Math.round(e.g)}/100`;let f=enemyBox.querySelector('.fat173');if(e.key!=='normal'){let txt=`🔥 本層失敗 ${sel.failsAtFloor||0} 次｜Boss目前強度 ${Math.round((e.fatigue||1)*100)}%`;if(!f)enemyBox.insertAdjacentHTML('beforeend',`<div class="fat173">${txt}</div>`);else f.textContent=txt}}
-  document.querySelectorAll('#arena .cards .card').forEach((card,i)=>{let p=sel.party[i],c=R[sel.city].find(x=>x.id===p.id),g=cm[c.id];let name=card.querySelector('.name');if(name){name.classList.remove('X','U','S','A','B','C','D','E','F','Z');name.classList.add('ratingText',g.tier);if(!name.querySelector('.tier'))name.insertAdjacentHTML('beforeend',` <span class="tier tierLetter tierMotion ${g.tier}">${g.tier}</span>`);}let sub=card.querySelector('.sub');if(sub)sub.textContent=`全服#${g.rank}｜Lv.${c.lv}｜EXP ${c.xp}/${xpNeed(c.lv)}`;if(!card.querySelector('.xp173'))card.querySelector('.cardTop').insertAdjacentHTML('afterend',`<div class="xp173"><i style="width:${100*c.xp/xpNeed(c.lv)}%"></i></div>`);else card.querySelector('.xp173 i').style.width=(100*c.xp/xpNeed(c.lv))+'%';let gb=card.querySelector('.gbar');if(gb&&!card.querySelector('.gnum173'))gb.insertAdjacentHTML('afterend',`<div class="gnum173">⚡ 攻擊條 ${Math.round(p.g)}/100</div>`);else if(card.querySelector('.gnum173'))card.querySelector('.gnum173').textContent=`⚡ 攻擊條 ${Math.round(p.g)}/100`});
+  document.querySelectorAll('#rank tr.team').forEach(tr=>{let s=states.find(x=>x.city===tr.dataset.city);if(!s)return;tr.querySelectorAll('.partyMini>div').forEach((d,i)=>{let p=s.party[i],c=R[s.city].find(x=>x.id===p.id);if(!p||!c)return;let nm=d.querySelector('.miniName'),cg=cm[c.id];if(nm&&cg){nm.classList.remove('X','U','S','A','B','C','D','E','F','Z');nm.classList.add('ratingText',cg.tier)}let sub=d.querySelector('.sub');if(sub)sub.textContent=`${Math.round(p.hp)}/${p.max}｜👟 ${Math.round(p.g)}/100`;let mg=d.querySelector('.miniGauge17425');if(!mg){d.insertAdjacentHTML('beforeend',`<div class="miniGauge17425" aria-label="攻擊條"><i></i></div>`);mg=d.querySelector('.miniGauge17425')}if(mg&&mg.firstElementChild)mg.firstElementChild.style.width=Math.max(0,Math.min(100,Number(p.g)||0))+'%';let xp=d.querySelector('.xp173');if(xp)xp.style.display='none'})});
+  let e=sel.enemy,enemyBox=document.querySelector('#arena .enemy');if(enemyBox){let hpPct=Math.max(0,Math.min(100,100*e.hp/e.max)),mh=enemyBox.querySelector('.monsterHp174');if(!mh){let anchor=enemyBox.querySelector('.cardTop')||enemyBox.firstElementChild;anchor.insertAdjacentHTML('afterend',`<div class="monsterHp174"><div class="mh174top"><span>❤️ 怪物 HP</span><span class="mh174num"></span></div><div class="mh174track"><div class="mh174fill"></div></div><div class="mh174pct"></div></div>`);mh=enemyBox.querySelector('.monsterHp174')}if(mh){mh.querySelector('.mh174num').textContent=`${Math.round(e.hp)} / ${e.max}`;mh.querySelector('.mh174fill').style.width=hpPct+'%';mh.querySelector('.mh174pct').textContent=`剩餘 ${Math.round(hpPct)}%`}let gb=enemyBox.querySelector('.gbar');if(gb&&!enemyBox.querySelector('.gnum173'))gb.insertAdjacentHTML('afterend',`<div class="gnum173">👟 怪物攻擊條 ${Math.round(e.g)}/100</div>`);else if(enemyBox.querySelector('.gnum173'))enemyBox.querySelector('.gnum173').textContent=`👟 怪物攻擊條 ${Math.round(e.g)}/100`;let f=enemyBox.querySelector('.fat173');if(e.key!=='normal'){let txt=`🔥 本層失敗 ${sel.failsAtFloor||0} 次｜Boss目前強度 ${Math.round((e.fatigue||1)*100)}%`;if(!f)enemyBox.insertAdjacentHTML('beforeend',`<div class="fat173">${txt}</div>`);else f.textContent=txt}}
+  document.querySelectorAll('#arena .cards .card').forEach((card,i)=>{let p=sel.party[i],c=R[sel.city].find(x=>x.id===p.id),g=cm[c.id];let name=card.querySelector('.name');if(name){name.classList.remove('X','U','S','A','B','C','D','E','F','Z');name.classList.add('ratingText',g.tier);if(!name.querySelector('.tier'))name.insertAdjacentHTML('beforeend',` <span class="tier tierLetter tierMotion ${g.tier}">${g.tier}</span>`);}let sub=card.querySelector('.sub');if(sub)sub.textContent=`全服#${g.rank}｜Lv.${c.lv}｜EXP ${c.xp}/${xpNeed(c.lv)}`;if(!card.querySelector('.xp173'))card.querySelector('.cardTop').insertAdjacentHTML('afterend',`<div class="xp173"><i style="width:${100*c.xp/xpNeed(c.lv)}%"></i></div>`);else card.querySelector('.xp173 i').style.width=(100*c.xp/xpNeed(c.lv))+'%';let gb=card.querySelector('.gbar');if(gb&&!card.querySelector('.gnum173'))gb.insertAdjacentHTML('afterend',`<div class="gnum173">👟 攻擊條 ${Math.round(p.g)}/100</div>`);else if(card.querySelector('.gnum173'))card.querySelector('.gnum173').textContent=`👟 攻擊條 ${Math.round(p.g)}/100`});
   if(lastEvent&&lastEvent.top&&q('event'))q('event').innerHTML='<b>'+lastEvent.type+'</b>｜T'+(lastEvent.turn||turn)+'<br>'+lastEvent.top.map((x,i)=>(i+1)+'. '+x.city+'｜'+x.score.toFixed(0)+(x.reward?'｜+EXP '+x.reward.xp:'')).join('<br>');
 }
 window.render=function(){OLD_RENDER();patchUI()};
@@ -875,7 +953,7 @@ window.ehit=function(s){
  let p=living[Math.floor(Math.random()*living.length)],c=R[s.city].find(x=>x.id===p.id),items=tForCharAll(c),shields=items.filter(x=>x.type==='shield');
  const dst=cstats(c);p.dodge=dst.dodge;p.critDmg=dst.critDmg;if(Math.random()<(dst.dodge||0)){log(s,`💨 ${p.name} 閃避怪物攻擊`);return}
  let mult=1;for(const it of shields){const r=it.tier==='S'?.08:it.tier==='U'?.18:it.tier==='X'?.35:0;mult*=1-r}
- let dmg=Math.max(1,Math.round(s.enemy.atk*2*100/(100+p.def)*rnd(.85,1.15)*mult));p.hp=Math.max(0,p.hp-dmg);
+ let dmg=Math.max(1,Math.round(s.enemy.atk*2*100/(100+p.def)*rnd(.85,1.15)*mult*ctElementMultiplier180(s.enemy.element,c.element)));p.hp=Math.max(0,p.hp-dmg);
  const revive=shields.filter(x=>x.tier==='U'||x.tier==='X').sort((a,b)=>TASC.indexOf(b.tier)-TASC.indexOf(a.tier))[0];
  if(!p.hp&&revive&&!p.tGuardUsed){p.tGuardUsed=true;p.hp=Math.max(1,Math.round(p.max*(revive.tier==='X'?.35:.15)));p.alive=true;log(s,`${revive.tier==='X'?'🌟 創世神域':'💗 不滅城'}｜致命傷逆轉，回復 ${Math.round(100*p.hp/p.max)}% HP`)}
  else if(!p.hp){p.alive=false;log(s,'☠️ '+p.name+' 被擊倒')}
@@ -915,6 +993,7 @@ function tInvHtml(){
 }
 function tCatalogHtml(){return TORDER.map(g=>`<h3 class="catalogTierTitle ratingText ${g}" style="margin:14px 0 7px">${g}｜${tTierName(g)}</h3><div class="tCatalogGrid">${TDISPLAY_TYPES.map(type=>`<div class="tItem t${g}" style="--tg:${TCOL[g]}"><img class="tPic" src="${tSvg(type,g)}"><div class="tItemHead"><span class="tGrade ratingText ${g}">${g}｜${tTierName(g)}</span><span class="sub ratingText ${g}">${TTYPE_NAME[type]}</span></div><div class="tName ratingText ${g}">${TNAMES[g][type]}</div><div class="tEffect ratingText ${g}">${tEffect(g,type)}</div></div>`).join('')}</div>`).join('')}
 function tHelpHtml(){return `<div class="tHelp168">
+<section><h3>🌈 屬性系統</h3><p>角色屬性在新遊戲建立時一次決定，之後永久固定，只有重新開新遊戲才會重抽。開局全服個人戰力 #1–5 固定為 <span class="ctElementBadge180 elThunder180">⚡神雷</span>；#6–35 隨機為 <span class="ctElementBadge180 elLight180">☀️光</span>／<span class="ctElementBadge180 elDark180">🌑暗</span>；#36–264 隨機為 <span class="ctElementBadge180 elWater180">💧水</span>／<span class="ctElementBadge180 elFire180">🔥火</span>／<span class="ctElementBadge180 elWood180">🌿木</span>。基礎三屬水→火→木→水：剋制×1.10、被剋×0.90。光↔暗互剋×1.30。光打基礎×1.30、基礎打光×0.90；暗打基礎×1.20、基礎打暗×0.85；神雷打光暗×1.50、打基礎×2.00，任何非神雷攻擊神雷×0.70；神雷對神雷雙方×3.00。</p></section>
 <section><h3>🎁 寶物取得</h3><p>所有來源採隊伍強度加權。一般怪最高 <span class="tierWord17434 C">C</span>、精英最高 <span class="tierWord17434 B">B</span>、小Boss／大Boss／章節Boss最高 <span class="tierWord17434 A">A</span>；Boss必掉，一般怪掉率隨樓層與隊伍強度提升。</p></section>
 <section><h3>♻️ 關卡絕版</h3><p><span class="tierWord17434 Z">Z</span> 1000F、<span class="tierWord17434 F">F</span> 1500F、<span class="tierWord17434 E">E</span> 2000F、<span class="tierWord17434 D">D</span> 3000F、<span class="tierWord17434 C">C</span> 5000F 起絕版。達門檻後以 <b>ceil(數量÷5)</b> 100%退役升階並連鎖整理，所有活動獎勵也套用最低合法階級。</p></section>
 <section><h3>🧪 合成與裝備</h3><p>5件同階未裝備寶物可合成下一階，成功率依隊伍強度小幅加成。每名角色最多5件，同種類最多1件。<span class="tierWord17434 S">S</span>/<span class="tierWord17434 U">U</span>/<span class="tierWord17434 X">X</span> 原則上靠合成；創世神守擂成功的保證S為活動特例。</p></section>
@@ -1380,7 +1459,7 @@ if(location.hash==='#treasure')setTimeout(tOpen,80);
   function bonusStrike(c,base,crit){try{let x=0;for(const it of tForCharAll(c)){if(it.type==='blade'){const ch=it.tier==='X'?.25:it.tier==='U'?.14:it.tier==='S'?.08:0,m=it.tier==='X'?.9:it.tier==='U'?.55:it.tier==='S'?.30:0;if(ch&&Math.random()<ch)x+=base*m}if(crit&&it.type==='sigil'){const ch=it.tier==='X'?.35:it.tier==='U'?.18:it.tier==='S'?.10:0,m=it.tier==='X'?1.10:it.tier==='U'?.65:it.tier==='S'?.35:0;if(ch&&Math.random()<ch)x+=base*m}}return Math.round(x)}catch(e){return 0}}
   function duelPower(c){return Math.max(1,craw(c))}
   function duelWinProb(ca,cb){
-    const A=duelPower(ca),B=duelPower(cb);if(Math.abs(A-B)<1e-9)return .5;
+    const A=duelPower(ca)*Math.sqrt(ctElementMultiplier180(ca.element,cb.element)),B=duelPower(cb)*Math.sqrt(ctElementMultiplier180(cb.element,ca.element));if(Math.abs(A-B)<1e-9)return .5;
     const r=Math.max(A,B)/Math.max(1e-9,Math.min(A,B));
     const pts=[[1,.50],[1.05,.60],[1.10,.70],[1.15,.80],[1.20,.90],[1.25,.95],[1.33,.98],[1.40,.995],[1.50,1.0]];
     let ps=1;if(r<1.5){for(let i=1;i<pts.length;i++){if(r<=pts[i][0]){const [x1,y1]=pts[i-1],[x2,y2]=pts[i],u=(r-x1)/(x2-x1);ps=y1+(y2-y1)*u;break}}}
@@ -1407,7 +1486,7 @@ if(location.hash==='#treasure')setTimeout(tOpen,80);
     const board=q('duelBoard17412');if(!board)return;
     const pa=Math.max(0,100*d.hpA/d.maxA),pb=Math.max(0,100*d.hpB/d.maxB);
     const ga=Math.max(0,Math.min(100,d.gA||0)),gb=Math.max(0,Math.min(100,d.gB||0));
-    board.innerHTML=`<div class="fighter ${d.hpB<=0?'winGlow':''}"><div class="fighterName">${d.ca.name}</div><div class="fighterCity">${d.aTeam.city}｜Lv.${d.ca.lv}</div><div class="fighterHpTop"><span>HP</span><b>${Math.max(0,Math.round(d.hpA))} / ${d.maxA}</b></div><div class="fighterHp ${pa<30?'low':''}"><i style="width:${pa}%"></i></div><div class="duelGauge17498"><i style="width:${ga}%"></i></div><div class="duelGaugeNum17498">⚡ 攻擊條 ${Math.round(d.gA)}/100</div><div class="fighterStats">ATK ${d.sa.atk}｜DEF ${d.sa.def}｜攻速 ${d.sa.speed.toFixed(1)}｜爆擊 ${(d.sa.crit*100).toFixed(0)}%｜閃避 ${((d.sa.dodge||0)*100).toFixed(0)}%｜爆傷 +${((d.sa.critDmg||.50)*100).toFixed(0)}%</div><div class="fighterTreasures">${tIcons(d.ca)}</div></div><div class="duelVs"><strong>VS</strong><span>估計勝率<br>${fmtProb17414(d.pA)}% : ${fmtProb17414(1-d.pA)}%</span></div><div class="fighter ${d.hpA<=0?'winGlow':''}"><div class="fighterName">${d.cb.name}</div><div class="fighterCity">${d.bTeam.city}｜Lv.${d.cb.lv}</div><div class="fighterHpTop"><span>HP</span><b>${Math.max(0,Math.round(d.hpB))} / ${d.maxB}</b></div><div class="fighterHp ${pb<30?'low':''}"><i style="width:${pb}%"></i></div><div class="duelGauge17498"><i style="width:${gb}%"></i></div><div class="duelGaugeNum17498">⚡ 攻擊條 ${Math.round(d.gB)}/100</div><div class="fighterStats">ATK ${d.sb.atk}｜DEF ${d.sb.def}｜攻速 ${d.sb.speed.toFixed(1)}｜爆擊 ${(d.sb.crit*100).toFixed(0)}%｜閃避 ${((d.sb.dodge||0)*100).toFixed(0)}%｜爆傷 +${((d.sb.critDmg||.50)*100).toFixed(0)}%</div><div class="fighterTreasures">${tIcons(d.cb)}</div></div>`;
+    board.innerHTML=`<div class="fighter ${d.hpB<=0?'winGlow':''}"><div class="fighterName">${ctElementBadge180(d.ca.element)} ${d.ca.name}</div><div class="fighterCity">${d.aTeam.city}｜Lv.${d.ca.lv}</div><div class="fighterHpTop"><span>HP</span><b>${Math.max(0,Math.round(d.hpA))} / ${d.maxA}</b></div><div class="fighterHp ${pa<30?'low':''}"><i style="width:${pa}%"></i></div><div class="duelGauge17498"><i style="width:${ga}%"></i></div><div class="duelGaugeNum17498">👟 攻擊條 ${Math.round(d.gA)}/100</div><div class="fighterStats">ATK ${d.sa.atk}｜DEF ${d.sa.def}｜攻速 ${d.sa.speed.toFixed(1)}｜爆擊 ${(d.sa.crit*100).toFixed(0)}%｜閃避 ${((d.sa.dodge||0)*100).toFixed(0)}%｜爆傷 +${((d.sa.critDmg||.50)*100).toFixed(0)}%｜穿透 ${((d.sa.penetration||0)*100).toFixed(1)}%｜連擊 ${((d.sa.combo||0)*100).toFixed(1)}%</div><div class="fighterTreasures">${tIcons(d.ca)}</div></div><div class="duelVs"><strong>VS</strong><span>估計勝率<br>${fmtProb17414(d.pA)}% : ${fmtProb17414(1-d.pA)}%</span></div><div class="fighter ${d.hpA<=0?'winGlow':''}"><div class="fighterName">${ctElementBadge180(d.cb.element)} ${d.cb.name}</div><div class="fighterCity">${d.bTeam.city}｜Lv.${d.cb.lv}</div><div class="fighterHpTop"><span>HP</span><b>${Math.max(0,Math.round(d.hpB))} / ${d.maxB}</b></div><div class="fighterHp ${pb<30?'low':''}"><i style="width:${pb}%"></i></div><div class="duelGauge17498"><i style="width:${gb}%"></i></div><div class="duelGaugeNum17498">👟 攻擊條 ${Math.round(d.gB)}/100</div><div class="fighterStats">ATK ${d.sb.atk}｜DEF ${d.sb.def}｜攻速 ${d.sb.speed.toFixed(1)}｜爆擊 ${(d.sb.crit*100).toFixed(0)}%｜閃避 ${((d.sb.dodge||0)*100).toFixed(0)}%｜爆傷 +${((d.sb.critDmg||.50)*100).toFixed(0)}%｜穿透 ${((d.sb.penetration||0)*100).toFixed(1)}%｜連擊 ${((d.sb.combo||0)*100).toFixed(1)}%</div><div class="fighterTreasures">${tIcons(d.cb)}</div></div>`;
   }
   function runDuel17412(aTeam,bTeam,usedA,usedB,onDone){
     const ca=pickOne(aTeam.city,usedA),cb=pickOne(bTeam.city,usedB),sa=cstats(ca),sb=cstats(cb);const pA=duelWinProb(ca,cb);
@@ -1419,8 +1498,17 @@ if(location.hash==='#treasure')setTimeout(tOpen,80);
       if(compState&&compState.skip){queueComp(()=>onDone(Math.random()<pA?aTeam:bTeam),COMP_SKIP_STEP_MS118);return}
       const ta=(100-d.gA)/Math.max(1,d.sa.speed),tb=(100-d.gB)/Math.max(1,d.sb.speed),dt=Math.max(.01,Math.min(ta,tb));d.gA+=d.sa.speed*dt;d.gB+=d.sb.speed*dt;
       const left=d.gA>=99.999&&(d.gB<99.999||Math.random()<.5);const atkC=left?d.ca:d.cb,atkS=left?d.sa:d.sb,defC=left?d.cb:d.ca,defS=left?d.sb:d.sa;if(left)d.gA-=100;else d.gB-=100;
-      const dodged=Math.random()<(defS.dodge||0),crit=!dodged&&Math.random()<atkS.crit;let dmg=dodged?0:Math.max(1,Math.round(atkS.atk*2.15*100/(100+defS.def)*(0.88+Math.random()*.24)*(crit?(1+(atkS.critDmg||.50)):1)*(1-shieldReduce(defC))));const extra=dodged?0:bonusStrike(atkC,dmg,crit);dmg+=extra;if(!dodged){if(left){d.hpB=Math.max(d.pA===0?1:0,d.hpB-dmg)}else{d.hpA=Math.max(d.pA===1?1:0,d.hpA-dmg)}}
-      renderFighters(d);const duelBoard164=q('duelBoard17412');ctCombatAttackFx(duelBoard164?.querySelector(left?'.fighter:first-child':'.fighter:last-child'));if(dodged)ctCombatDodgeFx(duelBoard164?.querySelector(left?'.fighter:last-child':'.fighter:first-child'));q('duelLog17412').textContent=dodged?`💨 ${defC.name} 閃避 ${atkC.name} 的攻擊`:`${crit?'✨ 暴擊！':'⚔️'} ${atkC.name} → ${defC.name} -${dmg}${extra?`（寶物追加 ${extra}）`:''}`;
+      const dodged=Math.random()<(defS.dodge||0),crit=!dodged&&Math.random()<atkS.crit;
+      const effDef=typeof ctEffectiveDef182==='function'?ctEffectiveDef182(defS.def,atkS.penetration):defS.def;
+      let dmg=dodged?0:Math.max(1,Math.round(atkS.atk*2.15*100/(100+effDef)*(0.88+Math.random()*.24)*(crit?(1+(atkS.critDmg||.50)):1)*(1-shieldReduce(defC))*ctElementMultiplier180(atkC.element,defC.element)));
+      const extra=dodged?0:bonusStrike(atkC,dmg,crit);dmg+=extra;
+      let combo=false,comboDodged=false,comboCrit=false,comboDmg=0,comboExtra=0;
+      if(Math.random()<(atkS.combo||0)){
+        combo=true;comboDodged=Math.random()<(defS.dodge||0);comboCrit=!comboDodged&&(crit||Math.random()<atkS.crit);
+        if(!comboDodged){comboDmg=Math.max(1,Math.round(atkS.atk*2.15*100/(100+effDef)*(0.88+Math.random()*.24)*(comboCrit?(1+(atkS.critDmg||.50)):1)*(1-shieldReduce(defC))*ctElementMultiplier180(atkC.element,defC.element)));comboExtra=bonusStrike(atkC,comboDmg,comboCrit);comboDmg+=comboExtra;dmg+=comboDmg;}
+      }
+      if(dmg>0){if(left){d.hpB=Math.max(d.pA===0?1:0,d.hpB-dmg)}else{d.hpA=Math.max(d.pA===1?1:0,d.hpA-dmg)}}
+      renderFighters(d);const duelBoard164=q('duelBoard17412');ctCombatAttackFx(duelBoard164?.querySelector(left?'.fighter:first-child':'.fighter:last-child'));if(dodged||comboDodged)ctCombatDodgeFx(duelBoard164?.querySelector(left?'.fighter:last-child':'.fighter:first-child'));q('duelLog17412').textContent=(dodged?`💨 首擊閃避｜`:`${crit?'✨ 暴擊！':'⚔️'} `)+`${atkC.name} → ${defC.name} -${dmg}${extra?`（寶物追加 ${extra}）`:''}${combo?`｜🔁 連擊${comboDodged?'被閃避':`${comboCrit?'✨':''} +${comboDmg}`}`:''}`;
       if(d.hpA<=0||d.hpB<=0){queueComp(()=>{q('duelLog17412').textContent=`🏁 ${d.hpB<=0?aTeam.city:bTeam.city}｜${d.hpB<=0?ca.name:cb.name} 贏下本小局`;onDone(d.hpB<=0?aTeam:bTeam)},850);return}
       queueComp(attack,680)
     }
@@ -1607,13 +1695,13 @@ function phase(p){return p>75?['Ⅰ・甦醒',1]:p>50?['Ⅱ・狂怒',1.2]:p>25?
 function worldBoss(){
 const teams=Object.keys(R).map(city=>({city,cs:randChars(city,4),score:0,mvp:0,chars:null}));
 for(const t of teams)t.chars=t.cs.map(c=>{const s=cstats(c);return{c,s,max:Math.round(s.hp*1.5),hp:Math.round(s.hp*1.5),g:Math.random()*80,att:0}});
-const targetWaves=8,maxWaves=12,def=95;
+const targetWaves=8,maxWaves=12,def=95,bossElement=Math.random()<.5?'light':'dark';
 let oneHitExp=0,expectedPerWave=0;
-for(const t of teams)for(const x of t.chars){const d=x.s.atk*2.15*100/(100+def)*(1+(x.s.crit||0)*.65);oneHitExp+=d;expectedPerWave+=d*Math.max(.01,(Number(x.s.speed)||0)/100)}
+for(const t of teams)for(const x of t.chars){const ed=typeof ctEffectiveDef182==='function'?ctEffectiveDef182(def,x.s.penetration):def,d=x.s.atk*2.15*100/(100+ed)*(1+(x.s.crit||0)*.65)*ctElementMultiplier180(x.c.element,bossElement);oneHitExp+=d*(1+(x.s.combo||0));expectedPerWave+=d*(1+(x.s.combo||0))*Math.max(.01,(Number(x.s.speed)||0)/100)}
 const openingBurst=oneHitExp*.40,max=Math.max(50000,Math.round((expectedPerWave*targetWaves+openingBurst)*.92));
 let hp=max,w=1,done=false,last=null,best=null,bestD=0;
 const st=q('megaStage');
-st.innerHTML=`<div class="bossFace">👹</div><div class="bossPhase" id="bPhase"></div><div class="bossTop"><span>世界 Boss HP</span><b id="bNum"></b></div><div class="bossBar"><i id="bFill" style="width:100%"></i></div><div class="actionMega" id="bAct">Boss降臨！22隊同步備戰</div><div class="duoMega"><div class="cardMega" id="bChar">88名角色同步累積攻擊條...</div><div class="cardMega" id="bBoss">Boss準備同步反擊...</div></div><div class="statMega"><div>同步波數<b id="bWave">1</b></div><div>本波MVP<b id="bMvp">—</b></div><div>終結一擊<b id="bLast">—</b></div><div>階段<b id="bPN">I</b></div></div><div class="noteMega" id="bNote"><b>⚡ 同步戰鬥規則</b>｜22隊、共88名角色同時累積攻擊條；每波直接 +角色攻速，攻擊條達100/200/300即可出手1/2/3次，因此攻速會直接提高實際DPS。Boss於每波玩家輸出後對各隊同步反擊。<br><b>🎁 正式獎勵</b>｜#1/2/3：每名出戰角色基礎 +220/+180/+150 EXP、+1.60/+1.30/+1.10%；#4–5 +120/+0.85%、#6–10 +90/+0.60%、#11–16 +60/+0.35%、#17–22 +35/+0.18%。再依實際Boss傷害占比等比例提高；每波MVP每次 +8 EXP；終結一擊 +60 EXP/+0.30%。正式賽每隊必得1件寶物，最高B，並套用關卡絕版最低階保護。</div>`;
+st.innerHTML=`<div class="bossFace">👹</div><div class="bossPhase" id="bPhase"></div><div class="bossTop"><span>世界 Boss ${ctElementBadge180(bossElement)}</span><b id="bNum"></b></div><div class="bossBar"><i id="bFill" style="width:100%"></i></div><div class="actionMega" id="bAct">Boss降臨！22隊同步備戰</div><div class="duoMega"><div class="cardMega" id="bChar">88名角色同步累積攻擊條...</div><div class="cardMega" id="bBoss">Boss準備同步反擊...</div></div><div class="statMega"><div>同步波數<b id="bWave">1</b></div><div>本波MVP<b id="bMvp">—</b></div><div>終結一擊<b id="bLast">—</b></div><div>階段<b id="bPN">I</b></div></div><div class="noteMega" id="bNote"><b>👟 同步戰鬥規則</b>｜22隊、共88名角色同時累積攻擊條；每波直接 +角色攻速，攻擊條達100/200/300即可出手1/2/3次，因此攻速會直接提高實際DPS。Boss於每波玩家輸出後對各隊同步反擊。<br><b>🎁 正式獎勵</b>｜#1/2/3：每名出戰角色基礎 +220/+180/+150 EXP、+1.60/+1.30/+1.10%；#4–5 +120/+0.85%、#6–10 +90/+0.60%、#11–16 +60/+0.35%、#17–22 +35/+0.18%。再依實際Boss傷害占比等比例提高；每波MVP每次 +8 EXP；終結一擊 +60 EXP/+0.30%。正式賽每隊必得1件寶物，最高B，並套用關卡絕版最低階保護。</div>`;
 const pct=()=>100*hp/max;
 function rank(){const r=[...teams].sort((a,b)=>b.score-a.score);q('megaRankList').innerHTML=r.map((x,i)=>`<div class="rankMega ${i<3?'top':''}"><b>#${i+1}</b><span>${x.city}</span><span class="num">${(100*x.score/max).toFixed(2)}%</span><span class="num">傷 ${Math.round(x.score)}</span></div>`).join('')}
 function heal(){for(const t of teams)for(const x of t.chars)x.hp=x.hp<=0?Math.round(x.max*.35):Math.min(x.max,Math.round(x.hp+x.max*.1))}
@@ -1623,25 +1711,25 @@ function act(){
  if(done)return;if(hp<=0){finish();return}
  const ph=phase(pct()),hpStart=hp,events=[],waveDamage=new Map(teams.map(t=>[t.city,0]));let critN=0;
  q('bPhase').textContent=`${ph[0]}｜Boss反擊×${ph[1].toFixed(2)}`;q('bPN').textContent=ph[0][0];
- for(const t of teams){for(const x of t.chars){if(x.hp<=0)continue;x.g+=Math.max(0,Number(x.s.speed)||0);let guard=0;while(x.g>=100&&guard<24){guard++;x.g-=100;const cr=Math.random()<x.s.crit;let d=Math.max(1,Math.round(x.s.atk*2.15*100/(100+def)*rnd(.88,1.12)*(cr?(1+(x.s.critDmg||.50)):1))),ex=extra(x.c,d,cr);d+=ex;x.att++;x.g+=wing(x.c,x.att);events.push({t,x,d,cr});if(cr)critN++}}}
+ for(const t of teams){for(const x of t.chars){if(x.hp<=0)continue;x.g+=Math.max(0,Number(x.s.speed)||0);let guard=0;while(x.g>=100&&guard<24){guard++;x.g-=100;const ed=typeof ctEffectiveDef182==='function'?ctEffectiveDef182(def,x.s.penetration):def;const cr=Math.random()<x.s.crit;let d=Math.max(1,Math.round(x.s.atk*2.15*100/(100+ed)*rnd(.88,1.12)*(cr?(1+(x.s.critDmg||.50)):1)*ctElementMultiplier180(x.c.element,bossElement))),ex=extra(x.c,d,cr);d+=ex;x.att++;x.g+=wing(x.c,x.att);events.push({t,x,d,cr,combo:false});if(cr)critN++;if(Math.random()<(x.s.combo||0)){const cr2=cr||Math.random()<x.s.crit;let d2=Math.max(1,Math.round(x.s.atk*2.15*100/(100+ed)*rnd(.88,1.12)*(cr2?(1+(x.s.critDmg||.50)):1)*ctElementMultiplier180(x.c.element,bossElement))),ex2=extra(x.c,d2,cr2);d2+=ex2;x.att++;x.g+=wing(x.c,x.att);events.push({t,x,d:d2,cr:cr2,combo:true});if(cr2)critN++;}}}}
  let rawTotal=events.reduce((a,e)=>a+e.d,0),scale=rawTotal>0?Math.min(1,hpStart/rawTotal):0;
  if(rawTotal>0){const shuffled=[...events];for(let i=shuffled.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[shuffled[i],shuffled[j]]=[shuffled[j],shuffled[i]]}let accD=0,fin=null;for(const e of shuffled){accD+=e.d;if(accD>=hpStart){fin=e;break}}if(rawTotal>=hpStart&&fin)last={city:fin.t.city,char:fin.x.c.name};for(const e of events){const eff=e.d*scale;e.t.score+=eff;waveDamage.set(e.t.city,(waveDamage.get(e.t.city)||0)+eff)}hp=Math.max(0,hpStart-Math.min(hpStart,rawTotal))}
  const waveRows=[...teams].map(t=>({t,d:waveDamage.get(t.city)||0})).sort((a,b)=>b.d-a.d);best=waveRows[0]?.d>0?waveRows[0].t:null;bestD=waveRows[0]?.d||0;
  let bossAttacks=0,dodgeN=0,totalTaken=0;
- if(hp>0){for(const t of teams){const live=t.chars.filter(x=>x.hp>0);if(!live.length)continue;const x=live[Math.floor(Math.random()*live.length)];bossAttacks++;const ba=(55+Math.sqrt(max)*.035)*ph[1];if(Math.random()<(x.s.dodge||0)){dodgeN++;continue}const d=Math.max(1,Math.round(ba*2*100/(100+x.s.def)*rnd(.88,1.12)*(1-shield(x.c))));const taken=Math.min(x.hp,d);x.hp=Math.max(0,x.hp-d);totalTaken+=taken}}
+ if(hp>0){for(const t of teams){const live=t.chars.filter(x=>x.hp>0);if(!live.length)continue;const x=live[Math.floor(Math.random()*live.length)];bossAttacks++;const ba=(55+Math.sqrt(max)*.035)*ph[1];if(Math.random()<(x.s.dodge||0)){dodgeN++;continue}const d=Math.max(1,Math.round(ba*2*100/(100+x.s.def)*rnd(.88,1.12)*(1-shield(x.c))*ctElementMultiplier180(bossElement,x.c.element)));const taken=Math.min(x.hp,d);x.hp=Math.max(0,x.hp-d);totalTaken+=taken}}
  const p=pct(),top3=waveRows.slice(0,3).map((z,i)=>`#${i+1} ${z.t.city} ${Math.round(z.d)}`).join('｜');
  q('bFill').style.width=p+'%';q('bNum').textContent=`${Math.round(hp)} / ${max}｜${p.toFixed(1)}%`;q('bLast').textContent=last?`${last.city}・${last.char}`:'—';q('bMvp').textContent=best?best.city:'—';
  q('bAct').textContent=`⚡ 第${w}同步波｜88人共同蓄力｜${events.length}次出手｜總傷 ${Math.round(Math.min(hpStart,rawTotal))}${critN?'｜暴擊 '+critN:''}`;
- q('bChar').innerHTML=`<b>⚡ 22隊同步輸出</b><div class="sub">攻速直接累積攻擊條：每波 +攻速；100=1次、200=2次、300=3次…</div><div class="sub">本波出手 ${events.length} 次｜${top3||'本波全員蓄力，尚未出手'}</div><div class="sub">目前傷害王 ${[...teams].sort((a,b)=>b.score-a.score)[0].city}｜${Math.round([...teams].sort((a,b)=>b.score-a.score)[0].score)} 傷</div>`;
+ q('bChar').innerHTML=`<b>👟 22隊同步輸出｜Boss ${ctElementBadge180(bossElement)}</b><div class="sub">攻速直接累積攻擊條：每波 +攻速；100=1次、200=2次、300=3次…</div><div class="sub">本波出手 ${events.length} 次｜${top3||'本波全員蓄力，尚未出手'}</div><div class="sub">目前傷害王 ${[...teams].sort((a,b)=>b.score-a.score)[0].city}｜${Math.round([...teams].sort((a,b)=>b.score-a.score)[0].score)} 傷</div>`;
  q('bBoss').innerHTML=`<b>${ph[0]}｜同步反擊</b><div class="hpMega"><i style="width:${p}%"></i></div><div class="sub">本波反擊 ${bossAttacks} 次｜被閃避 ${dodgeN} 次｜造成 ${Math.round(totalTaken)} 傷</div><div class="sub">Boss剩餘 ${p.toFixed(1)}%｜終結一擊 ${last?last.city:'尚未'}</div>`;
  ctCombatAttackFx(q('bChar'));if(hp>0)ctCombatEnemyFx(q('bBoss'));rank();queue(endWave,C.skip?0:460)
 }
 function reward(rows){const details=[];for(let i=0;i<rows.length;i++){const x=rows[i],r=i+1,bx=r===1?220:r===2?180:r===3?150:r<=5?120:r<=10?90:r<=16?60:35,bg=r===1?.016:r===2?.013:r===3?.011:r<=5?.0085:r<=10?.006:r<=16?.0035:.0018,f=1+x.pct/100;let xp=Math.round(bx*f),g=bg*f;xp+=x.mvp*8;if(last&&last.city===x.city){xp+=60;g+=.003}for(const c of x.cs){gain(c,xp);c.bonus=(c.bonus||0)+g}const it=treasureAward(x,r,'boss','🌐 世界 Boss');details.push({x,r,xp,g,it})}try{api()?.save()}catch(e){console.error('world boss treasure save',e)}const eventRows=rows.map(x=>({city:x.city,score:Number(x.score)||0,pct:Number(x.pct)||0,mvp:Number(x.mvp)||0}));lastEvent={type:'🌐 世界 Boss',turn,rows:eventRows,top:eventRows.slice(0,5),official:true,lastHit:last?{city:last.city,char:last.char}:null};nextSchedule();save(true);try{const box=document.createElement('div');box.innerHTML=window.ctSettlement166('🌐 世界 Boss｜同步正式結算表',['名次','隊伍','傷害','EXP／出戰角色','永久成長／出戰角色','寶物','額外獎勵'],details.map(d=>{const extra=[d.x.mvp?`波段MVP ×${d.x.mvp}`:'',last&&last.city===d.x.city?'🎯 終結一擊 +60 EXP／+0.30%':''].filter(Boolean).join('｜')||'—';return[`#${d.r}`,d.x.city,`${d.x.pct.toFixed(2)}%｜${Math.round(d.x.score)}傷`,`+${d.xp} EXP`,`+${(d.g*100).toFixed(2)}%`,window.ctTreasureCell166(d.it),extra]}),'');st.appendChild(box)}catch(e){console.error('world boss reward ui',e)}}
 rank();q('bNum').textContent=`${max} / ${max}｜100%`;queue(act,450)
 }
-function brawl(){const F=Object.keys(R).map(city=>{const c=randChars(city,1)[0],s=cstats(c);return{city,c,s,max:s.hp,hp:s.hp,g:Math.random()*90,alive:true,place:null,kills:0,damage:0,att:0}});let done=false,last=null,actions=0;const st=q('megaStage');st.innerHTML=`<div class="stickyMega" id="brAct">⚔️ 22隊各派1人｜最後存活者勝利</div><div class="brawlGrid" id="brGrid"></div><div class="noteMega" id="brNote"><b>🎁 正式獎勵</b>｜#1/2/3：出戰角色基礎 +190/+155/+130 EXP、+1.30/+1.00/+0.85%；#4–5 +105/+0.65%、#6–10 +80/+0.45%、#11–16 +55/+0.25%、#17–22 +35/+0.13%。每擊殺 +15 EXP；總傷害#1 +70 EXP/+0.20%、#2 +45/+0.12%、#3 +30/+0.08%、#4–5 +15 EXP；最後淘汰一擊 +50 EXP/+0.25%。正式賽每隊必得1件寶物，最高B，並套用關卡絕版最低階保護。</div>`;const live=()=>F.filter(x=>x.alive);const order=()=>[...F].sort((a,b)=>a.alive!==b.alive?(a.alive?-1:1):a.alive?(b.kills-a.kills||b.damage-a.damage):((a.place||99)-(b.place||99)||b.kills-a.kills));function render(){q('brGrid').innerHTML=F.map(x=>`<div class="bf ${x.alive?'':'dead'}" data-city="${x.city}"><div class="nm">${x.c.name}</div><div class="sub">${x.city}｜Lv.${x.c.lv}</div><div class="hpMega"><i style="width:${100*x.hp/x.max}%"></i></div><div class="gaugeMega17498"><i style="width:${Math.max(0,Math.min(100,x.g))}%"></i></div><div class="sub">${x.alive?'存活':'#'+x.place}｜K ${x.kills}｜總傷害 ${Math.round(x.damage)}｜⚡ ${Math.round(x.g)}/100</div></div>`).join('');q('megaRankList').innerHTML=order().map((x,i)=>`<div class="rankMega ${i<3?'top':''}"><b>#${i+1}</b><span>${x.city}</span><span class="num">${x.alive?'存活':'#'+x.place}</span><span class="num">K ${x.kills}</span><span class="num">傷 ${Math.round(x.damage)}</span></div>`).join('')}
+function brawl(){const F=Object.keys(R).map(city=>{const c=randChars(city,1)[0],s=cstats(c);return{city,c,s,max:s.hp,hp:s.hp,g:Math.random()*90,alive:true,place:null,kills:0,damage:0,att:0}});let done=false,last=null,actions=0;const st=q('megaStage');st.innerHTML=`<div class="stickyMega" id="brAct">⚔️ 22隊各派1人｜最後存活者勝利</div><div class="brawlGrid" id="brGrid"></div><div class="noteMega" id="brNote"><b>🎁 正式獎勵</b>｜#1/2/3：出戰角色基礎 +190/+155/+130 EXP、+1.30/+1.00/+0.85%；#4–5 +105/+0.65%、#6–10 +80/+0.45%、#11–16 +55/+0.25%、#17–22 +35/+0.13%。每擊殺 +15 EXP；總傷害#1 +70 EXP/+0.20%、#2 +45/+0.12%、#3 +30/+0.08%、#4–5 +15 EXP；最後淘汰一擊 +50 EXP/+0.25%。正式賽每隊必得1件寶物，最高B，並套用關卡絕版最低階保護。</div>`;const live=()=>F.filter(x=>x.alive);const order=()=>[...F].sort((a,b)=>a.alive!==b.alive?(a.alive?-1:1):a.alive?(b.kills-a.kills||b.damage-a.damage):((a.place||99)-(b.place||99)||b.kills-a.kills));function render(){q('brGrid').innerHTML=F.map(x=>`<div class="bf ${x.alive?'':'dead'}" data-city="${x.city}"><div class="nm">${ctElementBadge180(x.c.element,true)} ${x.c.name}</div><div class="sub">${x.city}｜Lv.${x.c.lv}</div><div class="hpMega"><i style="width:${100*x.hp/x.max}%"></i></div><div class="gaugeMega17498"><i style="width:${Math.max(0,Math.min(100,x.g))}%"></i></div><div class="sub">${x.alive?'存活':'#'+x.place}｜K ${x.kills}｜總傷害 ${Math.round(x.damage)}｜👟 ${Math.round(x.g)}/100</div></div>`).join('');q('megaRankList').innerHTML=order().map((x,i)=>`<div class="rankMega ${i<3?'top':''}"><b>#${i+1}</b><span>${x.city}</span><span class="num">${x.alive?'存活':'#'+x.place}</span><span class="num">K ${x.kills}</span><span class="num">傷 ${Math.round(x.damage)}</span></div>`).join('')}
 function finish(){if(done)return;done=true;clearTimer();const l=live();if(l.length===1)l[0].place=1;const rows=[...F].sort((a,b)=>(a.place||99)-(b.place||99)||b.kills-a.kills||b.damage-a.damage),dr=[...F].sort((a,b)=>b.damage-a.damage),kr=[...F].sort((a,b)=>b.kills-a.kills||b.damage-a.damage);q('brNote').innerHTML=`🏆 最後生存：${rows[0].city}・${rows[0].c.name}　｜　💀 擊殺王：${kr[0].city} ${kr[0].kills}殺　｜　💥 傷害王：${dr[0].city} ${Math.round(dr[0].damage)}　｜　🎯 最後淘汰一擊：${last?last.city:'—'}`;st.insertAdjacentHTML('beforeend',pod(rows,'brawl',C.official));if(C.official)reward(rows,dr);else{try{const damageRank=new Map(dr.map((x,i)=>[x.city,i+1]));st.insertAdjacentHTML('beforeend',window.ctSettlement166('⚔️ 22隊大混鬥｜練習結算表',['名次','隊伍／角色','擊殺','總傷害','傷害排名','最後一擊','獎勵'],rows.map((x,i)=>[`#${i+1}`,`${x.city}｜${x.c.name}`,String(x.kills),Math.round(x.damage),`#${damageRank.get(x.city)}`,last&&last.city===x.city?'是':'—','練習模式不發放']),''))}catch(e){console.error('brawl practice table',e)}}C.pending=null;ctl();render();autoCloseMega17419('22隊大混鬥結算完成')}
-function step(){if(done)return;let L=live();if(L.length<=1){finish();return}let ready=L.filter(x=>x.g>=100);if(!ready.length){const dt=Math.min(...L.map(x=>(100-x.g)/Math.max(1,x.s.speed)));for(const x of L)x.g+=x.s.speed*Math.max(.01,dt);ready=L.filter(x=>x.g>=99.999)}const a=ready.sort((x,y)=>y.g-x.g)[0],targets=L.filter(x=>x!==a),b=targets[Math.floor(Math.random()*targets.length)];a.g-=100;a.att++;actions++;const dodged=Math.random()<(b.s.dodge||0),cr=!dodged&&Math.random()<a.s.crit;let d=dodged?0:Math.max(1,Math.round(a.s.atk*2.15*100/(100+b.s.def)*rnd(.86,1.14)*(cr?(1+(a.s.critDmg||.50)):1)*(1-shield(b.c)))),ex=dodged?0:extra(a.c,d,cr);d+=ex;const eff=dodged?0:Math.min(b.hp,d);b.hp-=eff;a.damage+=eff;a.g+=wing(a.c,a.att);let kill=false;if(b.hp<=0){b.hp=0;b.alive=false;b.place=L.length;a.kills++;last=a;kill=true}q('brAct').textContent=dodged?`💨 ${b.city}・${b.c.name} 閃避 ${a.city}・${a.c.name}｜攻擊條剩 ${Math.round(a.g)}/100`:`${cr?'✨ 暴擊｜':'⚔️ '}${a.city}・${a.c.name} → ${b.city}・${b.c.name} -${eff}${ex?'｜寶物追加'+ex:''}${kill?'｜☠️ 擊殺':''}｜攻擊條剩 ${Math.round(a.g)}/100`;render();const brGrid164=q('brGrid');ctCombatAttackFx(brGrid164?.children[F.indexOf(a)]);if(dodged)ctCombatDodgeFx(brGrid164?.children[F.indexOf(b)]);if(kill&&boundary()){queue(step,260);return}queue(step,C.skip?0:300)}
+function step(){if(done)return;let L=live();if(L.length<=1){finish();return}let ready=L.filter(x=>x.g>=100);if(!ready.length){const dt=Math.min(...L.map(x=>(100-x.g)/Math.max(1,x.s.speed)));for(const x of L)x.g+=x.s.speed*Math.max(.01,dt);ready=L.filter(x=>x.g>=99.999)}const a=ready.sort((x,y)=>y.g-x.g)[0],targets=L.filter(x=>x!==a),b=targets[Math.floor(Math.random()*targets.length)];a.g-=100;a.att++;actions++;const ed=typeof ctEffectiveDef182==='function'?ctEffectiveDef182(b.s.def,a.s.penetration):b.s.def;const dodged=Math.random()<(b.s.dodge||0),cr=!dodged&&Math.random()<a.s.crit;let d=dodged?0:Math.max(1,Math.round(a.s.atk*2.15*100/(100+ed)*rnd(.86,1.14)*(cr?(1+(a.s.critDmg||.50)):1)*(1-shield(b.c))*ctElementMultiplier180(a.c.element,b.c.element))),ex=dodged?0:extra(a.c,d,cr);d+=ex;let combo=false,comboDodged=false,cr2=false,d2=0,ex2=0;if(Math.random()<(a.s.combo||0)){combo=true;comboDodged=Math.random()<(b.s.dodge||0);cr2=!comboDodged&&(cr||Math.random()<a.s.crit);if(!comboDodged){d2=Math.max(1,Math.round(a.s.atk*2.15*100/(100+ed)*rnd(.86,1.14)*(cr2?(1+(a.s.critDmg||.50)):1)*(1-shield(b.c))*ctElementMultiplier180(a.c.element,b.c.element)));ex2=extra(a.c,d2,cr2);d2+=ex2;d+=d2;a.att++;}}const eff=Math.min(b.hp,d);b.hp-=eff;a.damage+=eff;a.g+=wing(a.c,a.att);let kill=false;if(b.hp<=0){b.hp=0;b.alive=false;b.place=L.length;a.kills++;last=a;kill=true}q('brAct').textContent=`${dodged?'💨 首擊閃避｜':cr?'✨ 暴擊｜':'⚔️ '}${a.city}・${a.c.name} → ${b.city}・${b.c.name} -${eff}${ex?'｜寶物追加'+ex:''}${combo?`｜🔁 連擊${comboDodged?'被閃避':`${cr2?'✨':''} +${d2}`}`:''}${kill?'｜☠️ 擊殺':''}｜攻擊條剩 ${Math.round(a.g)}/100`;render();const brGrid164=q('brGrid');ctCombatAttackFx(brGrid164?.children[F.indexOf(a)]);if(dodged||comboDodged)ctCombatDodgeFx(brGrid164?.children[F.indexOf(b)]);if(kill&&boundary()){queue(step,260);return}queue(step,C.skip?0:300)}
 function reward(rows,dr){const dp=new Map(dr.map((x,i)=>[x.city,i+1])),details=[];rows.forEach((x,i)=>{const r=i+1;let xp=r===1?190:r===2?155:r===3?130:r<=5?105:r<=10?80:r<=16?55:35,g=r===1?.013:r===2?.010:r===3?.0085:r<=5?.0065:r<=10?.0045:r<=16?.0025:.0013;xp+=x.kills*15;const d=dp.get(x.city);if(d===1){xp+=70;g+=.0020}else if(d===2){xp+=45;g+=.0012}else if(d===3){xp+=30;g+=.0008}else if(d<=5)xp+=15;if(last&&last.city===x.city){xp+=50;g+=.0025}gain(x.c,xp);x.c.bonus=(x.c.bonus||0)+g;const it=treasureAward(x,r,'brawl','⚔️ 22隊大混鬥');details.push({x,r,xp,g,it})});try{api()?.save()}catch(e){}lastEvent={type:'⚔️ 22隊大混鬥',turn,rows,top:rows.slice(0,5),official:true};nextSchedule();save(true);render();const box=document.createElement('div');const damageRank=new Map(dr.map((x,i)=>[x.city,i+1]));box.innerHTML=window.ctSettlement166('⚔️ 22隊大混鬥｜正式結算表',['名次','隊伍／角色','戰績','EXP／出戰角色','永久成長／出戰角色','寶物','額外獎勵'],details.map(d=>{const dd=damageRank.get(d.x.city),extra=[d.x.kills?`擊殺 ×${d.x.kills}（+${d.x.kills*15} EXP）`:'',dd===1?'💥 傷害王 +70 EXP／+0.20%':dd===2?'傷害#2 +45 EXP／+0.12%':dd===3?'傷害#3 +30 EXP／+0.08%':dd<=5?'傷害前5 +15 EXP':'',last&&last.city===d.x.city?'🎯 最後淘汰一擊 +50 EXP／+0.25%':''].filter(Boolean).join('｜')||'—';return[`#${d.r}`,`${d.x.city}｜${d.x.c.name}`,`K ${d.x.kills}｜傷 ${Math.round(d.x.damage)}｜傷害#${dd}`,`+${d.xp} EXP`,`+${(d.g*100).toFixed(2)}%`,window.ctTreasureCell166(d.it),extra]}),'');st.appendChild(box)}render();queue(step,420)}
 
 const GENESIS_AUTO_KEY='CITY_TOWER_GENESIS_AUTO_V174162';
@@ -1686,7 +1774,7 @@ function genesisBattle(){
  st.innerHTML='<div id="genesisArena"></div>';
  function tierSpan(x){return `<span class="tier tierLetter tierMotion ${x}">${x}</span>`}
  function hpPct(x){return x?Math.max(0,Math.min(100,100*x.hp/x.max)):0}
- function card(x,city,isGod){if(!x)return'<div class="genesisCard">—</div>';return `<div class="genesisCard ${isGod?'god':''}"><div class="cityLine">${isGod?'👑 創世神｜':'⚔️ 挑戰者｜'}${city}・${TEAMN[city]||''}</div><div class="charName ratingText ${x.tier}">${x.c.name}</div><div class="globalRank">全服 #${x.rank}</div><div class="powerLine">${tierSpan(x.tier)}｜戰力 ${x.power.toFixed(2)}｜Lv.${x.c.lv}</div><div class="genesisHpTop"><span>HP ${Math.round(x.hp)} / ${x.max}</span><span>${hpPct(x).toFixed(1)}%</span></div><div class="hpMega"><i style="width:${hpPct(x)}%"></i></div><div class="gaugeMega17498"><i style="width:${Math.max(0,Math.min(100,x.g))}%"></i></div><div class="genesisStats"><div>HP<b>${Math.round(x.s.hp)}</b></div><div>ATK<b>${x.s.atk}</b></div><div>DEF<b>${x.s.def}</b></div><div>攻速<b>${x.s.speed.toFixed(1)}</b></div><div>爆率<b>${(x.s.crit*100).toFixed(1)}%</b></div><div>閃避<b>${(x.s.dodge*100).toFixed(1)}%</b></div><div>爆傷<b>+${(x.s.critDmg*100).toFixed(0)}%</b></div></div>${gear(x.c)}</div>`}
+ function card(x,city,isGod){if(!x)return'<div class="genesisCard">—</div>';return `<div class="genesisCard ${isGod?'god':''}"><div class="cityLine">${isGod?'👑 創世神｜':'⚔️ 挑戰者｜'}${city}・${TEAMN[city]||''}</div><div class="charName ratingText ${x.tier}">${ctElementBadge180(x.c.element)} ${x.c.name}</div><div class="globalRank">全服 #${x.rank}</div><div class="powerLine">${tierSpan(x.tier)}｜戰力 ${x.power.toFixed(2)}｜Lv.${x.c.lv}</div><div class="genesisHpTop"><span>HP ${Math.round(x.hp)} / ${x.max}</span><span>${hpPct(x).toFixed(1)}%</span></div><div class="hpMega"><i style="width:${hpPct(x)}%"></i></div><div class="gaugeMega17498"><i style="width:${Math.max(0,Math.min(100,x.g))}%"></i></div><div class="genesisStats"><div>HP<b>${Math.round(x.s.hp)}</b></div><div>ATK<b>${x.s.atk}</b></div><div>DEF<b>${x.s.def}</b></div><div>攻速<b>${x.s.speed.toFixed(1)}</b></div><div>爆率<b>${(x.s.crit*100).toFixed(1)}%</b></div><div>閃避<b>${(x.s.dodge*100).toFixed(1)}%</b></div><div>爆傷<b>+${(x.s.critDmg*100).toFixed(0)}%</b></div><div>穿透<b>${((x.s.penetration||0)*100).toFixed(1)}%</b></div><div>連擊<b>${((x.s.combo||0)*100).toFixed(1)}%</b></div></div>${gear(x.c)}</div>`}
  function damageRows(final=false){
   let arr=opponentCities.map(city=>({city,damage:damage[city]||0,played:played.has(city)}));
   arr.sort((a,b)=>b.damage-a.damage||opponentCities.indexOf(a.city)-opponentCities.indexOf(b.city));
@@ -1707,8 +1795,11 @@ function genesisBattle(){
   if(done||!god||!opp)return;
   const pair=[god,opp],dt=Math.min(...pair.map(x=>(100-x.g)/Math.max(1,x.s.speed)));for(const x of pair)x.g+=x.s.speed*Math.max(.001,dt);
   const a=[...pair].filter(x=>x.g>=99.999).sort((x,y)=>y.g-x.g)[0]||pair[0],b=a===god?opp:god;a.g-=100;a.att++;a.c.attacks=(Number(a.c.attacks)||0)+1;
+  const ed=typeof ctEffectiveDef182==='function'?ctEffectiveDef182(b.s.def,a.s.penetration):b.s.def;
   const dodged=Math.random()<(b.s.dodge||0),crit=!dodged&&Math.random()<(a.s.crit||0);if(crit)a.c.crits=(Number(a.c.crits)||0)+1;
-  let d=dodged?0:Math.max(1,Math.round(a.s.atk*2.15*100/(100+b.s.def)*rnd(.86,1.14)*(crit?(1+(a.s.critDmg||.50)):1)*(1-shield(b.c)))),ex=dodged?0:extra(a.c,d,crit);d+=ex;const eff=dodged?0:Math.min(b.hp,d);b.hp-=eff;a.g+=wing(a.c,a.att);
+  let d=dodged?0:Math.max(1,Math.round(a.s.atk*2.15*100/(100+ed)*rnd(.86,1.14)*(crit?(1+(a.s.critDmg||.50)):1)*(1-shield(b.c))*ctElementMultiplier180(a.c.element,b.c.element))),ex=dodged?0:extra(a.c,d,crit);d+=ex;
+  let combo=false,comboDodged=false,crit2=false,d2=0,ex2=0;if(Math.random()<(a.s.combo||0)){combo=true;comboDodged=Math.random()<(b.s.dodge||0);crit2=!comboDodged&&(crit||Math.random()<(a.s.crit||0));if(crit2)a.c.crits=(Number(a.c.crits)||0)+1;if(!comboDodged){d2=Math.max(1,Math.round(a.s.atk*2.15*100/(100+ed)*rnd(.86,1.14)*(crit2?(1+(a.s.critDmg||.50)):1)*(1-shield(b.c))*ctElementMultiplier180(a.c.element,b.c.element)));ex2=extra(a.c,d2,crit2);d2+=ex2;d+=d2;a.c.attacks=(Number(a.c.attacks)||0)+1;}}
+  const eff=Math.min(b.hp,d);b.hp-=eff;a.g+=wing(a.c,a.att);
   if(a===opp&&eff>0)damage[oppCity]=(damage[oppCity]||0)+eff;
   if(b.hp<=0){b.hp=0;a.c.kills=(Number(a.c.kills)||0)+1;charKills.set(a.c.id,(charKills.get(a.c.id)||0)+1);const godWon=a===god;record(godWon?'god':'opp');
    if(godWon){currentStreak++;defeatedOpp++;ci++;if(ci>=opponentQueue.length){if(draw){render();ctCombatAttackFx(q('genesisArena')?.querySelector('.genesisCard.god'))}if(schedule)queue(()=>finish(true,null),240);else finish(true,null);return}enterOpp();if(opp)opp.g=0;}
@@ -1857,7 +1948,7 @@ const wb=q('manualWB'),br=q('manualBrawl');if(wb)wb.onclick=()=>open('boss',fals
     bar.style.width=now+'%';
     if(gn)gn.textContent=fired
       ?('⚔️ 攻擊｜攻擊條 '+Math.round(now)+'/100')
-      :('⚡ 攻擊條 '+Math.round(now)+'/100');
+      :('👟 攻擊條 '+Math.round(now)+'/100');
     if(fired){
       card.classList.add('gaugeFired17424');
       const seq=String((Number(card.dataset.gaugeSeq17424)||0)+1);
@@ -1941,10 +2032,10 @@ const wb=q('manualWB'),br=q('manualBrawl');if(wb)wb.onclick=()=>open('boss',fals
               setTimeout(()=>{if(box.dataset.miniGaugeSeqCT===seq)box.classList.remove('miniGaugeFiredCT')},180);
             }
           }
-          const nm=box.querySelector('.miniName');if(nm)nm.textContent=`${p.name}${c?` Lv.${c.lv}`:''}`;
+          const nm=box.querySelector('.miniName');if(nm)nm.innerHTML=`${c?ctElementBadge180(c.element,true)+' ':''}${p.name}${c?` Lv.${c.lv}`:''}`;
           const hpFill=box.querySelector('.bar>i');
           if(hpFill)hpFill.style.width=Math.max(0,Math.min(100,100*p.hp/Math.max(1,p.max)))+'%';
-          const sub=box.querySelector('.sub');if(sub)sub.textContent=`${Math.round(p.hp)}/${p.max}｜⚡ ${Math.round(p.g)}/100`;
+          const sub=box.querySelector('.sub');if(sub)sub.textContent=`${Math.round(p.hp)}/${p.max}｜👟 ${Math.round(p.g)}/100`;
           let mg=box.querySelector('.miniGauge17425');
           if(!mg){box.insertAdjacentHTML('beforeend','<div class="miniGauge17425" aria-label="攻擊條"><i></i></div>');mg=box.querySelector('.miniGauge17425')}
           const fill=mg&&mg.querySelector('i');if(fill)fill.style.width=Math.max(0,Math.min(100,Number(p.g)||0))+'%';
@@ -1957,10 +2048,11 @@ const wb=q('manualWB'),br=q('manualBrawl');if(wb)wb.onclick=()=>open('boss',fals
         if(td){
           let box=td.querySelector('.rankEnemy174');
           if(!box){
-            td.innerHTML='<div class="rankEnemy174"><div class="reh174top"><span></span><span></span></div><div class="reh174track"><div class="reh174fill"></div></div></div>';
+            td.innerHTML='<div class="rankEnemy174"><div class="reh174name"></div><div class="reh174top"><span></span><span></span></div><div class="reh174track"><div class="reh174fill"></div></div></div>';
             box=td.querySelector('.rankEnemy174');
           }
           if(box){
+            const rname=box.querySelector('.reh174name');if(rname)rname.innerHTML=`${ctElementBadge180(e.element,true)} ${e.name}`;
             const nums=box.querySelectorAll('.reh174top span');
             if(nums[0])nums[0].textContent=`${Math.round(e.hp)} / ${e.max}`;
             if(nums[1])nums[1].textContent=`${Math.round(pct)}%`;
@@ -1991,7 +2083,7 @@ const wb=q('manualWB'),br=q('manualBrawl');if(wb)wb.onclick=()=>open('boss',fals
       const ehp=enemyBox.querySelector('.cardTop>b');if(ehp)ehp.textContent=Math.round(e.hp)+' / '+e.max;
       const eb=enemyBox.querySelector(':scope>.bar>i');if(eb)eb.style.width=Math.max(0,Math.min(100,100*e.hp/e.max))+'%';
       const egb=enemyBox.querySelector('.gbar>i');if(egb)egb.style.width=Math.max(0,Math.min(100,e.g))+'%';
-      const egn=enemyBox.querySelector('.gnum173');if(egn)egn.textContent='⚡ 怪物攻擊條 '+Math.round(e.g)+'/100';
+      const egn=enemyBox.querySelector('.gnum173');if(egn)egn.textContent='👟 怪物攻擊條 '+Math.round(e.g)+'/100';
       const mh=enemyBox.querySelector('.monsterHp174');
       if(mh){
         const pct=Math.max(0,Math.min(100,100*e.hp/e.max));
@@ -2552,8 +2644,8 @@ td,th,.ev173row,.rankMega,.rewardMega>div,.bf .nm,.compChar b,.compChar .sub{
       const floorCell=tr.children[4];
       floorCell.querySelector('b').textContent=s.floor+'F';
       floorCell.querySelector('.sub').textContent=s.ft+'T｜敵剩'+Math.round(s.enemy.hp/s.enemy.max*100)+'%';
-      tr.children[5].innerHTML='<div class="partyMini">'+s.party.map(p=>`<div><div class="miniName">${p.name} Lv.${(window.__CT_FAST_CHAR_BY_ID?.(s.city,p.id)||R[s.city].find(c=>c.id===p.id)).lv}</div><div class="bar"><i style="width:${100*p.hp/p.max}%"></i></div><div class="sub">${Math.round(p.hp)}/${p.max}｜⚡ ${Math.round(p.g)}/100</div><div class="miniGauge17425" aria-label="攻擊條"><i style="width:${Math.max(0,Math.min(100,Number(p.g)||0))}%"></i></div></div>`).join('')+'</div>';
-      {const ep=Math.max(0,Math.min(100,100*s.enemy.hp/Math.max(1,s.enemy.max)));tr.children[6].innerHTML=`<div class="rankEnemy174"><div class="reh174top"><span>${Math.round(s.enemy.hp)} / ${s.enemy.max}</span><span>${Math.round(ep)}%</span></div><div class="reh174track"><div class="reh174fill" style="width:${ep}%"></div></div></div>`;}
+      tr.children[5].innerHTML='<div class="partyMini">'+s.party.map(p=>{const c=(window.__CT_FAST_CHAR_BY_ID?.(s.city,p.id)||R[s.city].find(x=>x.id===p.id));return `<div><div class="miniName">${ctElementBadge180(c.element,true)} ${p.name} Lv.${c.lv}</div><div class="bar"><i style="width:${100*p.hp/p.max}%"></i></div><div class="sub">${Math.round(p.hp)}/${p.max}｜👟 ${Math.round(p.g)}/100</div><div class="miniGauge17425" aria-label="攻擊條"><i style="width:${Math.max(0,Math.min(100,Number(p.g)||0))}%"></i></div></div>`}).join('')+'</div>';
+      {const ep=Math.max(0,Math.min(100,100*s.enemy.hp/Math.max(1,s.enemy.max)));tr.children[6].innerHTML=`<div class="rankEnemy174"><div class="reh174name">${ctElementBadge180(s.enemy.element,true)} ${s.enemy.name}</div><div class="reh174top"><span>${Math.round(s.enemy.hp)} / ${s.enemy.max}</span><span>${Math.round(ep)}%</span></div><div class="reh174track"><div class="reh174fill" style="width:${ep}%"></div></div></div>`;}
       rows.push(tr);
       oldRows.delete(s.city);
     });
@@ -2565,7 +2657,7 @@ td,th,.ev173row,.rankMega,.rewardMega>div,.bf .nm,.compChar b,.compChar .sub{
     }
 
     let e=sel.enemy;
-    $('arena').innerHTML=`<div class="enemy"><div class="cardTop"><div><b>${e.name}</b><div class="sub">ATK ${e.atk.toFixed(0)}｜DEF ${e.def.toFixed(0)}｜攻速 ${e.speed.toFixed(1)}</div></div><b>${Math.round(e.hp)} / ${e.max}</b></div><div class="monsterHp174"><div class="mh174top"><span>❤️ 怪物 HP</span><span class="mh174num">${Math.round(e.hp)} / ${e.max}</span></div><div class="mh174track"><div class="mh174fill" style="width:${Math.max(0,Math.min(100,100*e.hp/e.max))}%"></div></div><div class="mh174pct">剩餘 ${Math.round(Math.max(0,Math.min(100,100*e.hp/e.max)))}%</div></div><div class="gbar" style="margin-top:5px"><i style="width:${e.g}%"></i></div></div><div class="cards">${sel.party.map(p=>{let c=(window.__CT_FAST_CHAR_BY_ID?.(sel.city,p.id)||R[sel.city].find(x=>x.id===p.id));return `<div class="card ${p.alive?'':'dead'}"><div class="cardTop"><div><div class="name">${p.name}</div></div><b>${Math.round(p.hp)}/${p.max}</b></div><div class="ctExpRowFinal"><span class="ctLvFinal">Lv.${c.lv}</span><span class="ctExpValueFinal">EXP ${c.xp}/${xpNeed(c.lv)}</span></div><div class="xp173" aria-label="EXP進度"><i style="width:${Math.max(0,Math.min(100,100*c.xp/xpNeed(c.lv)))}%"></i></div><div class="bar"><i style="width:${100*p.hp/p.max}%"></i></div><div class="gbar" style="margin-top:5px"><i style="width:${p.g}%"></i></div>${window.ctBattleTreasureInline126(c)}<div class="stats"><div class="stat">ATK<b>${p.atk}</b></div><div class="stat">DEF<b>${p.def}</b></div><div class="stat">攻速<b>${p.speed.toFixed(1)}</b></div><div class="stat">爆擊<b>${Math.round(p.crit*100)}%</b></div><div class="stat">閃避<b>${Math.round((p.dodge||0)*100)}%</b></div><div class="stat">爆傷<b>+${Math.round((p.critDmg||.50)*100)}%</b></div></div></div>`}).join('')}</div>`;
+    $('arena').innerHTML=`<div class="enemy"><div class="cardTop"><div><b class="ctMonsterTitle184">${ctElementBadge180(e.element)} <span>${e.name}</span></b><div class="sub">屬性 ${ctElementInfo180(e.element).name}｜ATK ${e.atk.toFixed(0)}｜DEF ${e.def.toFixed(0)}｜攻速 ${e.speed.toFixed(1)}</div></div><b>${Math.round(e.hp)} / ${e.max}</b></div><div class="monsterHp174"><div class="mh174top"><span>❤️ ${ctElementBadge180(e.element,true)} ${ctElementInfo180(e.element).name}｜怪物 HP</span><span class="mh174num">${Math.round(e.hp)} / ${e.max}</span></div><div class="mh174track"><div class="mh174fill" style="width:${Math.max(0,Math.min(100,100*e.hp/e.max))}%"></div></div><div class="mh174pct">剩餘 ${Math.round(Math.max(0,Math.min(100,100*e.hp/e.max)))}%</div></div><div class="gbar" style="margin-top:5px"><i style="width:${e.g}%"></i></div></div><div class="cards">${sel.party.map(p=>{let c=(window.__CT_FAST_CHAR_BY_ID?.(sel.city,p.id)||R[sel.city].find(x=>x.id===p.id)),ss=cstats(c);return `<div class="card ${p.alive?'':'dead'}"><div class="cardTop"><div><div class="name">${ctElementBadge180(c.element)} ${p.name}</div></div><b>${Math.round(p.hp)}/${p.max}</b></div><div class="ctExpRowFinal"><span class="ctLvFinal">Lv.${c.lv}</span><span class="ctExpValueFinal">EXP ${c.xp}/${xpNeed(c.lv)}</span></div><div class="xp173" aria-label="EXP進度"><i style="width:${Math.max(0,Math.min(100,100*c.xp/xpNeed(c.lv)))}%"></i></div><div class="bar"><i style="width:${100*p.hp/p.max}%"></i></div><div class="gbar" style="margin-top:5px"><i style="width:${p.g}%"></i></div>${window.ctBattleTreasureInline126(c)}<div class="stats"><div class="stat">ATK<b>${p.atk}</b></div><div class="stat">DEF<b>${p.def}</b></div><div class="stat">攻速<b>${p.speed.toFixed(1)}</b></div><div class="stat">爆擊<b>${Math.round(p.crit*100)}%</b></div><div class="stat">閃避<b>${Math.round((p.dodge||0)*100)}%</b></div><div class="stat">爆傷<b>+${Math.round((p.critDmg||.50)*100)}%</b></div><div class="stat">穿透<b>${((ss.penetration||0)*100).toFixed(1)}%</b></div><div class="stat">連擊<b>${((ss.combo||0)*100).toFixed(1)}%</b></div></div></div>`}).join('')}</div>`;
     const battleLogEl=$('log')||$('battlelog');
     if(battleLogEl) battleLogEl.innerHTML='<div class="sub">'+sel.city+'｜'+(TEAMN[sel.city]||'')+'</div>'+sel.log.slice(0,18).map(x=>'<div>'+x+'</div>').join('');
   };
@@ -3383,31 +3475,6 @@ html,body{padding-top:0!important}
 #kr .tierMotion:active, #rank .rankTierCell .tierMotion:active{filter:brightness(1.35)}
 .ctTierFxCard.ctTierFxFocused{outline:2px solid rgba(255,255,255,.88);outline-offset:3px;box-shadow:0 0 28px currentColor,0 0 50px rgba(255,255,255,.18)}
 </style>
-<script id="ctIndexTierClickPreviewScript">
-(()=>{
-  'use strict';
-  function openFocusedTier(tier){
-    if(typeof window.openTierFxPreview==='function') window.openTierFxPreview(tier);
-  }
-  document.getElementById('kr')?.addEventListener('click',e=>{
-    const el=e.target.closest?.('.tierMotion');
-    if(!el)return;
-    e.preventDefault();
-    e.stopPropagation();
-    const tier=(el.textContent||'').trim();
-    if(tier)openFocusedTier(tier);
-  });
-  document.getElementById('rank')?.addEventListener('click',e=>{
-    const el=e.target.closest?.('.rankTierCell .tierMotion');
-    if(!el)return;
-    e.preventDefault();
-    e.stopPropagation();
-    const tier=(el.textContent||'').trim();
-    if(tier)openFocusedTier(tier);
-  },true);
-})();
-</script>
-
 <style id="ctIndexTierLargeTapTargetStyle">
 #kr{cursor:pointer!important;touch-action:manipulation!important;z-index:5!important;}
 #rank td.rankTierCell{cursor:pointer!important;touch-action:manipulation!important;position:relative!important;z-index:4!important;}
@@ -4394,7 +4461,7 @@ function ctTreasureHtml153(c){
 function ctRosterCardHtml153(c,idx,g,active){
  const s=cstats(c),need=xpNeed(c.lv),pct=Math.max(0,Math.min(100,100*(Number(c.xp)||0)/Math.max(1,need))),tier=g?.tier||c.grade||'F';
  const nd=Number(s.naturalDodge??s.dodge??0),td=Number(s.treasureDodge??0),nc=Number(s.naturalCrit??s.crit??0),tc=Number(s.treasureCrit??0),ncd=Number(s.naturalCritDmg??s.critDmg??0),tcd=Number(s.treasureCritDmg??0);
- return `<div class="rosterCard ${active?'active':''}" data-char-id="${c.id}"><div class="cardTop"><div><b class="ct153CharName ratingText ${tier}">#${idx} ${c.name}</b><div class="sub ct153CharGrade">目前評級 <span class="ct153CharTier tier tierLetter tierMotion ${tier}">${tier}</span>｜全服角色#<span class="ct153CharRank">${g?.rank??'—'}</span>｜原始階級 <span class="ct153OrigGrade ratingText ${c.grade}">${c.grade}</span>｜原始總分 <span class="ct153OrigTotal">${c.total}</span></div></div><b class="ct153Lv">Lv.<span class="ct153LvNum">${c.lv}</span></b></div><div class="xp"><i style="width:${pct.toFixed(2)}%"></i></div><div class="sub ct153PowerLine ratingText ${tier}">EXP <span class="ct153Xp">${c.xp}</span>/<span class="ct153XpNeed">${need}</span>｜個人戰力 <span class="ct153CharPower">${ctPower153(c)}</span></div><div class="stats"><div class="stat">HP<b class="ct153Hp">${s.hp}</b></div><div class="stat">ATK<b class="ct153Atk">${s.atk}</b></div><div class="stat">DEF<b class="ct153Def">${s.def}</b></div><div class="stat">攻速<b class="ct153Speed">${s.speed.toFixed(1)}</b></div><div class="stat">爆率<b class="ct153Crit">${(s.crit*100).toFixed(1)}%</b></div><div class="stat">閃避<b class="ct153Dodge">${(s.dodge*100).toFixed(1)}%</b></div><div class="stat">爆傷<b class="ct153Cdmg">+${(s.critDmg*100).toFixed(0)}%</b></div></div><div class="sub ct153Battle">出場 ${c.deploys}｜攻擊 ${c.attacks}｜暴擊 ${c.crits}</div><div class="ct127Overflow ct153Break">構成｜閃避 ${(nd*100).toFixed(1)}%＋寶物 ${(td*100).toFixed(1)}%＝${(Number(s.dodge||0)*100).toFixed(1)}%｜爆率 ${(nc*100).toFixed(1)}%＋寶物 ${(tc*100).toFixed(1)}%＝${(Number(s.crit||0)*100).toFixed(1)}%｜爆傷 +${(ncd*100).toFixed(0)}%＋寶物 +${(tcd*100).toFixed(0)}%＝+${(Number(s.critDmg||0)*100).toFixed(0)}%</div><div class="ct153TreasureWrap">${ctTreasureHtml153(c)}</div></div>`
+ return `<div class="rosterCard ${active?'active':''}" data-char-id="${c.id}"><div class="cardTop"><div><b class="ct153CharName ratingText ${tier}">#${idx} ${ctElementBadge180(c.element)} ${c.name}</b><div class="sub ct153CharGrade">目前評級 <span class="ct153CharTier tier tierLetter tierMotion ${tier}">${tier}</span>｜全服角色#<span class="ct153CharRank">${g?.rank??'—'}</span>｜原始階級 <span class="ct153OrigGrade ratingText ${c.grade}">${c.grade}</span>｜原始總分 <span class="ct153OrigTotal">${c.total}</span></div></div><b class="ct153Lv">Lv.<span class="ct153LvNum">${c.lv}</span></b></div><div class="xp"><i style="width:${pct.toFixed(2)}%"></i></div><div class="sub ct153PowerLine ratingText ${tier}">EXP <span class="ct153Xp">${c.xp}</span>/<span class="ct153XpNeed">${need}</span>｜個人戰力 <span class="ct153CharPower">${ctPower153(c)}</span></div><div class="stats"><div class="stat">HP<b class="ct153Hp">${s.hp}</b></div><div class="stat">ATK<b class="ct153Atk">${s.atk}</b></div><div class="stat">DEF<b class="ct153Def">${s.def}</b></div><div class="stat">攻速<b class="ct153Speed">${s.speed.toFixed(1)}</b></div><div class="stat">爆率<b class="ct153Crit">${(s.crit*100).toFixed(1)}%</b></div><div class="stat">閃避<b class="ct153Dodge">${(s.dodge*100).toFixed(1)}%</b></div><div class="stat">爆傷<b class="ct153Cdmg">+${(s.critDmg*100).toFixed(0)}%</b></div><div class="stat">穿透<b class="ct153Pen">${((s.penetration||0)*100).toFixed(1)}%</b></div><div class="stat">連擊<b class="ct153Combo">${((s.combo||0)*100).toFixed(1)}%</b></div></div><div class="sub ct153Battle">出場 ${c.deploys}｜攻擊 ${c.attacks}｜暴擊 ${c.crits}</div><div class="ct127Overflow ct153Break">構成｜閃避 ${(nd*100).toFixed(1)}%＋寶物 ${(td*100).toFixed(1)}%＝${(Number(s.dodge||0)*100).toFixed(1)}%｜爆率 ${(nc*100).toFixed(1)}%＋寶物 ${(tc*100).toFixed(1)}%＝${(Number(s.crit||0)*100).toFixed(1)}%｜爆傷 +${(ncd*100).toFixed(0)}%＋寶物 +${(tcd*100).toFixed(0)}%＝+${(Number(s.critDmg||0)*100).toFixed(0)}%</div><div class="ct153TreasureWrap">${ctTreasureHtml153(c)}</div></div>`
 }
 function ctSummaryHtml153(city,m){
  const x=m[city],a=ctTeamAvg153(city),f=ctFloor153(city),tier=x?.tier||'F',rank=x?.rank??x?.powerRank??'—';
@@ -4416,13 +4483,13 @@ function ctPatchSummary153(city,m){
 }
 function ctPatchCard153(card,c,idx,g,active){
  const s=cstats(c),need=xpNeed(c.lv),pct=Math.max(0,Math.min(100,100*(Number(c.xp)||0)/Math.max(1,need))),tier=g?.tier||c.grade||'F';card.classList.toggle('active',active);
- const nm=ctQ153('.ct153CharName',card);ctTxt153(nm,`#${idx} ${c.name}`);ctTier153(nm,tier);
+ const nm=ctQ153('.ct153CharName',card);if(nm){nm.innerHTML=`#${idx} ${ctElementBadge180(c.element)} ${c.name}`;ctTier153(nm,tier)}
  const tg=ctQ153('.ct153CharTier',card);ctTxt153(tg,tier);ctTier153(tg,tier);ctTxt153(ctQ153('.ct153CharRank',card),g?.rank??'—');
  const og=ctQ153('.ct153OrigGrade',card);ctTxt153(og,c.grade);ctTier153(og,c.grade);ctTxt153(ctQ153('.ct153OrigTotal',card),c.total);
  ctTxt153(ctQ153('.ct153LvNum',card),c.lv);
  const xi=ctQ153('.xp i',card),w=pct.toFixed(2)+'%';if(xi&&xi.style.width!==w)xi.style.width=w;
  ctTxt153(ctQ153('.ct153Xp',card),c.xp);ctTxt153(ctQ153('.ct153XpNeed',card),need);ctTxt153(ctQ153('.ct153CharPower',card),ctPower153(c));const pl=ctQ153('.ct153PowerLine',card);ctTier153(pl,tier);
- ctTxt153(ctQ153('.ct153Hp',card),s.hp);ctTxt153(ctQ153('.ct153Atk',card),s.atk);ctTxt153(ctQ153('.ct153Def',card),s.def);ctTxt153(ctQ153('.ct153Speed',card),s.speed.toFixed(1));ctTxt153(ctQ153('.ct153Crit',card),(s.crit*100).toFixed(1)+'%');ctTxt153(ctQ153('.ct153Dodge',card),(s.dodge*100).toFixed(1)+'%');ctTxt153(ctQ153('.ct153Cdmg',card),'+'+(s.critDmg*100).toFixed(0)+'%');
+ ctTxt153(ctQ153('.ct153Hp',card),s.hp);ctTxt153(ctQ153('.ct153Atk',card),s.atk);ctTxt153(ctQ153('.ct153Def',card),s.def);ctTxt153(ctQ153('.ct153Speed',card),s.speed.toFixed(1));ctTxt153(ctQ153('.ct153Crit',card),(s.crit*100).toFixed(1)+'%');ctTxt153(ctQ153('.ct153Dodge',card),(s.dodge*100).toFixed(1)+'%');ctTxt153(ctQ153('.ct153Cdmg',card),'+'+(s.critDmg*100).toFixed(0)+'%');ctTxt153(ctQ153('.ct153Pen',card),((s.penetration||0)*100).toFixed(1)+'%');ctTxt153(ctQ153('.ct153Combo',card),((s.combo||0)*100).toFixed(1)+'%');
  ctTxt153(ctQ153('.ct153Battle',card),`出場 ${c.deploys}｜攻擊 ${c.attacks}｜暴擊 ${c.crits}`);
  const nd=Number(s.naturalDodge??s.dodge??0),td=Number(s.treasureDodge??0),nc=Number(s.naturalCrit??s.crit??0),tc=Number(s.treasureCrit??0),ncd=Number(s.naturalCritDmg??s.critDmg??0),tcd=Number(s.treasureCritDmg??0);
  ctTxt153(ctQ153('.ct153Break',card),`構成｜閃避 ${(nd*100).toFixed(1)}%＋寶物 ${(td*100).toFixed(1)}%＝${(Number(s.dodge||0)*100).toFixed(1)}%｜爆率 ${(nc*100).toFixed(1)}%＋寶物 ${(tc*100).toFixed(1)}%＝${(Number(s.crit||0)*100).toFixed(1)}%｜爆傷 +${(ncd*100).toFixed(0)}%＋寶物 +${(tcd*100).toFixed(0)}%＝+${(Number(s.critDmg||0)*100).toFixed(0)}%`);
@@ -4578,8 +4645,8 @@ window.render=function(){
  }catch(e){console.warn('CT164 tower combat fx',e)}
  return out
 };
-try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.179');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.179')}catch(e){}
-window.__CT_BUILD='V17.4.179-simultaneous-world-boss-treasure-labels';
+try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.185');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.185')}catch(e){}
+window.__CT_BUILD='V17.4.185-tower-element-display-fix';
 })();
 </script>
 
@@ -4936,5 +5003,83 @@ window.__CT_BUILD='V17.4.179-simultaneous-world-boss-treasure-labels';
 })();
 </script>
 
-<!-- V17.4.179: simultaneous 22-team World Boss + visible activity treasure tiers/names -->
+
+<style id="ctElement180Style">
+.ctElementBadge180{display:inline-flex;align-items:center;justify-content:center;gap:2px;padding:1px 5px;border-radius:999px;font-size:.82em;line-height:1.35;font-weight:1000!important;vertical-align:middle;white-space:nowrap;border:1px solid currentColor;box-shadow:none!important;animation:none!important;transform:none!important}
+.elWater180{color:#46a9ff!important;background:#0a2f5a!important;border-color:#46a9ff!important}.elFire180{color:#ff5555!important;background:#541316!important;border-color:#ff5555!important}.elWood180{color:#49d878!important;background:#123d21!important;border-color:#49d878!important}.elLight180{color:#fff!important;background:#77808d!important;border-color:#fff!important;text-shadow:0 0 4px #fff8!important}.elDark180{color:#f2f2f2!important;background:#050505!important;border-color:#777!important;text-shadow:0 0 4px #000!important}.elThunder180{color:#ffe34e!important;background:#513d00!important;border-color:#ffe34e!important;text-shadow:0 0 5px #ffd700aa!important}
+.miniName .ctElementBadge180,.bf .ctElementBadge180{font-size:7px;padding:0 3px}
+</style>
+
+
+<style id="ct182StatsStyle">
+.ct182StatTag{font-weight:1000}.ct182Pen{color:#ffd7a1}.ct182Combo{color:#9fe7ff}.ctElementBadge180{flex:none}
+</style>
+<script id="ct182PenetrationComboFinal">
+(()=>{
+'use strict';
+const clamp182=(x,a,b)=>Math.max(a,Math.min(b,x));
+window.ctEffectiveDef182=function(def,pen){return Math.max(0,(Number(def)||0)*(1-clamp182(Number(pen)||0,0,.95)))};
+window.ctSecondHit182=function(st,firstCrit){const combo=Math.random()<(Number(st?.combo)||0);if(!combo)return{combo:false,crit:false};return{combo:true,crit:!!firstCrit||Math.random()<(Number(st?.crit)||0)}};
+
+// Natural stats: penetration is technology-oriented; combo is mobility-oriented. Both remain derived stats, so saves stay compatible.
+const prevCstats182=window.cstats;
+window.cstats=cstats=function(c){
+  const s=prevCstats182(c),n=Math.max(0,(Number(c?.lv)||1)-1),tech=Number(c?.tech)||50,mob=Number(c?.mob)||50;
+  s.penetration=clamp182(.03+((tech-50)/150)*.15+n*.00035,.03,.35);
+  s.combo=clamp182(.03+((mob-50)/150)*.12+n*.00025,.03,.30);
+  return s;
+};
+window.CT_STAT_CAPS={...(window.CT_STAT_CAPS||{}),penetration:.35,combo:.30};
+
+// Make the new offensive stats count in character/team power without changing save data.
+const prevCraw182=window.craw;
+window.craw=craw=function(c){const v=prevCraw182(c),s=window.cstats(c);return v*Math.sqrt((1+(s.combo||0))*(1+(s.penetration||0)*.45))};
+
+// Refresh current tower fighters with the newly derived stats.
+try{for(const st of states||[])for(const p of st.party||[]){const c=R[st.city]?.find(x=>x.id===p.id);if(!c)continue;const s=window.cstats(c);p.penetration=s.penetration;p.combo=s.combo}}catch(e){console.warn('CT182 party stats refresh',e)}
+
+// Tower combat: penetration reduces enemy DEF; combo performs a real second hit. If hit #1 crits, hit #2 is forced to crit.
+const prevHit182=window.hit;
+window.hit=hit=function(s,p){
+  const c=R[s.city]?.find(x=>x.id===p.id);if(!c)return prevHit182(s,p);
+  const st=window.cstats(c),origDef=Number(s.enemy?.def)||0,beforeCrit=Number(c.crits)||0;
+  let killed=false;
+  try{s.enemy.def=window.ctEffectiveDef182(origDef,st.penetration);killed=prevHit182(s,p)}finally{s.enemy.def=origDef}
+  if(killed||!s.enemy||s.enemy.hp<=0||Math.random()>=(st.combo||0))return killed;
+  const firstCrit=(Number(c.crits)||0)>beforeCrit,oldCrit=p.crit;
+  try{
+    if(firstCrit)p.crit=1;
+    s.enemy.def=window.ctEffectiveDef182(origDef,st.penetration);
+    log(s,`🔁 ${p.name} 觸發連擊${firstCrit?'｜首擊暴擊→第二擊必暴擊':''}`);
+    killed=prevHit182(s,p)||killed;
+  }finally{p.crit=oldCrit;s.enemy.def=origDef}
+  return killed;
+};
+
+// UI is rendered canonically in V17.4.184 CLEAN; no post-render DOM patch is needed.
+
+try{render()}catch(e){console.warn('CT182 initial render',e)}
+try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.185')}catch(_e){}
+window.__CT_BUILD='V17.4.185-tower-element-display-fix';
+})();
+</script>
+
+
+<style id="ct183RosterElementFixStyle">
+.ct153CharName .ctElementBadge180{margin:0 3px;vertical-align:1px}
+</style>
+
+<style id="ct184MonsterElementStyle">
+.ctMonsterTitle184{display:flex!important;align-items:center;gap:6px;flex-wrap:wrap}
+.ctMonsterRank184{min-width:165px!important}
+.ctMonsterRank184>div:first-child{display:flex;align-items:center;gap:4px;white-space:nowrap}
+.enemy .ctElementBadge180,.ctMonsterRank184 .ctElementBadge180{font-size:11px!important;padding:2px 6px!important}
+.monsterHp174 .ctElementBadge180{font-size:10px!important;padding:1px 5px!important}
+</style>
+
+<style id="ctTowerElement185Style">
+#rank .reh174name{font-size:8px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px;color:#dce9ff}
+#rank .reh174name .ctElementBadge180{font-size:7px!important;padding:0 3px!important}
+#rank .miniName .ctElementBadge180{margin-right:1px}
+</style>
 </body></html>
