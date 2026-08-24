@@ -145,7 +145,7 @@ window.ctBattleTreasureInline126=function(c){
 </script>
 <script>
 const SAVE='CITY_TOWER_V17_SAVE';
-const CT_BUILD_VERSION='V17.4.192';
+const CT_BUILD_VERSION='V17.4.193';
 const CT_SAVE_PREUPDATE='CITY_TOWER_V17_PREUPDATE_BACKUP';
 const CT_TREASURE_SAVE_KEY='CITY_TOWER_V1743_TREASURE';
 const CT_TREASURE_PREUPDATE='CITY_TOWER_V1743_TREASURE_PREUPDATE_BACKUP';
@@ -183,7 +183,7 @@ function ctCombatAttackFx(el){ctCombatPulse164(el,'activityAttackFlash174163',22
 function ctCombatDodgeFx(el){ctCombatPulse164(el,'activityDodgeFx174164',900)}
 function ctCombatEnemyFx(el){ctCombatPulse164(el,'enemyAttackFx174164',240)}
 window.__CT_COMBAT_FX={attack:ctCombatAttackFx,dodge:ctCombatDodgeFx,enemyAttack:ctCombatEnemyFx};
-// V17.4.192 — League 100x speed option; V17.4.190 root performance fix retained.
+// V17.4.193 — League 100x speed option; V17.4.190 root performance fix retained.
 const CT_ELEMENT180={
  water:{name:'水',icon:'💧',cls:'elWater180'},
  fire:{name:'火',icon:'🔥',cls:'elFire180'},
@@ -4683,8 +4683,8 @@ window.render=function(){
  }catch(e){console.warn('CT164 tower combat fx',e)}
  return out
 };
-try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.192');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.192')}catch(e){}
-window.__CT_BUILD='V17.4.192-league-100x';
+try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.193');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.193')}catch(e){}
+window.__CT_BUILD='V17.4.193-league-100x';
 })();
 </script>
 
@@ -5097,8 +5097,8 @@ window.hit=hit=function(s,p){
 // UI is rendered canonically in V17.4.184 CLEAN; no post-render DOM patch is needed.
 
 try{render()}catch(e){console.warn('CT182 initial render',e)}
-try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.192')}catch(_e){}
-window.__CT_BUILD='V17.4.192-league-100x';
+try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.193')}catch(_e){}
+window.__CT_BUILD='V17.4.193-league-100x';
 })();
 </script>
 
@@ -5124,7 +5124,7 @@ window.__CT_BUILD='V17.4.192-league-100x';
 <script id="ct174190RootPerformance">
 (()=>{
 'use strict';
-/* V17.4.192: V17.4.190 root performance fix retained; league adds 100x speed.
+/* V17.4.193: V17.4.190 root performance fix retained; league adds 100x speed.
    No visual/effect/gameplay multiplier is changed here.
    The expensive full-server rating calculations are memoized within one tower turn,
    and derived character stats are memoized until their actual stat inputs change. */
@@ -5216,8 +5216,8 @@ try{
   if(bad)bad.remove();
 }catch(_e){}
 
-try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.192')}catch(_e){}
-window.__CT_BUILD='V17.4.192-league-100x';
+try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.193')}catch(_e){}
+window.__CT_BUILD='V17.4.193-league-100x';
 })();
 </script>
 
@@ -5225,7 +5225,7 @@ window.__CT_BUILD='V17.4.192-league-100x';
 <script id="ct174192ElementPowerNormalization">
 (()=>{
 'use strict';
-/* V17.4.192 — canonical attribute power coefficients.
+/* V17.4.193 — canonical attribute power coefficients.
    These coefficients affect displayed character/team power only; combat element multipliers remain unchanged.
    New-game baseline is recalculated AFTER fixed character elements are assigned, so the strongest opening TEAM is always exactly 10.00. */
 const ELEMENT_POWER_192=Object.freeze({water:1.00,fire:1.00,wood:1.00,light:1.20,dark:1.19,thunder:1.70});
@@ -5286,8 +5286,101 @@ window.CT_POWER_RULE_192={
   xThresholdUnchanged:true
 };
 try{if(window.CT_TEAM_PR_RATING?.u)window.CT_TEAM_PR_RATING.u.minPower=10}catch(_e){}
-try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.192')}catch(_e){}
-window.__CT_BUILD='V17.4.192-element-power-u10';
+try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.193')}catch(_e){}
+window.__CT_BUILD='V17.4.193-element-power-u10';
+})();
+</script>
+
+
+<script id="ct174193FairKoTowerFx">
+(()=>{
+'use strict';
+/* V17.4.193
+   1) Every team gets the same one-turn KO hold before entering the next floor.
+   2) The watched tower battle keeps the KO attack gold flash.
+   3) Tower enemy attacks have their own attack FX.
+   4) A successful tower dodge shows only MISS on the exact dodging character card.
+   Combat formulas, rewards, elements and activity combat logic are unchanged. */
+
+// ----- Fair KO cadence: one complete simulation turn for ALL 22 teams -----
+const prevRound193=window.round;
+if(typeof prevRound193==='function'){
+  window.round=round=function(s){
+    if(!s)return prevRound193(s);
+    if(s.ctClearPending174133){
+      const now=Number(window.turn??turn)||0;
+      if(!Number.isFinite(Number(s.ctKoHoldTurn193))){
+        // First pending turn after the killing blow is always a pure KO hold turn.
+        s.ctKoHoldTurn193=now;
+        return;
+      }
+      if(now<=Number(s.ctKoHoldTurn193))return;
+      // Visual painting must never make the selected team wait longer than everyone else.
+      s.ctKoFlashPainted174133=true;
+      delete s.ctKoHoldTurn193;
+    }
+    const out=prevRound193(s);
+    if(!s.ctClearPending174133)delete s.ctKoHoldTurn193;
+    return out;
+  };
+}
+
+function towerCard193(s,id){
+  if(!s||s.city!==selected)return null;
+  const i=(s.party||[]).findIndex(p=>p.id===id);
+  if(i<0)return null;
+  return document.querySelectorAll('#arena .cards .card')[i]||null;
+}
+function flashKoGold193(s,id){
+  const card=towerCard193(s,id);if(!card)return;
+  card.classList.add('gaugeFired17424');
+  const seq=String((Number(card.dataset.gaugeSeq17424)||0)+1);
+  card.dataset.gaugeSeq17424=seq;
+  setTimeout(()=>{if(card.dataset.gaugeSeq17424===seq)card.classList.remove('gaugeFired17424')},220);
+}
+
+// Guarantee that the killing attack is visibly gold even at 25x/100x.
+const prevHit193=window.hit;
+if(typeof prevHit193==='function'){
+  window.hit=hit=function(s,p){
+    const killed=prevHit193(s,p);
+    if(killed&&s?.city===selected&&p?.id)flashKoGold193(s,p.id);
+    return killed;
+  };
+}
+
+// The final treasure-aware ehit did not publish tower FX events. Wrap it without
+// touching its target selection, dodge roll, shield, revive or damage formulas.
+const prevEhit193=window.ehit;
+if(typeof prevEhit193==='function'){
+  window.ehit=ehit=function(s){
+    if(!s)return prevEhit193(s);
+    const beforeLog=s.log?.[0]||'';
+    const out=prevEhit193(s);
+    if(s.city!==selected)return out;
+
+    // Enemy visibly attacks on every tower attack attempt, including a MISS.
+    try{ctCombatEnemyFx(document.querySelector('#arena .enemy'))}catch(_e){}
+
+    // The dodge log is generated only when that exact target evades. Show MISS
+    // on that character card only; no extra DODGE/閃避 label is added.
+    const newest=s.log?.[0]||'';
+    if(newest!==beforeLog){
+      const m=newest.match(/｜💨\s*(.+?)\s*閃避怪物攻擊/);
+      if(m){
+        const name=m[1],p=(s.party||[]).find(x=>x.name===name);
+        const card=p?towerCard193(s,p.id):null;
+        if(card)try{ctCombatDodgeFx(card)}catch(_e){}
+      }
+    }
+    return out;
+  };
+}
+
+// Recover old saves that happened to be stored on a pre-193 KO frame.
+try{for(const s of states||[])if(s)delete s.ctKoHoldTurn193}catch(_e){}
+try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.193');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.193')}catch(_e){}
+window.__CT_BUILD='V17.4.193-fair-ko-tower-fx';
 })();
 </script>
 
