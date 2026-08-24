@@ -145,7 +145,7 @@ window.ctBattleTreasureInline126=function(c){
 </script>
 <script>
 const SAVE='CITY_TOWER_V17_SAVE';
-const CT_BUILD_VERSION='V17.4.195';
+const CT_BUILD_VERSION='V17.4.196';
 const CT_SAVE_PREUPDATE='CITY_TOWER_V17_PREUPDATE_BACKUP';
 const CT_TREASURE_SAVE_KEY='CITY_TOWER_V1743_TREASURE';
 const CT_TREASURE_PREUPDATE='CITY_TOWER_V1743_TREASURE_PREUPDATE_BACKUP';
@@ -170,7 +170,7 @@ function ctPrepareUpdateSave(){
 ctPrepareUpdateSave();
 let R={},states=[],turn=0,selected='臺北市',running=false,raf=0,last=0,acc=0,lastPaint=0,nextEvent=160,lastEvent=null,initialTop=1;
 const $=id=>document.getElementById(id), clamp=(x,a,b)=>Math.max(a,Math.min(b,x)), rnd=(a,b)=>a+Math.random()*(b-a);
-// V17.4.195 — formal displayed/rating power uses 0.5-power compression. Combat stats and damage are unchanged.
+// V17.4.196 — formal displayed/rating power uses 0.5-power compression. Combat stats and damage are unchanged.
 window.ctPowerCompress194=function(ratio){ratio=Math.max(0,Number(ratio)||0);return 10*Math.sqrt(ratio)};
 const safeGet=k=>{try{return localStorage.getItem(k)}catch(_){return null}};
 let ctDisposableStorageCleaned184=false;
@@ -185,7 +185,7 @@ function ctCombatAttackFx(el){ctCombatPulse164(el,'activityAttackFlash174163',22
 function ctCombatDodgeFx(el){ctCombatPulse164(el,'activityDodgeFx174164',900)}
 function ctCombatEnemyFx(el){ctCombatPulse164(el,'enemyAttackFx174164',240)}
 window.__CT_COMBAT_FX={attack:ctCombatAttackFx,dodge:ctCombatDodgeFx,enemyAttack:ctCombatEnemyFx};
-// V17.4.195 — League 100x speed option; V17.4.190 root performance fix retained.
+// V17.4.196 — League 100x speed option; V17.4.190 root performance fix retained.
 const CT_ELEMENT180={
  water:{name:'水',icon:'💧',cls:'elWater180'},
  fire:{name:'火',icon:'🔥',cls:'elFire180'},
@@ -3570,8 +3570,9 @@ html,body{padding-top:0!important}
     Team rating:
     - X: max 1 team, only current #1 by team power, absolute power >= 50,
          and >= 25% above #2.
-    - U: max 1 team, only the strongest non-X team, absolute power >= 10,
-         and >= 12% above the next non-X team.
+    - U: top non-X cluster in the main top 3, absolute power >= 10.
+         Adjacent teams with <12% power difference are the same cluster;
+         when the cluster is >=12% above the next team, the whole cluster is U (max 2 teams).
     - Everyone else uses power percentile rank (PR) among all 22 teams:
       S >= 85, A >= 70, B >= 55, C >= 40,
       D >= 25, E >= 15, F >= 5, Z < 5.
@@ -3625,17 +3626,12 @@ html,body{padding-top:0!important}
       };
     });
 
-    // X / U 仍先依隊伍戰力資格產生；最後再接受主排行榜名次鎖定。
+    // 先依純隊伍戰力資格產生唯一 X；U 改到主排行榜名次鎖定後，
+    // 依「前段同梯隊＋下方 12% 斷層」判定。
     if(data[0] && data[1] &&
        data[0].power>=50 &&
        data[0].power>=data[1].power*1.25){
       data[0].tier='X';
-    }
-    const nonX=data.filter(x=>x.tier!=='X');
-    if(nonX[0] && nonX[1] &&
-       nonX[0].power>=10 &&
-       nonX[0].power>=nonX[1].power*1.12){
-      nonX[0].tier='U';
     }
 
     const byCity=Object.fromEntries(data.map(x=>[x.city,x]));
@@ -3665,13 +3661,41 @@ html,body{padding-top:0!important}
       if(p>=0 && c>=0 && c<p)cur.tier=prev.tier;
     }
 
+    // V17.4.196：U 改為「同梯隊斷層」判定。
+    // 規則：
+    // 1) 只看主排行榜前 3 名中的最強非 X 集團。
+    // 2) 戰力皆需 >= 10.00。
+    // 3) 相鄰兩隊戰力比 < 1.12（差 <12%）視為同一梯隊。
+    // 4) 最多把前兩支非 X 隊綁成同一 U 梯隊。
+    // 5) 該梯隊最末隊必須對下一名形成 >=12% 斷層，整梯才升 U。
+    //    因此 100.22 / 94.98 < 1.12 且 94.98 / 83.83 >= 1.12 => 前兩隊同為 U。
+    const progressRows=progress.map(s=>byCity[s.city]).filter(Boolean);
+    const uStart=progressRows.findIndex(x=>x.tier!=='X' && x.rank<=3);
+    if(uStart>=0){
+      const first=progressRows[uStart];
+      if(first && first.rank<=3 && first.power>=10){
+        const group=[first];
+        const second=progressRows[uStart+1];
+        if(second && second.tier!=='X' && second.rank<=3 && second.power>=10){
+          const hi=Math.max(first.power,second.power), lo=Math.max(1e-9,Math.min(first.power,second.power));
+          if(hi/lo < 1.12)group.push(second);
+        }
+        const bottom=group[group.length-1];
+        const next=progressRows[uStart+group.length];
+        const separated=!next || (bottom.power>=next.power*1.12);
+        if(separated){
+          for(const x of group)x.tier='U';
+        }
+      }
+    }
+
     return byCity;
   };
 
   // Expose thresholds for team-data / future UI descriptions.
   window.CT_TEAM_PR_RATING={
     x:{maxTeams:1,minPower:50,gap:1.25},
-    u:{maxTeams:1,minPower:10,gap:1.12},
+    u:{maxTeams:2,minPower:10,gap:1.12,sameClusterBelow:1.12,maxRank:3,mode:'top-cluster'},
     rankLock:'main-progress-rank-high-first',
     updateSafe:true,
     build:CT_BUILD_VERSION,
@@ -4702,8 +4726,8 @@ window.render=function(){
  }catch(e){console.warn('CT164 tower combat fx',e)}
  return out
 };
-try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.195');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.195')}catch(e){}
-window.__CT_BUILD='V17.4.195-power-compression-05';
+try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.196');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.196')}catch(e){}
+window.__CT_BUILD='V17.4.196-power-compression-05';
 })();
 </script>
 
@@ -5116,8 +5140,8 @@ window.hit=hit=function(s,p){
 // UI is rendered canonically in V17.4.184 CLEAN; no post-render DOM patch is needed.
 
 try{render()}catch(e){console.warn('CT182 initial render',e)}
-try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.195')}catch(_e){}
-window.__CT_BUILD='V17.4.195-power-compression-05';
+try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.196')}catch(_e){}
+window.__CT_BUILD='V17.4.196-power-compression-05';
 })();
 </script>
 
@@ -5143,7 +5167,7 @@ window.__CT_BUILD='V17.4.195-power-compression-05';
 <script id="ct174190RootPerformance">
 (()=>{
 'use strict';
-/* V17.4.195: V17.4.190 root performance fix retained; league adds 100x speed.
+/* V17.4.196: V17.4.190 root performance fix retained; league adds 100x speed.
    No visual/effect/gameplay multiplier is changed here.
    The expensive full-server rating calculations are memoized within one tower turn,
    and derived character stats are memoized until their actual stat inputs change. */
@@ -5235,8 +5259,8 @@ try{
   if(bad)bad.remove();
 }catch(_e){}
 
-try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.195')}catch(_e){}
-window.__CT_BUILD='V17.4.195-power-compression-05';
+try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.196')}catch(_e){}
+window.__CT_BUILD='V17.4.196-power-compression-05';
 })();
 </script>
 
@@ -5244,7 +5268,7 @@ window.__CT_BUILD='V17.4.195-power-compression-05';
 <script id="ct174192ElementPowerNormalization">
 (()=>{
 'use strict';
-/* V17.4.195 — canonical attribute power coefficients + 0.5 power compression.
+/* V17.4.196 — canonical attribute power coefficients + 0.5 power compression.
    These coefficients affect displayed character/team power only; combat element multipliers remain unchanged.
    New-game baseline is recalculated AFTER fixed character elements are assigned; visible/rating power then uses 10*sqrt(raw/baseline), so the strongest opening TEAM is exactly 10.00. */
 const ELEMENT_POWER_192=Object.freeze({water:1.00,fire:1.00,wood:1.00,light:1.20,dark:1.19,thunder:1.70});
@@ -5302,13 +5326,13 @@ window.CT_POWER_RULE_192={
   compressionExponent:0.50,
   displayFormula:'10*sqrt(rawPower/openingTopBaseline)',
   elementCoefficients:{...ELEMENT_POWER_192},
-  teamU:{minPower:10,gap:1.12,maxTeams:1},
+  teamU:{minPower:10,gap:1.12,maxTeams:2,maxRank:3,mode:'top-cluster'},
   characterU:{minPower:10,maxCharacters:3},
   xThresholdUnchanged:true
 };
 try{if(window.CT_TEAM_PR_RATING?.u)window.CT_TEAM_PR_RATING.u.minPower=10}catch(_e){}
-try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.195')}catch(_e){}
-window.__CT_BUILD='V17.4.195-power-compression-05';
+try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.196')}catch(_e){}
+window.__CT_BUILD='V17.4.196-power-compression-05';
 })();
 </script>
 
@@ -5316,7 +5340,7 @@ window.__CT_BUILD='V17.4.195-power-compression-05';
 <script id="ct174193FairKoTowerFx">
 (()=>{
 'use strict';
-/* V17.4.195
+/* V17.4.196
    1) Every team gets the same one-turn KO hold before entering the next floor.
    2) The watched tower battle keeps the KO attack gold flash.
    3) Tower enemy attacks have their own attack FX.
@@ -5407,15 +5431,22 @@ if(typeof prevEhit193==='function'){
 
 // Recover old saves that happened to be stored on a pre-193 KO frame.
 try{for(const s of states||[])if(s)delete s.ctKoHoldTurn193}catch(_e){}
-try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.195');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.195')}catch(_e){}
-window.__CT_BUILD='V17.4.195-fair-ko-tower-fx';
+try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.196');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.196')}catch(_e){}
+window.__CT_BUILD='V17.4.196-fair-ko-tower-fx';
 })();
 </script>
 
 <script id="ct174195RankAttackFlashAllTeamsMarker">
 (()=>{
 'use strict';
-window.__CT_BUILD='V17.4.195-rank-attack-flash-all-teams';
+window.__CT_BUILD='V17.4.196-rank-attack-flash-all-teams';
+})();
+</script>
+
+<script id="ct174196UTierClusterMarker">
+(()=>{
+  try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.196')}catch(_e){}
+  window.__CT_BUILD='V17.4.196-u-tier-cluster';
 })();
 </script>
 </body></html>
