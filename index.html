@@ -145,7 +145,7 @@ window.ctBattleTreasureInline126=function(c){
 </script>
 <script>
 const SAVE='CITY_TOWER_V17_SAVE';
-const CT_BUILD_VERSION='V17.4.193';
+const CT_BUILD_VERSION='V17.4.194';
 const CT_SAVE_PREUPDATE='CITY_TOWER_V17_PREUPDATE_BACKUP';
 const CT_TREASURE_SAVE_KEY='CITY_TOWER_V1743_TREASURE';
 const CT_TREASURE_PREUPDATE='CITY_TOWER_V1743_TREASURE_PREUPDATE_BACKUP';
@@ -170,6 +170,8 @@ function ctPrepareUpdateSave(){
 ctPrepareUpdateSave();
 let R={},states=[],turn=0,selected='臺北市',running=false,raf=0,last=0,acc=0,lastPaint=0,nextEvent=160,lastEvent=null,initialTop=1;
 const $=id=>document.getElementById(id), clamp=(x,a,b)=>Math.max(a,Math.min(b,x)), rnd=(a,b)=>a+Math.random()*(b-a);
+// V17.4.194 — formal displayed/rating power uses 0.5-power compression. Combat stats and damage are unchanged.
+window.ctPowerCompress194=function(ratio){ratio=Math.max(0,Number(ratio)||0);return 10*Math.sqrt(ratio)};
 const safeGet=k=>{try{return localStorage.getItem(k)}catch(_){return null}};
 let ctDisposableStorageCleaned184=false;
 function ctCleanupDisposableStorage184(){
@@ -183,7 +185,7 @@ function ctCombatAttackFx(el){ctCombatPulse164(el,'activityAttackFlash174163',22
 function ctCombatDodgeFx(el){ctCombatPulse164(el,'activityDodgeFx174164',900)}
 function ctCombatEnemyFx(el){ctCombatPulse164(el,'enemyAttackFx174164',240)}
 window.__CT_COMBAT_FX={attack:ctCombatAttackFx,dodge:ctCombatDodgeFx,enemyAttack:ctCombatEnemyFx};
-// V17.4.193 — League 100x speed option; V17.4.190 root performance fix retained.
+// V17.4.194 — League 100x speed option; V17.4.190 root performance fix retained.
 const CT_ELEMENT180={
  water:{name:'水',icon:'💧',cls:'elWater180'},
  fire:{name:'火',icon:'🔥',cls:'elFire180'},
@@ -255,7 +257,7 @@ function craw(c){let s=cstats(c),ehp=s.hp*(1+s.def*.006),dps=s.atk*(s.speed/100)
 function teamRaw(city){return R[city].reduce((a,c)=>a+craw(c),0)/12}
 function baseInitialTop(){return Math.max(...Object.keys(R).map(city=>R[city].reduce((a,c)=>a+craw({...c,lv:1,xp:0,bonus:0}),0)/12))}
 function meta(){
- let a=Object.keys(R).map(city=>({city,power:10*teamRaw(city)/initialTop})).sort((x,y)=>y.power-x.power);a.forEach((x,i)=>x.rank=i+1);
+ let a=Object.keys(R).map(city=>({city,power:window.ctPowerCompress194(teamRaw(city)/initialTop)})).sort((x,y)=>y.power-x.power);a.forEach((x,i)=>x.rank=i+1);
  for(const x of a){let v=x.power,r=x.rank;x.tier=v>=9&&r<=3?'S':v>=8&&r<=7?'A':v>=7&&r<=11?'B':v>=6&&r<=15?'C':v>=4.5&&r<=18?'D':v>=4?'E':'F'}
  if(a[0].power>=10&&a[0].power>=a[1].power*1.08)a[0].tier='U'; else if(a[1].power>=10&&a[1].power>=a[2].power*1.08)a[1].tier='U';
  if(a[0].power>=50&&a[0].power>=a[1].power*1.15)a[0].tier='X';
@@ -410,9 +412,9 @@ let eventWasRunning=false,eventTimer=0,eventSecs=0;
 
 // ---- Character dynamic rating ----
 function charMetaV173(){
-  // V17.4.112：角色評級直接使用畫面可見的「個人戰力」數字：10*craw(c)/initialTop。
+  // V17.4.112：角色評級直接使用畫面可見的「個人戰力」數字：window.ctPowerCompress194(craw(c)/initialTop)。
   // 因此畫面 10.00+ 就是 U 絕對門檻；50.00+ 且全服第1才可 X。
-  let a=Object.values(R).flat().map(c=>({id:c.id,power:10*craw(c)/initialTop})).sort((x,y)=>y.power-x.power||String(x.id).localeCompare(String(y.id),'zh-Hant'));
+  let a=Object.values(R).flat().map(c=>({id:c.id,power:window.ctPowerCompress194(craw(c)/initialTop)})).sort((x,y)=>y.power-x.power||String(x.id).localeCompare(String(y.id),'zh-Hant'));
   const n=a.length,EPS=1e-9;
   a.forEach((x,i)=>x.rank=i+1);
   for(let i=0;i<n;){
@@ -1766,7 +1768,7 @@ function genesisTeamOrder(){
 }
 function genesisCharMeta(){try{return (typeof window.charMeta==='function'?window.charMeta():{})||{}}catch(e){return{}}}
 function genesisSortedChars(city,cm){return [...(R[city]||[])].sort((a,b)=>((cm[b.id]?.rank??9999)-(cm[a.id]?.rank??9999))||craw(a)-craw(b)||String(a.id).localeCompare(String(b.id),'zh-Hant'))}
-function genesisFighter(c,cm){const s=cstats(c);c.deploys=(Number(c.deploys)||0)+1;return{c,s,max:s.hp,hp:s.hp,g:0,att:0,rank:cm[c.id]?.rank??'—',tier:cm[c.id]?.tier||c.grade||'Z',power:10*craw(c)/initialTop}}
+function genesisFighter(c,cm){const s=cstats(c);c.deploys=(Number(c.deploys)||0)+1;return{c,s,max:s.hp,hp:s.hp,g:0,att:0,rank:cm[c.id]?.rank??'—',tier:cm[c.id]?.tier||c.grade||'Z',power:window.ctPowerCompress194(craw(c)/initialTop)}}
 function genesisCanOpen(){return !q('megaComp')?.classList.contains('open')&&!q('comp1748')?.classList.contains('open')&&!q('eventModalV173')?.classList.contains('open')}
 function openGenesis(official=true,source='manual'){
  ensure();
@@ -1782,7 +1784,7 @@ function genesisBattle(){
  const teamRows=genesisTeamOrder(),godCity=teamRows[0]?.city;if(!godCity){q('megaStage').innerHTML='<div class="noteMega">⚠️ 無法建立創世神挑戰賽資料。</div>';return}
  const opponentCities=teamRows.slice(1).map(x=>x.city),cm=genesisCharMeta();
  const godList=genesisSortedChars(godCity,cm);
- const opponentQueue=Object.keys(R).filter(city=>city!==godCity).flatMap(city=>(R[city]||[]).map(c=>({city,c,rank:Number(cm[c.id]?.rank)||999999,power:10*craw(c)/initialTop}))).sort((a,b)=>b.rank-a.rank||a.power-b.power||String(a.c.id).localeCompare(String(b.c.id),'zh-Hant'));
+ const opponentQueue=Object.keys(R).filter(city=>city!==godCity).flatMap(city=>(R[city]||[]).map(c=>({city,c,rank:Number(cm[c.id]?.rank)||999999,power:window.ctPowerCompress194(craw(c)/initialTop)}))).sort((a,b)=>b.rank-a.rank||a.power-b.power||String(a.c.id).localeCompare(String(b.c.id),'zh-Hant'));
  if(!godList.length||!opponentQueue.length){q('megaStage').innerHTML='<div class="noteMega">⚠️ 創世神或挑戰者名單不足，無法開始。</div>';return}
  let gi=0,ci=0,god=genesisFighter(godList[0],cm),oppEntry=opponentQueue[0],oppCity=oppEntry.city,opp=genesisFighter(oppEntry.c,cm),done=false,fightNo=1,defeatedOpp=0,currentStreak=0,godslayer=null;
  const damage=Object.fromEntries(opponentCities.map(city=>[city,0])),played=new Set([oppCity]),battleLog=[],charKills=new Map();
@@ -2702,7 +2704,7 @@ td,th,.ev173row,.rankMega,.rewardMega>div,.bf .nm,.compChar b,.compChar .sub{
 
   // ===== 3) Team tier thresholds kept but widened as latest logic =====
   window.meta = meta = function(){
-    let a=Object.keys(R).map(city=>({city,power:10*teamRaw(city)/initialTop})).sort((x,y)=>y.power-x.power);
+    let a=Object.keys(R).map(city=>({city,power:window.ctPowerCompress194(teamRaw(city)/initialTop)})).sort((x,y)=>y.power-x.power);
     a.forEach((x,i)=>x.rank=i+1);
     for(const x of a){let v=x.power,r=x.rank;x.tier=v>=9&&r<=3?'S':v>=8&&r<=7?'A':v>=7&&r<=11?'B':v>=6&&r<=15?'C':v>=4.5&&r<=18?'D':v>=4?'E':'F'}
     if(a[0]&&a[1]&&a[0].power>=10&&a[0].power>=a[1].power*1.12)a[0].tier='U';
@@ -2715,7 +2717,7 @@ td,th,.ev173row,.rankMega,.rewardMega>div,.bf .nm,.compChar b,.compChar .sub{
   // ===== 4) Character tiers use PR; U up to 3, X unique =====
   window.charMeta = function charMetaV174(){
     // V17.4.112：與角色資料頁顯示的「個人戰力」完全同一把尺。
-    let a=Object.values(R).flat().map(c=>({id:c.id,power:10*craw(c)/initialTop})).sort((x,y)=>y.power-x.power||String(x.id).localeCompare(String(y.id),'zh-Hant'));
+    let a=Object.values(R).flat().map(c=>({id:c.id,power:window.ctPowerCompress194(craw(c)/initialTop)})).sort((x,y)=>y.power-x.power||String(x.id).localeCompare(String(y.id),'zh-Hant'));
     const n=a.length, EPS=1e-9;
     a.forEach((x,i)=>x.rank=i+1);
     for(let i=0;i<n;){
@@ -2853,7 +2855,7 @@ td,th,.ev173row,.rankMega,.rewardMega>div,.bf .nm,.compChar b,.compChar .sub{
 (()=>{
   'use strict';
   // Canonical public character power: exactly what the roster prints as 個人戰力.
-  window.CT_CHARACTER_VISIBLE_POWER=c=>10*craw(c)/initialTop;
+  window.CT_CHARACTER_VISIBLE_POWER=c=>window.ctPowerCompress194(craw(c)/initialTop);
   try{
     document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.112');
     const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.112');
@@ -3062,7 +3064,7 @@ function baselineTop127(){
 }
 initialTop=baselineTop127();window.__CT127_INITIAL_TOP=initialTop;
 window.meta=meta=function(){
-  let a=Object.keys(R).map(city=>({city,power:10*teamRaw(city)/initialTop})).sort((x,y)=>y.power-x.power);
+  let a=Object.keys(R).map(city=>({city,power:window.ctPowerCompress194(teamRaw(city)/initialTop)})).sort((x,y)=>y.power-x.power);
   a.forEach((x,i)=>x.rank=i+1);
   for(const x of a){let v=x.power,r=x.rank;x.tier=v>=9&&r<=3?'S':v>=8&&r<=7?'A':v>=7&&r<=11?'B':v>=6&&r<=15?'C':v>=4.5&&r<=18?'D':v>=4?'E':'F'}
   if(a[0]&&a[1]&&a[0].power>=10&&a[0].power>=a[1].power*1.12)a[0].tier='U';
@@ -3387,7 +3389,7 @@ html,body{padding-top:0!important}
   function ctRawTeamPowerMap(){
     const out={};
     for(const city of Object.keys(R||{})){
-      out[city]=10*teamRaw(city)/Math.max(1e-9,Number(initialTop)||1);
+      out[city]=window.ctPowerCompress194(teamRaw(city)/Math.max(1e-9,Number(initialTop)||1));
     }
     return out;
   }
@@ -3564,7 +3566,7 @@ html,body{padding-top:0!important}
   function ctPRRawPowerMap(){
     const out={};
     for(const city of Object.keys(R||{})){
-      out[city]=10*teamRaw(city)/Math.max(1e-9,Number(initialTop)||1);
+      out[city]=window.ctPowerCompress194(teamRaw(city)/Math.max(1e-9,Number(initialTop)||1));
     }
     return out;
   }
@@ -4459,7 +4461,7 @@ function ctTeamAvg153(city){
  for(const k of Object.keys(out))out[k]/=n;
  return out
 }
-function ctPower153(c){return (10*craw(c)/Math.max(1e-9,Number(initialTop)||1)).toFixed(2)}
+function ctPower153(c){return (window.ctPowerCompress194(craw(c)/Math.max(1e-9,Number(initialTop)||1))).toFixed(2)}
 function ctFloor153(city){return Math.max(1,Number(ctState153(city)?.floor)||1)}
 function ctNow153(){const d=new Date();return [d.getHours(),d.getMinutes(),d.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':')}
 
@@ -4683,8 +4685,8 @@ window.render=function(){
  }catch(e){console.warn('CT164 tower combat fx',e)}
  return out
 };
-try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.193');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.193')}catch(e){}
-window.__CT_BUILD='V17.4.193-league-100x';
+try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.194');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.194')}catch(e){}
+window.__CT_BUILD='V17.4.194-power-compression-05';
 })();
 </script>
 
@@ -5097,8 +5099,8 @@ window.hit=hit=function(s,p){
 // UI is rendered canonically in V17.4.184 CLEAN; no post-render DOM patch is needed.
 
 try{render()}catch(e){console.warn('CT182 initial render',e)}
-try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.193')}catch(_e){}
-window.__CT_BUILD='V17.4.193-league-100x';
+try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.194')}catch(_e){}
+window.__CT_BUILD='V17.4.194-power-compression-05';
 })();
 </script>
 
@@ -5124,7 +5126,7 @@ window.__CT_BUILD='V17.4.193-league-100x';
 <script id="ct174190RootPerformance">
 (()=>{
 'use strict';
-/* V17.4.193: V17.4.190 root performance fix retained; league adds 100x speed.
+/* V17.4.194: V17.4.190 root performance fix retained; league adds 100x speed.
    No visual/effect/gameplay multiplier is changed here.
    The expensive full-server rating calculations are memoized within one tower turn,
    and derived character stats are memoized until their actual stat inputs change. */
@@ -5216,8 +5218,8 @@ try{
   if(bad)bad.remove();
 }catch(_e){}
 
-try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.193')}catch(_e){}
-window.__CT_BUILD='V17.4.193-league-100x';
+try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.194')}catch(_e){}
+window.__CT_BUILD='V17.4.194-power-compression-05';
 })();
 </script>
 
@@ -5225,9 +5227,9 @@ window.__CT_BUILD='V17.4.193-league-100x';
 <script id="ct174192ElementPowerNormalization">
 (()=>{
 'use strict';
-/* V17.4.193 — canonical attribute power coefficients.
+/* V17.4.194 — canonical attribute power coefficients + 0.5 power compression.
    These coefficients affect displayed character/team power only; combat element multipliers remain unchanged.
-   New-game baseline is recalculated AFTER fixed character elements are assigned, so the strongest opening TEAM is always exactly 10.00. */
+   New-game baseline is recalculated AFTER fixed character elements are assigned; visible/rating power then uses 10*sqrt(raw/baseline), so the strongest opening TEAM is exactly 10.00. */
 const ELEMENT_POWER_192=Object.freeze({water:1.00,fire:1.00,wood:1.00,light:1.20,dark:1.19,thunder:1.70});
 window.CT_ELEMENT_POWER_192=ELEMENT_POWER_192;
 window.ctElementPower192=function(element){return Number(ELEMENT_POWER_192[element])||1};
@@ -5280,14 +5282,16 @@ try{
 // Public rule metadata for help/review UI.
 window.CT_POWER_RULE_192={
   openingTopTeam:10.00,
+  compressionExponent:0.50,
+  displayFormula:'10*sqrt(rawPower/openingTopBaseline)',
   elementCoefficients:{...ELEMENT_POWER_192},
   teamU:{minPower:10,gap:1.12,maxTeams:1},
   characterU:{minPower:10,maxCharacters:3},
   xThresholdUnchanged:true
 };
 try{if(window.CT_TEAM_PR_RATING?.u)window.CT_TEAM_PR_RATING.u.minPower=10}catch(_e){}
-try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.193')}catch(_e){}
-window.__CT_BUILD='V17.4.193-element-power-u10';
+try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.194')}catch(_e){}
+window.__CT_BUILD='V17.4.194-power-compression-05';
 })();
 </script>
 
@@ -5295,7 +5299,7 @@ window.__CT_BUILD='V17.4.193-element-power-u10';
 <script id="ct174193FairKoTowerFx">
 (()=>{
 'use strict';
-/* V17.4.193
+/* V17.4.194
    1) Every team gets the same one-turn KO hold before entering the next floor.
    2) The watched tower battle keeps the KO attack gold flash.
    3) Tower enemy attacks have their own attack FX.
@@ -5379,8 +5383,8 @@ if(typeof prevEhit193==='function'){
 
 // Recover old saves that happened to be stored on a pre-193 KO frame.
 try{for(const s of states||[])if(s)delete s.ctKoHoldTurn193}catch(_e){}
-try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.193');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.193')}catch(_e){}
-window.__CT_BUILD='V17.4.193-fair-ko-tower-fx';
+try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.194');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.194')}catch(_e){}
+window.__CT_BUILD='V17.4.194-fair-ko-tower-fx';
 })();
 </script>
 
