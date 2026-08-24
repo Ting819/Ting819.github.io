@@ -145,7 +145,7 @@ window.ctBattleTreasureInline126=function(c){
 </script>
 <script>
 const SAVE='CITY_TOWER_V17_SAVE';
-const CT_BUILD_VERSION='V17.4.198';
+const CT_BUILD_VERSION='V17.4.199';
 const CT_SAVE_PREUPDATE='CITY_TOWER_V17_PREUPDATE_BACKUP';
 const CT_TREASURE_SAVE_KEY='CITY_TOWER_V1743_TREASURE';
 const CT_TREASURE_PREUPDATE='CITY_TOWER_V1743_TREASURE_PREUPDATE_BACKUP';
@@ -170,7 +170,7 @@ function ctPrepareUpdateSave(){
 ctPrepareUpdateSave();
 let R={},states=[],turn=0,selected='臺北市',running=false,raf=0,last=0,acc=0,lastPaint=0,nextEvent=160,lastEvent=null,initialTop=1;
 const $=id=>document.getElementById(id), clamp=(x,a,b)=>Math.max(a,Math.min(b,x)), rnd=(a,b)=>a+Math.random()*(b-a);
-// V17.4.198 — formal displayed/rating power uses 0.5-power compression. Combat stats and damage are unchanged.
+// V17.4.199 — formal displayed/rating power uses 0.5-power compression. Combat stats and damage are unchanged.
 window.ctPowerCompress194=function(ratio){ratio=Math.max(0,Number(ratio)||0);return 10*Math.sqrt(ratio)};
 const safeGet=k=>{try{return localStorage.getItem(k)}catch(_){return null}};
 let ctDisposableStorageCleaned184=false;
@@ -185,7 +185,7 @@ function ctCombatAttackFx(el){ctCombatPulse164(el,'activityAttackFlash174163',22
 function ctCombatDodgeFx(el){ctCombatPulse164(el,'activityDodgeFx174164',900)}
 function ctCombatEnemyFx(el){ctCombatPulse164(el,'enemyAttackFx174164',240)}
 window.__CT_COMBAT_FX={attack:ctCombatAttackFx,dodge:ctCombatDodgeFx,enemyAttack:ctCombatEnemyFx};
-// V17.4.198 — League 100x speed option; V17.4.190 root performance fix retained.
+// V17.4.199 — League 100x speed option; V17.4.190 root performance fix retained.
 const CT_ELEMENT180={
  water:{name:'水',icon:'💧',cls:'elWater180'},
  fire:{name:'火',icon:'🔥',cls:'elFire180'},
@@ -1044,7 +1044,7 @@ function tHelpHtml(){return `<div class="tHelp168">
 <section><h3>🌐 世界 Boss</h3><p>22隊、88名出戰角色採同步戰鬥：每波所有角色攻擊條都直接增加自身攻速，達100/200/300即可出手1/2/3次，因此攻速直接影響DPS與傷害排名。Boss於每波玩家輸出後同步反擊各隊。#1/#2/#3：+220/+180/+150 EXP、+1.60/+1.30/+1.10%；#4–5 +120/+0.85%；#6–10 +90/+0.60%；#11–16 +60/+0.35%；#17–22 +35/+0.18%。傷害占比再加成；每波MVP +8 EXP；終結一擊 +60 EXP/+0.30%。正式賽每隊1件寶物，最高B。</p></section>
 <section><h3>⚔️ 22隊大混鬥</h3><p>#1/#2/#3：+190/+155/+130 EXP、+1.30/+1.00/+0.85%；#4–5 +105/+0.65%；#6–10 +80/+0.45%；#11–16 +55/+0.25%；#17–22 +35/+0.13%。每擊殺 +15 EXP；傷害前列與最後淘汰一擊另有加成。正式賽每隊1件寶物，最高B。</p></section>
 <section><h3>🏆 城市聯賽</h3><p>冠／亞／季／殿：+240/+190/+160/+135 EXP、+1.50/+1.20/+1.00/+0.80%；第5–8名 +100/+0.55%；第9–16名 +65/+0.30%；第17–22名 +40/+0.15%，再套用隊伍與角色評級加成。每隊1件寶物，最高A。</p></section>
-<section><h3>👑 創世神挑戰賽</h3><p>每10000回正式觸發，也可手動正式挑戰。當下塔榜#1為創世神；雙方皆由弱到強出場。若創世神12人打完整個252人聯軍仍未全滅，就全員滿血、攻擊條歸零，從頭開始下一輪，直到創世神首次失守。每完整守住1輪累積1個S額度：1輪=1S、4輪=4S、5輪=1U、6輪=1U+1S，依此類推（每5個S額度自動換1U）。當創世神至少拿到1U時，後方隊伍開始有追趕S機會：1U只開放塔榜#2、2U開放#2～#3、3U開放#2～#4；守住輪數越多，中S機率越高（5輪20%，之後每多1輪+5%，最高95%）。</p></section>
+<section><h3>👑 創世神挑戰賽</h3><p>每10000回正式觸發，也可手動正式挑戰。當下塔榜#1為創世神；雙方皆由弱到強出場。若創世神12人打完整個252人聯軍仍未全滅，只有252人聯軍全員滿血並從最弱重新開始下一輪；創世神端不重置，已倒下角色維持倒下，當前角色剩餘HP與攻擊條全部繼承，直到創世神首次失守。每完整守住1輪累積1個S額度：1輪=1S、4輪=4S、5輪=1U、6輪=1U+1S，依此類推（每5個S額度自動換1U）。當創世神至少拿到1U時，後方隊伍開始有追趕S機會：1U只開放塔榜#2、2U開放#2～#3、3U開放#2～#4；守住輪數越多，中S機率越高（5輪20%，之後每多1輪+5%，最高95%）。</p></section>
 <section><h3>🏅 強度階級</h3><p><span class="tierWord17434 X">X</span> ≫≫≫ <span class="tierWord17434 U">U</span> ≫≫ <span class="tierWord17434 S">S</span> ≫ <span class="tierWord17434 A">A</span> ＞ <span class="tierWord17434 B">B</span> ＞ <span class="tierWord17434 C">C</span> ＞ <span class="tierWord17434 D">D</span> ＞ <span class="tierWord17434 E">E</span> ＞ <span class="tierWord17434 F">F</span> ＞ <span class="tierWord17434 Z">Z</span>。</p></section>
 </div>`}
 function tRenderModal(){if(!tq('mb').classList.contains('open')||!tq('mbo'))return;tq('mt').textContent='🎁 寶物庫｜'+TCITY;tq('back').style.display='none';if(TVIEW!=='cat')TVIEW='inv';const body=TVIEW==='cat'?tCatalogHtml():tInvHtml();tq('mbo').innerHTML=tModalShell()+body;tq('tCity').onchange=e=>{TCITY=e.target.value;tRenderModal()};tq('tInvBtn').onclick=()=>{TVIEW='inv';tRenderModal()};tq('tCatBtn').onclick=()=>{TVIEW='cat';tRenderModal()};tq('tAutoBtn').onclick=()=>{TAUTO=!TAUTO;tSave();if(TAUTO)tAutoEquip(TCITY,true);tSyncAll();render();tRenderModal()};tq('tBestBtn').onclick=()=>{tAutoEquip(TCITY);tRenderModal()};const fuseAllBtn=tq('tFuseAllBtn');if(fuseAllBtn){const canFuse=TASC.slice(0,-1).some(g=>TINV.filter(x=>x.city===TCITY&&x.tier===g&&!x.equippedTo).length>=5)||tCanStarFuse(TCITY);fuseAllBtn.disabled=!canFuse;fuseAllBtn.onclick=()=>tFuseAll(TCITY)}const fuseAllTeamsBtn=tq('tFuseAllTeamsBtn');if(fuseAllTeamsBtn){const canFuseTeams=Object.keys(R).some(city=>TASC.slice(0,-1).some(g=>TINV.filter(x=>x.city===city&&x.tier===g&&!x.equippedTo).length>=5)||tCanStarFuse(city));fuseAllTeamsBtn.disabled=!canFuseTeams;fuseAllTeamsBtn.onclick=tFuseAllTeams}document.querySelectorAll('.tAssign').forEach(x=>x.onchange=e=>{tEquip(tItem(e.target.dataset.id),e.target.value||null);tRenderModal()});document.querySelectorAll('.tFuseBtn').forEach(x=>x.onclick=()=>tFuse(TCITY,x.dataset.tier))}
@@ -1827,14 +1827,14 @@ function genesisBattle(){
  function trailingSChance(){if(completedRounds<5)return 0;return Math.min(.95,.20+Math.max(0,completedRounds-5)*.05)}
  function render(){
   const area=q('genesisArena');if(!area)return;const logRows=battleLog.slice(-40).reverse(),plan=creatorTreasurePlan(),chance=trailingSChance();
-  area.innerHTML=`<div class="genesisDuel">${card(god,godCity,true)}<div class="genesisVs"><div>第 ${roundNo} 輪</div><div>VS</div><div>全服 #${opp?.rank??'—'}</div><small>第 ${fightNo} 戰｜本輪 ${Math.min(ci+1,totalCoalition)}/${totalCoalition}</small></div>${card(opp,oppCity,false)}</div><div class="genesisProgress"><div>已完整守住<b>${completedRounds} 輪</b></div><div>本輪創世神剩餘<b>${Math.max(0,godList.length-gi)} / 12</b></div><div>本輪聯軍剩餘<b>${Math.max(0,totalCoalition-defeatedOpp)} / ${totalCoalition}</b></div><div>目前連斬<b>${currentStreak}</b></div></div><div class="noteMega"><b>🏆 輪迴獎勵</b>｜每完整守住1輪＝1個S額度；每5個S額度自動換成1U。現在預計：${plan.u?`${plan.u}U `:''}${plan.s?`${plan.s}S`:(plan.u?'':'尚未完成1輪')}。${plan.u?`後方前${plan.u}隊（#2～#${plan.u+1}）各有 ${(chance*100).toFixed(0)}% 機率把本次寶物升為S。`:''}</div><div class="genesisLog"><div class="genesisLogHead"><span>戰次</span><span>創世神</span><span>對手</span><span>勝者</span><span>剩HP</span></div>${logRows.map(r=>`<div class="genesisLogRow"><span>#${r.no}</span><span>${r.god}</span><span>${r.opp}</span><span>${r.winner}</span><span>${r.hp.toFixed(1)}%</span></div>`).join('')||'<div class="genesisLogRow"><span>—</span><span>尚未</span><span>開戰</span><span>—</span><span>—</span></div>'}</div>`;
+  area.innerHTML=`<div class="genesisDuel">${card(god,godCity,true)}<div class="genesisVs"><div>第 ${roundNo} 輪</div><div>VS</div><div>全服 #${opp?.rank??'—'}</div><small>第 ${fightNo} 戰｜本輪 ${Math.min(ci+1,totalCoalition)}/${totalCoalition}</small></div>${card(opp,oppCity,false)}</div><div class="genesisProgress"><div>已完整守住<b>${completedRounds} 輪</b></div><div>創世神剩餘<b>${Math.max(0,godList.length-gi)} / 12</b></div><div>本輪聯軍剩餘<b>${Math.max(0,totalCoalition-defeatedOpp)} / ${totalCoalition}</b></div><div>目前連斬<b>${currentStreak}</b></div></div><div class="noteMega"><b>🏆 輪迴獎勵</b>｜每完整守住1輪＝1個S額度；每5個S額度自動換成1U。現在預計：${plan.u?`${plan.u}U `:''}${plan.s?`${plan.s}S`:(plan.u?'':'尚未完成1輪')}。${plan.u?`後方前${plan.u}隊（#2～#${plan.u+1}）各有 ${(chance*100).toFixed(0)}% 機率把本次寶物升為S。`:''}</div><div class="genesisLog"><div class="genesisLogHead"><span>戰次</span><span>創世神</span><span>對手</span><span>勝者</span><span>剩HP</span></div>${logRows.map(r=>`<div class="genesisLogRow"><span>#${r.no}</span><span>${r.god}</span><span>${r.opp}</span><span>${r.winner}</span><span>${r.hp.toFixed(1)}%</span></div>`).join('')||'<div class="genesisLogRow"><span>—</span><span>尚未</span><span>開戰</span><span>—</span><span>—</span></div>'}</div>`;
   const rows=damageRows(false);rankBox.innerHTML=rows.map((x,i)=>`<div class="rankMega ${i<3&&x.damage>0?'top':''} ${x.played?'':'genesisUnplayed'}"><b>#${i+1}</b><span>${x.city}${x.city===oppCity?'｜目前角色出戰':''}</span><span class="num">${x.played?'已出過角色':'尚未出場'}</span><span class="num">傷 ${Math.round(x.damage)}</span><span class="num">累積 ${godTotalHp?((x.damage/godTotalHp)*100).toFixed(2):'0.00'}%</span></div>`).join('')
  }
  function record(winner){const gwin=winner==='god',w=gwin?god:opp;battleLog.push({no:fightNo,god:`R${roundNo} ${god.c.name} #${god.rank}`,opp:`${oppCity}・${opp.c.name} #${opp.rank}`,winner:gwin?`${god.c.name} #${god.rank}`:`${opp.c.name} #${opp.rank}`,hp:hpPct(w)});fightNo++}
  function enterGod(){god=genesisFighter(godList[gi],cm)}
  function enterOpp(){oppEntry=opponentQueue[ci];oppCity=oppEntry?.city||null;if(oppCity)played.add(oppCity);opp=oppEntry?genesisFighter(oppEntry.c,cm):null}
  function resetGauges(){if(god)god.g=0;if(opp)opp.g=0}
- function startNextRound(schedule=true){completedRounds++;roundNo++;gi=0;ci=0;defeatedOpp=0;currentStreak=0;godslayer=null;god=genesisFighter(godList[0],cm);oppEntry=opponentQueue[0];oppCity=oppEntry.city;played.add(oppCity);opp=genesisFighter(oppEntry.c,cm);resetGauges();if(schedule){render();if(boundary()){queue(step,260);return}queue(step,360)}}
+ function startNextRound(schedule=true){completedRounds++;roundNo++;ci=0;defeatedOpp=0;godslayer=null;/* 創世神不重置：保留已倒下角色、目前角色HP與攻擊條；只有252人聯軍從最弱重新滿血開始。 */oppEntry=opponentQueue[0];oppCity=oppEntry.city;played.add(oppCity);opp=genesisFighter(oppEntry.c,cm);if(schedule){render();if(boundary()){queue(step,260);return}queue(step,360)}}
  function attackOnce(draw=true,schedule=true){
   if(done||!god||!opp)return;const pair=[god,opp],dt=Math.min(...pair.map(x=>(100-x.g)/Math.max(1,x.s.speed)));for(const x of pair)x.g+=x.s.speed*Math.max(.001,dt);
   const a=[...pair].filter(x=>x.g>=99.999).sort((x,y)=>y.g-x.g)[0]||pair[0],b=a===god?opp:god;a.g-=100;a.att++;a.c.attacks=(Number(a.c.attacks)||0)+1;
@@ -3677,7 +3677,7 @@ html,body{padding-top:0!important}
       if(p>=0 && c>=0 && c<p)cur.tier=prev.tier;
     }
 
-    // V17.4.198：U 改為「同梯隊斷層」判定。
+    // V17.4.199：U 改為「同梯隊斷層」判定。
     // 規則：
     // 1) 只看主排行榜前 3 名中的最強非 X 集團。
     // 2) 戰力皆需 >= 10.00。
@@ -4742,8 +4742,8 @@ window.render=function(){
  }catch(e){console.warn('CT164 tower combat fx',e)}
  return out
 };
-try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.198');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.198')}catch(e){}
-window.__CT_BUILD='V17.4.198-power-compression-05';
+try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.199');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.199')}catch(e){}
+window.__CT_BUILD='V17.4.199-power-compression-05';
 })();
 </script>
 
@@ -5156,8 +5156,8 @@ window.hit=hit=function(s,p){
 // UI is rendered canonically in V17.4.184 CLEAN; no post-render DOM patch is needed.
 
 try{render()}catch(e){console.warn('CT182 initial render',e)}
-try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.198')}catch(_e){}
-window.__CT_BUILD='V17.4.198-power-compression-05';
+try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.199')}catch(_e){}
+window.__CT_BUILD='V17.4.199-power-compression-05';
 })();
 </script>
 
@@ -5183,7 +5183,7 @@ window.__CT_BUILD='V17.4.198-power-compression-05';
 <script id="ct174190RootPerformance">
 (()=>{
 'use strict';
-/* V17.4.198: V17.4.190 root performance fix retained; league adds 100x speed.
+/* V17.4.199: V17.4.190 root performance fix retained; league adds 100x speed.
    No visual/effect/gameplay multiplier is changed here.
    The expensive full-server rating calculations are memoized within one tower turn,
    and derived character stats are memoized until their actual stat inputs change. */
@@ -5275,8 +5275,8 @@ try{
   if(bad)bad.remove();
 }catch(_e){}
 
-try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.198')}catch(_e){}
-window.__CT_BUILD='V17.4.198-power-compression-05';
+try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.199')}catch(_e){}
+window.__CT_BUILD='V17.4.199-power-compression-05';
 })();
 </script>
 
@@ -5284,7 +5284,7 @@ window.__CT_BUILD='V17.4.198-power-compression-05';
 <script id="ct174192ElementPowerNormalization">
 (()=>{
 'use strict';
-/* V17.4.198 — canonical attribute power coefficients + 0.5 power compression.
+/* V17.4.199 — canonical attribute power coefficients + 0.5 power compression.
    These coefficients affect displayed character/team power only; combat element multipliers remain unchanged.
    New-game baseline is recalculated AFTER fixed character elements are assigned; visible/rating power then uses 10*sqrt(raw/baseline), so the strongest opening TEAM is exactly 10.00. */
 const ELEMENT_POWER_192=Object.freeze({water:1.00,fire:1.00,wood:1.00,light:1.20,dark:1.19,thunder:1.70});
@@ -5347,8 +5347,8 @@ window.CT_POWER_RULE_192={
   xThresholdUnchanged:true
 };
 try{if(window.CT_TEAM_PR_RATING?.u)window.CT_TEAM_PR_RATING.u.minPower=10}catch(_e){}
-try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.198')}catch(_e){}
-window.__CT_BUILD='V17.4.198-power-compression-05';
+try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.199')}catch(_e){}
+window.__CT_BUILD='V17.4.199-power-compression-05';
 })();
 </script>
 
@@ -5356,7 +5356,7 @@ window.__CT_BUILD='V17.4.198-power-compression-05';
 <script id="ct174193FairKoTowerFx">
 (()=>{
 'use strict';
-/* V17.4.198
+/* V17.4.199
    1) Every team gets the same one-turn KO hold before entering the next floor.
    2) The watched tower battle keeps the KO attack gold flash.
    3) Tower enemy attacks have their own attack FX.
@@ -5447,23 +5447,23 @@ if(typeof prevEhit193==='function'){
 
 // Recover old saves that happened to be stored on a pre-193 KO frame.
 try{for(const s of states||[])if(s)delete s.ctKoHoldTurn193}catch(_e){}
-try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.198');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.198')}catch(_e){}
-window.__CT_BUILD='V17.4.198-fair-ko-tower-fx';
+try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.199');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.199')}catch(_e){}
+window.__CT_BUILD='V17.4.199-fair-ko-tower-fx';
 })();
 </script>
 
 <script id="ct174195RankAttackFlashAllTeamsMarker">
 (()=>{
 'use strict';
-window.__CT_BUILD='V17.4.198-rank-attack-flash-all-teams';
+window.__CT_BUILD='V17.4.199-rank-attack-flash-all-teams';
 })();
 </script>
 
 <script id="ct174196UTierClusterMarker">
 (()=>{
-  try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.198')}catch(_e){}
-  window.__CT_BUILD='V17.4.198-u-tier-cluster';
+  try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.199')}catch(_e){}
+  window.__CT_BUILD='V17.4.199-u-tier-cluster';
 })();
 </script>
-<script id="ct174198BuildMarker">(()=>{try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.198');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.198')}catch(e){}window.__CT_BUILD='V17.4.198-genesis-loop-fastest-xstar-roman';})();</script>
+<script id="ct174199BuildMarker">(()=>{try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.199');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.199')}catch(e){}window.__CT_BUILD='V17.4.199-genesis-god-no-reset';})();</script>
 </body></html>
