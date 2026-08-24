@@ -132,9 +132,9 @@ window.ctBattleTreasureInline126=function(c){
       if(!it)return '<span class="tBattleSlot empty" title="空寶物槽">◇</span>';
       let img='',effect='';
       try{img=typeof api.svg==='function'?api.svg(it.type,it.tier):''}catch(_e){}
-      try{effect=typeof api.effect==='function'?api.effect(it.tier,it.type):''}catch(_e){}
-      const title=esc([it.tier+' '+(names[it.tier]||it.tier),it.name,effect].filter(Boolean).join('｜'));
-      return `<span class="tBattleSlot ${it.tier}" title="${title}"><img src="${img}"><i><span class="tierLetter tierMotion ${it.tier}">${it.tier}</span></i></span>`;
+      try{effect=typeof api.effect==='function'?api.effect(it.tier,it.type,it):''}catch(_e){}
+      const display=typeof api.display==='function'?api.display(it):it.tier,title=esc([display+' '+(names[it.tier]||it.tier),it.name,effect].filter(Boolean).join('｜'));
+      return `<span class="tBattleSlot ${it.tier}" title="${title}"><img src="${img}"><i><span class="tierLetter tierMotion ${it.tier}">${display}</span></i></span>`;
     }).join('');
     return `<div class="tBattleTreasureStrip"><span class="tBattleTreasureLabel">寶物</span>${slots}</div>`;
   }catch(e){
@@ -145,7 +145,7 @@ window.ctBattleTreasureInline126=function(c){
 </script>
 <script>
 const SAVE='CITY_TOWER_V17_SAVE';
-const CT_BUILD_VERSION='V17.4.196';
+const CT_BUILD_VERSION='V17.4.198';
 const CT_SAVE_PREUPDATE='CITY_TOWER_V17_PREUPDATE_BACKUP';
 const CT_TREASURE_SAVE_KEY='CITY_TOWER_V1743_TREASURE';
 const CT_TREASURE_PREUPDATE='CITY_TOWER_V1743_TREASURE_PREUPDATE_BACKUP';
@@ -170,7 +170,7 @@ function ctPrepareUpdateSave(){
 ctPrepareUpdateSave();
 let R={},states=[],turn=0,selected='臺北市',running=false,raf=0,last=0,acc=0,lastPaint=0,nextEvent=160,lastEvent=null,initialTop=1;
 const $=id=>document.getElementById(id), clamp=(x,a,b)=>Math.max(a,Math.min(b,x)), rnd=(a,b)=>a+Math.random()*(b-a);
-// V17.4.196 — formal displayed/rating power uses 0.5-power compression. Combat stats and damage are unchanged.
+// V17.4.198 — formal displayed/rating power uses 0.5-power compression. Combat stats and damage are unchanged.
 window.ctPowerCompress194=function(ratio){ratio=Math.max(0,Number(ratio)||0);return 10*Math.sqrt(ratio)};
 const safeGet=k=>{try{return localStorage.getItem(k)}catch(_){return null}};
 let ctDisposableStorageCleaned184=false;
@@ -185,7 +185,7 @@ function ctCombatAttackFx(el){ctCombatPulse164(el,'activityAttackFlash174163',22
 function ctCombatDodgeFx(el){ctCombatPulse164(el,'activityDodgeFx174164',900)}
 function ctCombatEnemyFx(el){ctCombatPulse164(el,'enemyAttackFx174164',240)}
 window.__CT_COMBAT_FX={attack:ctCombatAttackFx,dodge:ctCombatDodgeFx,enemyAttack:ctCombatEnemyFx};
-// V17.4.196 — League 100x speed option; V17.4.190 root performance fix retained.
+// V17.4.198 — League 100x speed option; V17.4.190 root performance fix retained.
 const CT_ELEMENT180={
  water:{name:'水',icon:'💧',cls:'elWater180'},
  fire:{name:'火',icon:'🔥',cls:'elFire180'},
@@ -544,6 +544,22 @@ const TDISPLAY_TYPES=['blade','shield','wing','core','sigil'];
 const TTYPE_NAME={blade:'⚔️ 攻擊型',shield:'🛡️ 防禦型',wing:'🪽 速度型',core:'💎 綜合型',sigil:'🔮 技巧型'};
 const TTIER_NAME={X:'創世',U:'至尊',S:'神話',A:'傳說',B:'史詩',C:'稀有',D:'優良',E:'普通',F:'粗糙',Z:'劣質'};
 function tTierName(g){return TTIER_NAME[g]||g}
+function tStars(it){return it&&it.tier==='X'?Math.max(0,Math.floor(Number(it.stars)||0)):0}
+function tStarBonusPct(stars){stars=Math.max(0,Math.floor(Number(stars)||0));return stars?100*Math.pow(2,stars-1):0}
+function tStarEffectMul(itOrStars){const stars=typeof itOrStars==='object'?tStars(itOrStars):Math.max(0,Math.floor(Number(itOrStars)||0));return 1+tStarBonusPct(stars)/100}
+function tStarRoman(n){
+ n=Math.max(0,Math.floor(Number(n)||0));if(!n)return'';
+ const map=[[1000,'M'],[900,'CM'],[500,'D'],[400,'CD'],[100,'C'],[90,'XC'],[50,'L'],[40,'XL'],[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I']];
+ let out='';for(const [v,s] of map)while(n>=v){out+=s;n-=v}return out
+}
+function tStarLabel(it){const n=tStars(it);return n?'★'+tStarRoman(n):''}
+function tXDisplay(it){return it&&it.tier==='X'?'X'+tStarLabel(it):(it?.tier||'')}
+function tNextXStarGroup(city){
+ const groups=new Map();for(const it of TINV){if(it.city!==city||it.tier!=='X'||it.equippedTo)continue;const st=tStars(it);groups.set(st,(groups.get(st)||0)+1)}
+ const stars=[...groups.keys()].sort((a,b)=>a-b);for(const st of stars)if((groups.get(st)||0)>=5)return{stars:st,count:groups.get(st)};return null
+}
+function tCanStarFuse(city){return !!tNextXStarGroup(city)}
+window.tStars=tStars;window.tStarBonusPct=tStarBonusPct;window.tStarEffectMul=tStarEffectMul;window.tStarRoman=tStarRoman;window.tStarLabel=tStarLabel;window.tXDisplay=tXDisplay;
 const TNAMES={
  Z:{blade:'破鐵短刃',shield:'粗製鐵盾',wing:'破風羽',core:'碎晶核心',sigil:'灰燼靈印'},
  F:{blade:'赤銅戰刃',shield:'黑鐵壁盾',wing:'疾風羽翼',core:'青晶核心',sigil:'星砂靈印'},
@@ -563,7 +579,7 @@ function tChar(id){for(const a of Object.values(R)){const c=a.find(x=>x.id===id)
 function tForCharAll(c){
  if(!c)return [];
  let ids=Array.isArray(c.treasureIds)?c.treasureIds.filter(Boolean):(c.treasureId?[c.treasureId]:[]);
- return ids.map(tItem).filter(Boolean).sort((a,b)=>TASC.indexOf(b.tier)-TASC.indexOf(a.tier)||TPWR[b.tier]-TPWR[a.tier]);
+ return ids.map(tItem).filter(Boolean).sort((a,b)=>TASC.indexOf(b.tier)-TASC.indexOf(a.tier)||tStars(b)-tStars(a)||TPWR[b.tier]-TPWR[a.tier]);
 }
 function tForChar(c){return tForCharAll(c)[0]||null}
 const XFX={
@@ -573,16 +589,17 @@ const XFX={
  core:{hp:120,atk:120,def:100},
  sigil:{crit:30,speed:55}
 };
-function tEffect(tier,type){
+function tEffect(tier,type,it=null){
  const dodgeMap={Z:.5,F:1,E:1.5,D:2,C:3,B:4,A:6,S:9,U:14,X:20};
  const critDmgMap={Z:2,F:3,E:5,D:7,C:10,B:15,A:22,S:35,U:55,X:200};
  if(tier==='X'){
-  const x=XFX[type];
-  if(type==='blade')return `ATK +${x.atk}%｜爆率 +${x.crit}%｜25%創世追擊`;
-  if(type==='shield')return `HP +${x.hp}%｜DEF +${x.def}%｜減傷35%＋瀕死回35%`;
-  if(type==='wing')return `攻速 +${x.speed}%｜爆率 +${x.crit}%｜閃避 +${dodgeMap.X}%｜每4擊推條+60`;
-  if(type==='core')return `HP +${x.hp}%｜ATK +${x.atk}%｜DEF +${x.def}%`;
-  return `爆率 +${x.crit}%｜攻速 +${x.speed}%｜爆傷 +${critDmgMap.X}%｜暴擊有35%命運重寫`;
+  const x=XFX[type],sm=tStarEffectMul(it||0),star=it&&tStars(it)?`｜${tXDisplay(it)}：額外 +${tStarBonusPct(tStars(it))}% 全效果`:'';
+  const pct=v=>Math.round(v*sm),chance=v=>Math.min(100,Math.round(v*sm));
+  if(type==='blade')return `ATK +${pct(x.atk)}%｜爆率 +${pct(x.crit)}%｜${chance(25)}%創世追擊${star}`;
+  if(type==='shield')return `HP +${pct(x.hp)}%｜DEF +${pct(x.def)}%｜減傷${Math.min(90,pct(35))}%＋瀕死回${Math.min(100,pct(35))}%${star}`;
+  if(type==='wing')return `攻速 +${pct(x.speed)}%｜爆率 +${pct(x.crit)}%｜閃避 +${pct(dodgeMap.X)}%｜每4擊推條+${pct(60)}${star}`;
+  if(type==='core')return `HP +${pct(x.hp)}%｜ATK +${pct(x.atk)}%｜DEF +${pct(x.def)}%${star}`;
+  return `爆率 +${pct(x.crit)}%｜攻速 +${pct(x.speed)}%｜爆傷 +${pct(critDmgMap.X)}%｜暴擊有${chance(35)}%命運重寫${star}`;
  }
  const v=TPWR[tier];
  const critFmt=n=>Number(n).toFixed(n<1?1:0).replace(/\.0$/,'');
@@ -714,7 +731,7 @@ function tSvg(type,tier){
  TSVG_CACHE.set(key,uri);
  return uri;
 }
-function tNew(city,tier,origin,floor,type=null){type=type||TTYPES[Math.floor(Math.random()*TTYPES.length)];const it={id:'T'+(TSEQ++),city,tier,type,name:TNAMES[tier][type],origin:origin||'未知',floor:floor||0,turn:turn||0,equippedTo:null};TINV.push(it);return it}
+function tNew(city,tier,origin,floor,type=null,stars=0){type=type||TTYPES[Math.floor(Math.random()*TTYPES.length)];const it={id:'T'+(TSEQ++),city,tier,type,name:TNAMES[tier][type],origin:origin||'未知',floor:floor||0,turn:turn||0,equippedTo:null,stars:tier==='X'?Math.max(0,Math.floor(Number(stars)||0)):0};TINV.push(it);return it}
 function tSave(){try{localStorage.setItem(TSAVE,JSON.stringify({v:1,inv:TINV,seq:TSEQ,auto:TAUTO}));return true}catch(e){console.warn('treasure save',e);return false}}
 function tLoad(){try{
  let d=null;
@@ -726,6 +743,7 @@ function tLoad(){try{
   }catch(_e){}
  }
  if(d&&d.v===1){TINV=Array.isArray(d.inv)?d.inv:[];TSEQ=Number.isFinite(d.seq)?d.seq:1;TAUTO=d.auto!==false}else{TINV=[];TSEQ=1;TAUTO=true}
+ for(const it of TINV){it.stars=it.tier==='X'?Math.max(0,Math.floor(Number(it.stars)||0)):0}
  for(const arr of Object.values(R))for(const c of arr){c.treasureIds=[];c.treasureId=null}
  for(const it of TINV){
   if(!R[it.city]){it.equippedTo=null;continue}
@@ -737,7 +755,7 @@ function tLoad(){try{
   }
  }
 }catch(e){TINV=[];TSEQ=1;TAUTO=true}}
-function tToast(it,title='獲得寶物'){let el=tq('tToast');if(!el){document.body.insertAdjacentHTML('beforeend','<div id="tToast" class="tToast"></div>');el=tq('tToast')}el.innerHTML=`<img src="${tSvg(it.type,it.tier)}"><div><b class="ratingText ${it.tier}">${title}｜${it.tier} ${tTierName(it.tier)}｜${it.name}</b><div class="sub ratingText ${it.tier}">${it.city}｜${it.origin}${it.floor?'｜'+it.floor+'F':''}</div></div>`;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2600)}
+function tToast(it,title='獲得寶物'){let el=tq('tToast');if(!el){document.body.insertAdjacentHTML('beforeend','<div id="tToast" class="tToast"></div>');el=tq('tToast')}el.innerHTML=`<img src="${tSvg(it.type,it.tier)}"><div><b class="ratingText ${it.tier}">${title}｜${tXDisplay(it)} ${tTierName(it.tier)}｜${it.name}</b><div class="sub ratingText ${it.tier}">${it.city}｜${it.origin}${it.floor?'｜'+it.floor+'F':''}</div></div>`;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2600)}
 function tInterp(anchors,f){if(f<=anchors[0][0])return anchors[0][1].slice();for(let i=1;i<anchors.length;i++){if(f<=anchors[i][0]){const [x1,a]=anchors[i-1],[x2,b]=anchors[i],u=(f-x1)/(x2-x1);return a.map((v,j)=>v+(b[j]-v)*u)}}return anchors[anchors.length-1][1].slice()}
 function tRoll(tiers,weights){let sum=weights.reduce((a,b)=>a+Math.max(0,b),0),r=Math.random()*sum;for(let i=0;i<tiers.length;i++){r-=Math.max(0,weights[i]);if(r<=0)return tiers[i]}return tiers[tiers.length-1]}
 function tLootStrength(city,f=1){
@@ -853,7 +871,7 @@ function tAutoEquip(city,quiet=false){
  const cs=R[city]||[],items=TINV.filter(x=>x.city===city);
  for(const c of cs){c.treasureIds=[];c.treasureId=null}
  for(const it of items)it.equippedTo=null;
- const order=items.slice().sort((a,b)=>TASC.indexOf(b.tier)-TASC.indexOf(a.tier)||TPWR[b.tier]-TPWR[a.tier]);
+ const order=items.slice().sort((a,b)=>TASC.indexOf(b.tier)-TASC.indexOf(a.tier)||tStars(b)-tStars(a)||TPWR[b.tier]-TPWR[a.tier]);
  for(const it of order){
   let best=null,bestGain=-Infinity;
   for(const c of cs){
@@ -871,9 +889,15 @@ function tAutoEquip(city,quiet=false){
  tSyncCity(city);tSave();if(!quiet)render()
 }
 function tAward(city,tier,origin,floor,show=true){const st=states.find(x=>x.city===city),f=Math.max(1,Number(floor)||(st?Number(st.floor):1)||1);tier=tFloorClampTier(tier,f);const it=tNew(city,tier,origin,floor);if(TAUTO)tAutoEquip(city,true);tSyncCity(city);tSave();if(show)tToast(it);return it}
-function tFuse(city,tier){const next=TNEXT[tier];if(!next)return;const pool=TINV.filter(x=>x.city===city&&x.tier===tier&&!x.equippedTo);if(pool.length<5){alert(`${city} 的 ${tier} 未裝備寶物不足5件`);return}const used=pool.slice(0,5),ids=new Set(used.map(x=>x.id));TINV=TINV.filter(x=>!ids.has(x.id));const ok=Math.random()<tFuseChance(city,tier);let it=null;if(ok){it=tNew(city,next,'5合1合成',0);if(TAUTO)tAutoEquip(city,true);tToast(it,`合成成功 ${tier}→${next}`)}else{const fake={type:'core',tier,name:`${tier} 合成失敗`,city,origin:'5件素材已消耗',floor:0};tToast(fake,'💥 合成失敗')}tSyncCity(city);tSave();tRenderModal()}
+function tFuse(city,tier){
+ if(tier==='X'){
+  const g=tNextXStarGroup(city);if(!g){alert(`${city} 沒有5件同星等的未裝備 X 寶物`);return}
+  const pool=TINV.filter(x=>x.city===city&&x.tier==='X'&&!x.equippedTo&&tStars(x)===g.stars),used=pool.slice(0,5),ids=new Set(used.map(x=>x.id));TINV=TINV.filter(x=>!ids.has(x.id));
+  const it=tNew(city,'X',`5件 ${g.stars?('X★'+tStarRoman(g.stars)):'X'} 突破升星`,0,null,g.stars+1);if(TAUTO)tAutoEquip(city,true);tSyncCity(city);tSave();tToast(it,`創世突破｜${tXDisplay(it)}`);tRenderModal();return
+ }
+ const next=TNEXT[tier];if(!next)return;const pool=TINV.filter(x=>x.city===city&&x.tier===tier&&!x.equippedTo);if(pool.length<5){alert(`${city} 的 ${tier} 未裝備寶物不足5件`);return}const used=pool.slice(0,5),ids=new Set(used.map(x=>x.id));TINV=TINV.filter(x=>!ids.has(x.id));const ok=Math.random()<tFuseChance(city,tier);let it=null;if(ok){it=tNew(city,next,'5合1合成',0);if(TAUTO)tAutoEquip(city,true);tToast(it,`合成成功 ${tier}→${next}`)}else{const fake={type:'core',tier,name:`${tier} 合成失敗`,city,origin:'5件素材已消耗',floor:0,stars:0};tToast(fake,'💥 合成失敗')}tSyncCity(city);tSave();tRenderModal()}
 function tFuseAllCore(city){
- let attempts=0,success=0,failed=0,highest=null,safety=0;
+ let attempts=0,success=0,failed=0,highest=null,safety=0,starUps=0;
  for(const tier of TASC.slice(0,-1)){
   const next=TNEXT[tier];if(!next)continue;
   while(safety++<5000){
@@ -887,7 +911,8 @@ function tFuseAllCore(city){
    }else failed++;
   }
  }
- return{city,attempts,success,failed,highest};
+ while(safety++<5000){const g=tNextXStarGroup(city);if(!g)break;const pool=TINV.filter(x=>x.city===city&&x.tier==='X'&&!x.equippedTo&&tStars(x)===g.stars),used=pool.slice(0,5),ids=new Set(used.map(x=>x.id));TINV=TINV.filter(x=>!ids.has(x.id));tNew(city,'X','一鍵創世升星',0,null,g.stars+1);attempts++;success++;starUps++;highest='X'}
+ return{city,attempts,success,failed,highest,starUps};
 }
 function tFuseAll(city){
  const r=tFuseAllCore(city);
@@ -947,15 +972,15 @@ window.hit=function(s,p){
  const baseDmg=Math.max(1,before-s.enemy.hp);let extra=0,labels=[];
  for(const it of items){
   if(it.type==='blade'&&['S','U','X'].includes(it.tier)){
-   const chance=it.tier==='S'?.08:it.tier==='U'?.14:.25,m=it.tier==='S'?.30:it.tier==='U'?.55:.90;
+   const sm=it.tier==='X'?tStarEffectMul(it):1,chance=it.tier==='S'?.08:it.tier==='U'?.14:Math.min(1,.25*sm),m=it.tier==='S'?.30:it.tier==='U'?.55:.90*sm;
    if(Math.random()<chance){extra+=Math.max(1,Math.round(baseDmg*m));labels.push(it.tier==='X'?'🌟創世追擊':it.tier==='U'?'💗至尊追擊':'🔥神兵追擊')}
   }
   if(it.type==='sigil'&&(c.crits||0)>crit0&&['S','U','X'].includes(it.tier)){
-   const chance=it.tier==='S'?.10:it.tier==='U'?.18:.35,m=it.tier==='S'?.35:it.tier==='U'?.65:1.10;
+   const sm=it.tier==='X'?tStarEffectMul(it):1,chance=it.tier==='S'?.10:it.tier==='U'?.18:Math.min(1,.35*sm),m=it.tier==='S'?.35:it.tier==='U'?.65:1.10*sm;
    if(Math.random()<chance){extra+=Math.max(1,Math.round(baseDmg*m));labels.push(it.tier==='X'?'📖命運重寫':it.tier==='U'?'🔮因果追加':'✨萬象秘術')}
   }
   if(it.type==='wing'&&['S','U','X'].includes(it.tier)){
-   const every=it.tier==='S'?6:it.tier==='U'?5:4,push=it.tier==='S'?18:it.tier==='U'?35:60;
+   const every=it.tier==='S'?6:it.tier==='U'?5:4,sm=it.tier==='X'?tStarEffectMul(it):1,push=it.tier==='S'?18:it.tier==='U'?35:Math.round(60*sm);
    if(c.attacks%every===0){p.g=Math.max(0,p.g+push);log(s,`🪽 ${it.name}｜攻擊條 +${push}`)}
   }
  }
@@ -967,10 +992,10 @@ window.ehit=function(s){
  let living=s.party.filter(p=>p.alive);if(!living.length)return;
  let p=living[Math.floor(Math.random()*living.length)],c=R[s.city].find(x=>x.id===p.id),items=tForCharAll(c),shields=items.filter(x=>x.type==='shield');
  const dst=cstats(c);p.dodge=dst.dodge;p.critDmg=dst.critDmg;if(Math.random()<(dst.dodge||0)){log(s,`💨 ${p.name} 閃避怪物攻擊`);return}
- let mult=1;for(const it of shields){const r=it.tier==='S'?.08:it.tier==='U'?.18:it.tier==='X'?.35:0;mult*=1-r}
+ let mult=1;for(const it of shields){const sm=it.tier==='X'?tStarEffectMul(it):1,r=it.tier==='S'?.08:it.tier==='U'?.18:it.tier==='X'?Math.min(.90,.35*sm):0;mult*=1-r}
  let dmg=Math.max(1,Math.round(s.enemy.atk*2*100/(100+p.def)*rnd(.85,1.15)*mult*ctElementMultiplier180(s.enemy.element,c.element)));p.hp=Math.max(0,p.hp-dmg);
  const revive=shields.filter(x=>x.tier==='U'||x.tier==='X').sort((a,b)=>TASC.indexOf(b.tier)-TASC.indexOf(a.tier))[0];
- if(!p.hp&&revive&&!p.tGuardUsed){p.tGuardUsed=true;p.hp=Math.max(1,Math.round(p.max*(revive.tier==='X'?.35:.15)));p.alive=true;log(s,`${revive.tier==='X'?'🌟 創世神域':'💗 不滅城'}｜致命傷逆轉，回復 ${Math.round(100*p.hp/p.max)}% HP`)}
+ if(!p.hp&&revive&&!p.tGuardUsed){p.tGuardUsed=true;p.hp=Math.max(1,Math.round(p.max*(revive.tier==='X'?Math.min(1,.35*tStarEffectMul(revive)):.15)));p.alive=true;log(s,`${revive.tier==='X'?'🌟 創世神域':'💗 不滅城'}｜致命傷逆轉，回復 ${Math.round(100*p.hp/p.max)}% HP`)}
  else if(!p.hp){p.alive=false;log(s,'☠️ '+p.name+' 被擊倒')}
 };
 
@@ -991,7 +1016,7 @@ function tRosterSlotsHtml(c){
  const equipped=tForCharAll(c),byType=new Map(equipped.map(it=>[it.type,it])),slots=[];
  for(const type of TDISPLAY_TYPES){
   const it=byType.get(type);
-  if(it){const title=`${it.tier} ${tTierName(it.tier)}｜${it.name}｜${TTYPE_NAME[it.type]}｜${tEffect(it.tier,it.type)}`;slots.push(`<div class="tRosterEquip ${it.tier}" style="color:${TCOL[it.tier]}" title="${title.replace(/"/g,'&quot;')}"><img src="${tSvg(it.type,it.tier)}" alt="${it.tier}"><b class="ratingText ${it.tier}">${it.tier}</b></div>`)}
+  if(it){const display=tXDisplay(it),title=`${display} ${tTierName(it.tier)}｜${it.name}｜${TTYPE_NAME[it.type]}｜${tEffect(it.tier,it.type,it)}`;slots.push(`<div class="tRosterEquip ${it.tier}" style="color:${TCOL[it.tier]}" title="${title.replace(/"/g,'&quot;')}"><img src="${tSvg(it.type,it.tier)}" alt="${display}"><b class="ratingText ${it.tier}">${display}</b></div>`)}
   else slots.push(`<div class="tRosterEquip empty" title="空寶物槽｜${TTYPE_NAME[type]}"><span>◇</span><b>空</b></div>`)
  }
  const sig=TDISPLAY_TYPES.map(type=>byType.get(type)?.id||'').join(',');
@@ -1001,26 +1026,28 @@ function tRosterSlotsHtml(c){
 function tCounts(city){const o=Object.fromEntries(TORDER.map(x=>[x,0]));for(const it of TINV)if(it.city===city)o[it.tier]++;return o}
 function tModalShell(){const cities=Object.keys(R),cnt=tCounts(TCITY);return `<div class="tToolbar"><select id="tCity">${cities.map(c=>`<option ${c===TCITY?'selected':''}>${c}</option>`).join('')}</select><button id="tInvBtn" class="${TVIEW==='inv'?'primary':''}">🎒 我的寶物</button><button id="tCatBtn" class="${TVIEW==='cat'?'primary':''}">📖 完整圖鑑</button><button id="tAutoBtn">🤖 自動配裝：${TAUTO?'ON':'OFF'}</button><button id="tBestBtn">⚙️ 一鍵最佳配裝</button><button id="tFuseAllBtn">⚡ 一鍵合成</button><button id="tFuseAllTeamsBtn">🌐 一鍵全隊伍合成</button></div><div class="tSummary">${TORDER.map(g=>`<div class="tCount ${g}"><span class="tSummaryTier ${g}">${g}</span><b class="tSummaryNum ${g}">${cnt[g]}</b></div>`).join('')}</div>`}
 function tInvHtml(){
- const inv=TINV.filter(x=>x.city===TCITY).sort((a,b)=>TASC.indexOf(b.tier)-TASC.indexOf(a.tier)||TDISPLAY_TYPES.indexOf(a.type)-TDISPLAY_TYPES.indexOf(b.type)||b.turn-a.turn);
- const fusion=`<div class="tFusion">${TASC.slice(0,-1).map(g=>`<div class="tFuse"><b class="fuseTitle17428"><span class="tierMark17428 tierLetter tierMotion ${g}">${g}</span><span class="fuseArrow17428">×5 →</span><span class="tierMark17428 tierLetter tierMotion ${TNEXT[g]}">${TNEXT[g]}</span></b><div>未裝備：${TINV.filter(x=>x.city===TCITY&&x.tier===g&&!x.equippedTo).length}｜成功率 ${Math.round(tFuseChance(TCITY,g)*100)}%</div><button class="tFuseBtn" data-tier="${g}" ${TINV.filter(x=>x.city===TCITY&&x.tier===g&&!x.equippedTo).length<5?'disabled':''}>5合1</button></div>`).join('')}</div>`;
+ const inv=TINV.filter(x=>x.city===TCITY).sort((a,b)=>TASC.indexOf(b.tier)-TASC.indexOf(a.tier)||tStars(b)-tStars(a)||TDISPLAY_TYPES.indexOf(a.type)-TDISPLAY_TYPES.indexOf(b.type)||b.turn-a.turn);
+ const xg=tNextXStarGroup(TCITY),xstars=xg?.stars||0,xcount=xg?.count||TINV.filter(x=>x.city===TCITY&&x.tier==='X'&&!x.equippedTo&&tStars(x)===0).length;
+ const xFusion=`<div class="tFuse"><b class="fuseTitle17428"><span class="tierMark17428 tierLetter tierMotion X">${xstars?('X★'+tStarRoman(xstars)):'X'}</span><span class="fuseArrow17428">×5 →</span><span class="tierMark17428 tierLetter tierMotion X">${'X★'+tStarRoman(xstars+1)}</span></b><div>同星未裝備：${xcount}｜升星成功率 100%｜X★I +100%、X★II +200%、X★III +400%、X★IV +800%…</div><button class="tFuseBtn" data-tier="X" ${xg?'':'disabled'}>創世升星</button></div>`;
+ const fusion=`<div class="tFusion">${TASC.slice(0,-1).map(g=>`<div class="tFuse"><b class="fuseTitle17428"><span class="tierMark17428 tierLetter tierMotion ${g}">${g}</span><span class="fuseArrow17428">×5 →</span><span class="tierMark17428 tierLetter tierMotion ${TNEXT[g]}">${TNEXT[g]}</span></b><div>未裝備：${TINV.filter(x=>x.city===TCITY&&x.tier===g&&!x.equippedTo).length}｜成功率 ${Math.round(tFuseChance(TCITY,g)*100)}%</div><button class="tFuseBtn" data-tier="${g}" ${TINV.filter(x=>x.city===TCITY&&x.tier===g&&!x.equippedTo).length<5?'disabled':''}>5合1</button></div>`).join('')}${xFusion}</div>`;
  if(!inv.length)return fusion+'<div class="tEmpty168">目前沒有寶物</div>';
- return fusion+`<div class="tInvGrid">${inv.map(it=>`<div class="tItem t${it.tier}" style="--tg:${TCOL[it.tier]}"><img class="tPic" src="${tSvg(it.type,it.tier)}"><div class="tItemHead"><span class="tGrade ratingText ${it.tier}">${it.tier}｜${tTierName(it.tier)}</span><span class="sub">${it.equippedTo?'已裝備':'背包'}</span></div><div class="tName ratingText ${it.tier}">${it.name}</div><div class="tEffect ratingText ${it.tier}">${TTYPE_NAME[it.type]}<br>${tEffect(it.tier,it.type)}</div><div class="tOrigin ratingText ${it.tier}">${it.origin}${it.floor?'｜'+it.floor+'F':''}</div><select class="tAssign" data-id="${it.id}"><option value="">— 背包／卸下 —</option>${R[TCITY].map(c=>{const eq=tForCharAll(c),n=eq.length,own=it.equippedTo===c.id,same=!own&&eq.some(x=>x.type===it.type),full=!own&&n>=5,disabled=same||full;return `<option value="${c.id}" ${own?'selected':''} ${disabled?'disabled':''}>${c.name}（${n}/5）${full?' 已滿':same?' 同類已裝':''}</option>`}).join('')}</select></div>`).join('')}</div>`
+ return fusion+`<div class="tInvGrid">${inv.map(it=>`<div class="tItem t${it.tier}" style="--tg:${TCOL[it.tier]}"><img class="tPic" src="${tSvg(it.type,it.tier)}"><div class="tItemHead"><span class="tGrade ratingText ${it.tier}">${tXDisplay(it)}｜${tTierName(it.tier)}</span><span class="sub">${it.equippedTo?'已裝備':'背包'}</span></div><div class="tName ratingText ${it.tier}">${it.name}${tStarLabel(it)?' '+tStarLabel(it):''}</div><div class="tEffect ratingText ${it.tier}">${TTYPE_NAME[it.type]}<br>${tEffect(it.tier,it.type,it)}</div><div class="tOrigin ratingText ${it.tier}">${it.origin}${it.floor?'｜'+it.floor+'F':''}</div><select class="tAssign" data-id="${it.id}"><option value="">— 背包／卸下 —</option>${R[TCITY].map(c=>{const eq=tForCharAll(c),n=eq.length,own=it.equippedTo===c.id,same=!own&&eq.some(x=>x.type===it.type),full=!own&&n>=5,disabled=same||full;return `<option value="${c.id}" ${own?'selected':''} ${disabled?'disabled':''}>${c.name}（${n}/5）${full?' 已滿':same?' 同類已裝':''}</option>`}).join('')}</select></div>`).join('')}</div>`
 }
 function tCatalogHtml(){return TORDER.map(g=>`<h3 class="catalogTierTitle ratingText ${g}" style="margin:14px 0 7px">${g}｜${tTierName(g)}</h3><div class="tCatalogGrid">${TDISPLAY_TYPES.map(type=>`<div class="tItem t${g}" style="--tg:${TCOL[g]}"><img class="tPic" src="${tSvg(type,g)}"><div class="tItemHead"><span class="tGrade ratingText ${g}">${g}｜${tTierName(g)}</span><span class="sub ratingText ${g}">${TTYPE_NAME[type]}</span></div><div class="tName ratingText ${g}">${TNAMES[g][type]}</div><div class="tEffect ratingText ${g}">${tEffect(g,type)}</div></div>`).join('')}</div>`).join('')}
 function tHelpHtml(){return `<div class="tHelp168">
 <section><h3>🌈 屬性系統</h3><p>角色屬性在新遊戲建立時一次決定，之後永久固定，只有重新開新遊戲才會重抽。開局全服個人戰力 #1–5 固定為 <span class="ctElementBadge180 elThunder180">⚡神雷</span>；#6–35 隨機為 <span class="ctElementBadge180 elLight180">☀️光</span>／<span class="ctElementBadge180 elDark180">🌑暗</span>；#36–264 隨機為 <span class="ctElementBadge180 elWater180">💧水</span>／<span class="ctElementBadge180 elFire180">🔥火</span>／<span class="ctElementBadge180 elWood180">🌿木</span>。基礎三屬水→火→木→水：剋制×1.10、被剋×0.90。光↔暗互剋×1.30。光打基礎×1.30、基礎打光×0.90；暗打基礎×1.20、基礎打暗×0.85；神雷打光暗×1.50、打基礎×2.00，任何非神雷攻擊神雷×0.70；神雷對神雷雙方×3.00。</p></section>
 <section><h3>🎁 寶物取得</h3><p>所有來源採隊伍強度加權。一般怪最高 <span class="tierWord17434 C">C</span>、精英最高 <span class="tierWord17434 B">B</span>、小Boss／大Boss／章節Boss最高 <span class="tierWord17434 A">A</span>；Boss必掉，一般怪掉率隨樓層與隊伍強度提升。</p></section>
 <section><h3>♻️ 關卡絕版</h3><p><span class="tierWord17434 Z">Z</span> 1000F、<span class="tierWord17434 F">F</span> 1500F、<span class="tierWord17434 E">E</span> 2000F、<span class="tierWord17434 D">D</span> 3000F、<span class="tierWord17434 C">C</span> 5000F 起絕版。達門檻後以 <b>ceil(數量÷5)</b> 100%退役升階並連鎖整理，所有活動獎勵也套用最低合法階級。</p></section>
-<section><h3>🧪 合成與裝備</h3><p>5件同階未裝備寶物可合成下一階，成功率依隊伍強度小幅加成。每名角色最多5件，同種類最多1件。<span class="tierWord17434 S">S</span>/<span class="tierWord17434 U">U</span>/<span class="tierWord17434 X">X</span> 原則上靠合成；創世神守擂成功的保證S為活動特例。</p></section>
+<section><h3>🧪 合成與裝備</h3><p>5件同階未裝備寶物可合成下一階，成功率依隊伍強度小幅加成。X為最高階；5件同星等未裝備X可100%突破為高1星X。X★I額外+100%全效果、X★II +200%、X★III +400%、X★IV +800%，之後每一階的額外效果繼續翻倍。每名角色最多5件，同種類最多1件。</p></section>
 <section><h3>🧰 五種寶物</h3><p>⚔️攻擊型劍 → 🛡️防禦型盾 → 🪽速度型翼 → 💎綜合型核心 → 🔮技巧型印。速度型主攻速／爆率／閃避；技巧型主爆率／攻速／爆傷。</p></section>
 <section><h3>📈 屬性上限</h3><p>自然閃避50%＋寶物最高70%；自然爆率60%＋寶物可至100%；自然爆傷+500%＋命運天書+200%（最高+700%）；攻速無上限。溢出依現行規則轉換至HP/DEF或ATK/攻速。</p></section>
 <section><h3>🌐 世界 Boss</h3><p>22隊、88名出戰角色採同步戰鬥：每波所有角色攻擊條都直接增加自身攻速，達100/200/300即可出手1/2/3次，因此攻速直接影響DPS與傷害排名。Boss於每波玩家輸出後同步反擊各隊。#1/#2/#3：+220/+180/+150 EXP、+1.60/+1.30/+1.10%；#4–5 +120/+0.85%；#6–10 +90/+0.60%；#11–16 +60/+0.35%；#17–22 +35/+0.18%。傷害占比再加成；每波MVP +8 EXP；終結一擊 +60 EXP/+0.30%。正式賽每隊1件寶物，最高B。</p></section>
 <section><h3>⚔️ 22隊大混鬥</h3><p>#1/#2/#3：+190/+155/+130 EXP、+1.30/+1.00/+0.85%；#4–5 +105/+0.65%；#6–10 +80/+0.45%；#11–16 +55/+0.25%；#17–22 +35/+0.13%。每擊殺 +15 EXP；傷害前列與最後淘汰一擊另有加成。正式賽每隊1件寶物，最高B。</p></section>
 <section><h3>🏆 城市聯賽</h3><p>冠／亞／季／殿：+240/+190/+160/+135 EXP、+1.50/+1.20/+1.00/+0.80%；第5–8名 +100/+0.55%；第9–16名 +65/+0.30%；第17–22名 +40/+0.15%，再套用隊伍與角色評級加成。每隊1件寶物，最高A。</p></section>
-<section><h3>👑 創世神挑戰賽</h3><p>每10000回正式觸發，也可手動正式挑戰。當下塔榜#1為創世神；創世神12人與其餘252人都依全服個人戰力由弱到強出場，挑戰者序列排除創世神12人的名次。敗者退場、勝者留場、HP完全繼承；創世神擊殺後保留攻擊條。守擂成功：全隊每人 +1200 EXP、+3.50%、保證S。失敗：創世神依進度 +180～600 EXP、+0.30～1.50%、最高A；挑戰隊按傷害排名 #1 +520/+1.60%、#2 +450/+1.40%、#3 +400/+1.20%、#4–5 +340/+1.00%、#6–10 +270/+0.75%、#11–16 +200/+0.50%、#17–21 +140/+0.30%，寶物最高A。未出場隊伍不領傷害獎勵。</p></section>
+<section><h3>👑 創世神挑戰賽</h3><p>每10000回正式觸發，也可手動正式挑戰。當下塔榜#1為創世神；雙方皆由弱到強出場。若創世神12人打完整個252人聯軍仍未全滅，就全員滿血、攻擊條歸零，從頭開始下一輪，直到創世神首次失守。每完整守住1輪累積1個S額度：1輪=1S、4輪=4S、5輪=1U、6輪=1U+1S，依此類推（每5個S額度自動換1U）。當創世神至少拿到1U時，後方隊伍開始有追趕S機會：1U只開放塔榜#2、2U開放#2～#3、3U開放#2～#4；守住輪數越多，中S機率越高（5輪20%，之後每多1輪+5%，最高95%）。</p></section>
 <section><h3>🏅 強度階級</h3><p><span class="tierWord17434 X">X</span> ≫≫≫ <span class="tierWord17434 U">U</span> ≫≫ <span class="tierWord17434 S">S</span> ≫ <span class="tierWord17434 A">A</span> ＞ <span class="tierWord17434 B">B</span> ＞ <span class="tierWord17434 C">C</span> ＞ <span class="tierWord17434 D">D</span> ＞ <span class="tierWord17434 E">E</span> ＞ <span class="tierWord17434 F">F</span> ＞ <span class="tierWord17434 Z">Z</span>。</p></section>
 </div>`}
-function tRenderModal(){if(!tq('mb').classList.contains('open')||!tq('mbo'))return;tq('mt').textContent='🎁 寶物庫｜'+TCITY;tq('back').style.display='none';if(TVIEW!=='cat')TVIEW='inv';const body=TVIEW==='cat'?tCatalogHtml():tInvHtml();tq('mbo').innerHTML=tModalShell()+body;tq('tCity').onchange=e=>{TCITY=e.target.value;tRenderModal()};tq('tInvBtn').onclick=()=>{TVIEW='inv';tRenderModal()};tq('tCatBtn').onclick=()=>{TVIEW='cat';tRenderModal()};tq('tAutoBtn').onclick=()=>{TAUTO=!TAUTO;tSave();if(TAUTO)tAutoEquip(TCITY,true);tSyncAll();render();tRenderModal()};tq('tBestBtn').onclick=()=>{tAutoEquip(TCITY);tRenderModal()};const fuseAllBtn=tq('tFuseAllBtn');if(fuseAllBtn){const canFuse=TASC.slice(0,-1).some(g=>TINV.filter(x=>x.city===TCITY&&x.tier===g&&!x.equippedTo).length>=5);fuseAllBtn.disabled=!canFuse;fuseAllBtn.onclick=()=>tFuseAll(TCITY)}const fuseAllTeamsBtn=tq('tFuseAllTeamsBtn');if(fuseAllTeamsBtn){const canFuseTeams=Object.keys(R).some(city=>TASC.slice(0,-1).some(g=>TINV.filter(x=>x.city===city&&x.tier===g&&!x.equippedTo).length>=5));fuseAllTeamsBtn.disabled=!canFuseTeams;fuseAllTeamsBtn.onclick=tFuseAllTeams}document.querySelectorAll('.tAssign').forEach(x=>x.onchange=e=>{tEquip(tItem(e.target.dataset.id),e.target.value||null);tRenderModal()});document.querySelectorAll('.tFuseBtn').forEach(x=>x.onclick=()=>tFuse(TCITY,x.dataset.tier))}
+function tRenderModal(){if(!tq('mb').classList.contains('open')||!tq('mbo'))return;tq('mt').textContent='🎁 寶物庫｜'+TCITY;tq('back').style.display='none';if(TVIEW!=='cat')TVIEW='inv';const body=TVIEW==='cat'?tCatalogHtml():tInvHtml();tq('mbo').innerHTML=tModalShell()+body;tq('tCity').onchange=e=>{TCITY=e.target.value;tRenderModal()};tq('tInvBtn').onclick=()=>{TVIEW='inv';tRenderModal()};tq('tCatBtn').onclick=()=>{TVIEW='cat';tRenderModal()};tq('tAutoBtn').onclick=()=>{TAUTO=!TAUTO;tSave();if(TAUTO)tAutoEquip(TCITY,true);tSyncAll();render();tRenderModal()};tq('tBestBtn').onclick=()=>{tAutoEquip(TCITY);tRenderModal()};const fuseAllBtn=tq('tFuseAllBtn');if(fuseAllBtn){const canFuse=TASC.slice(0,-1).some(g=>TINV.filter(x=>x.city===TCITY&&x.tier===g&&!x.equippedTo).length>=5)||tCanStarFuse(TCITY);fuseAllBtn.disabled=!canFuse;fuseAllBtn.onclick=()=>tFuseAll(TCITY)}const fuseAllTeamsBtn=tq('tFuseAllTeamsBtn');if(fuseAllTeamsBtn){const canFuseTeams=Object.keys(R).some(city=>TASC.slice(0,-1).some(g=>TINV.filter(x=>x.city===city&&x.tier===g&&!x.equippedTo).length>=5)||tCanStarFuse(city));fuseAllTeamsBtn.disabled=!canFuseTeams;fuseAllTeamsBtn.onclick=tFuseAllTeams}document.querySelectorAll('.tAssign').forEach(x=>x.onchange=e=>{tEquip(tItem(e.target.dataset.id),e.target.value||null);tRenderModal()});document.querySelectorAll('.tFuseBtn').forEach(x=>x.onclick=()=>tFuse(TCITY,x.dataset.tier))}
 function tResetAll(){
  TINV=[];TSEQ=1;TAUTO=true;TCITY=R[selected]?selected:(Object.keys(R)[0]||'臺北市');TVIEW='inv';
  for(const arr of Object.values(R))for(const c of arr){c.treasureIds=[];c.treasureId=null}
@@ -1038,8 +1065,8 @@ function tEnsureGlobalHelp169(){let back=tq('globalHelpBack169');if(back)return 
 function tOpenGlobalHelp169(){const back=tEnsureGlobalHelp169();tq('globalHelpBody169').innerHTML=tHelpHtml();back.classList.add('open')}
 const helpBtn169=tq('globalHelp169');if(helpBtn169)helpBtn169.onclick=tOpenGlobalHelp169;
 
-window.__CT_TREASURE={compTier:tCompTier,award:tAward,save:tSave,resetAll:tResetAll,retireCity:tRetireCity,minTier:tFloorMinTier,itemsForChar:tForCharAll,rosterSlots:tRosterSlotsHtml,svg:tSvg,colors:TCOL,effect:tEffect,typeName:TTYPE_NAME,rankLabel:tRankLabel};
-window.ctTreasureCell166=function(it){if(!it)return '—';let src='';try{src=window.__CT_TREASURE&&typeof window.__CT_TREASURE.svg==='function'?window.__CT_TREASURE.svg(it.type,it.tier):''}catch(e){}const tier=it.tier||'—',name=it.name||'未知寶物',tierName=typeof tTierName==='function'?tTierName(tier):tier;const title=`${tier} ${tierName}｜${name}`.replace(/"/g,'&quot;');const pic=src?`<img src="${src}" alt="${tier}" title="${title}">`:`<div class="ctTreasureFallback179 ratingText ${tier}">${tier}</div>`;return `<div class="ctTreasureReward166" title="${title}">${pic}<div class="ctTreasureMeta179"><b class="ratingText ${tier}">${tier} ${tierName}</b><span>${name}</span></div></div>`};
+window.__CT_TREASURE={compTier:tCompTier,award:tAward,save:tSave,resetAll:tResetAll,retireCity:tRetireCity,minTier:tFloorMinTier,itemsForChar:tForCharAll,rosterSlots:tRosterSlotsHtml,svg:tSvg,colors:TCOL,effect:tEffect,typeName:TTYPE_NAME,rankLabel:tRankLabel,stars:tStars,starEffectMul:tStarEffectMul,display:tXDisplay};
+window.ctTreasureCell166=function(it){if(!it)return '—';let src='';try{src=window.__CT_TREASURE&&typeof window.__CT_TREASURE.svg==='function'?window.__CT_TREASURE.svg(it.type,it.tier):''}catch(e){}const tier=it.tier||'—',display=typeof tXDisplay==='function'?tXDisplay(it):tier,name=it.name||'未知寶物',tierName=typeof tTierName==='function'?tTierName(tier):tier;const title=`${display} ${tierName}｜${name}`.replace(/"/g,'&quot;');const pic=src?`<img src="${src}" alt="${display}" title="${title}">`:`<div class="ctTreasureFallback179 ratingText ${tier}">${display}</div>`;return `<div class="ctTreasureReward166" title="${title}">${pic}<div class="ctTreasureMeta179"><b class="ratingText ${tier}">${display} ${tierName}</b><span>${name}</span></div></div>`};
 window.ctSettlement166=function(title,headers,rows,note=''){const head=(headers||[]).map(x=>`<th>${x}</th>`).join('');const body=(rows||[]).map((r,i)=>`<tr class="${i<3?'top166':''}">${r.map(c=>`<td>${c==null?'—':c}</td>`).join('')}</tr>`).join('');return `<div class="ctSettlement166"><h3>${title}</h3><div class="ctSettleScroll166"><table><thead><tr>${head}</tr></thead><tbody>${body||`<tr><td colspan="${Math.max(1,(headers||[]).length)}">沒有結算資料</td></tr>`}</tbody></table></div>${note?`<div class="ctSettleNote166">${note}</div>`:''}</div>`};
 
 tLoad();tRetireAll();tSyncAll();/* Existing saves are immediately normalized to the current city's floor-retirement rules; otherwise equipped layout is preserved until a new drop or explicit auto-equip action. */if(nextEvent-turn<600)nextEvent=turn+900+Math.floor(Math.random()*601);tSave();render();
@@ -1248,7 +1275,7 @@ if(location.hash==='#treasure')setTimeout(tOpen,80);
   function compDelayMs(ms){
     const s=compState&&Number(compState.speed)||1;
     // 100× is league-only. Keep a tiny event-loop slice so buttons/score/animations remain responsive.
-    const floor=s>=100?8:s>=10?40:s>=5?55:s>=2?75:90;
+    const floor=s>=999?1:s>=100?8:s>=10?40:s>=5?55:s>=2?75:90;
     return Math.max(floor,ms/Math.max(.35,s));
   }
   function updateCompControls(){
@@ -1313,7 +1340,7 @@ if(location.hash==='#treasure')setTimeout(tOpen,80);
     .podium1748{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:10px 0}.pod1748{border-radius:12px;padding:10px;text-align:center;background:#142138;border:1px solid #304563}.pod1748:nth-child(1){border-color:#d0ab34;box-shadow:0 0 18px #ffd34c30}.pod1748 b{display:block;font-size:12px}.pod1748 strong{font-size:18px}.compFootNote{font-size:10px;color:#9fb0c9;line-height:1.5;margin-top:7px}.official1748{color:#7ee7aa;font-weight:900}.practice1748{color:#ffcf79;font-weight:900}
     @media(max-width:850px){.comp1748Body{grid-template-columns:1fr}.compSide{max-height:34vh}.duelBoard{grid-template-columns:1fr 54px 1fr}.seriesScore{font-size:18px}.fighterName{font-size:12px}.podium1748{grid-template-columns:repeat(2,1fr)}}
     `;document.head.appendChild(st);
-    document.body.insertAdjacentHTML('beforeend',`<div class="comp1748Back" id="comp1748"><div class="comp1748"><div class="comp1748Head"><div><div class="comp1748Title" id="compTitle1748">競賽</div><div class="comp1748Mode" id="compMode1748"></div></div><div class="comp1748Btns"><select id="compSpeed1748"><option value="0.7">慢速 0.7×</option><option value="1" selected>1×</option><option value="1.5">1.5×</option><option value="2">2×</option><option value="5">5×</option><option value="10">10×</option><option value="100" id="compSpeed100x1748" hidden>100×｜聯賽極速</option></select><button id="compAuto1748" class="primary">⏸ 暫停競賽</button><button id="compNext1748" disabled>👆 手動下一擊</button><button id="compNextBO17414">🎯 手動下一BO</button><button id="compNextMatch17413">⏯ 手動下一場</button><button id="compSkip1748">⏭ 跳到結果</button><button id="compClose1748">✕ 關閉</button></div></div><div class="comp1748Body"><div class="compStage" id="compStage1748"></div><div class="compSide"><b>📊 即時排名</b><div id="compRank1748"></div></div></div></div></div>`);
+    document.body.insertAdjacentHTML('beforeend',`<div class="comp1748Back" id="comp1748"><div class="comp1748"><div class="comp1748Head"><div><div class="comp1748Title" id="compTitle1748">競賽</div><div class="comp1748Mode" id="compMode1748"></div></div><div class="comp1748Btns"><select id="compSpeed1748"><option value="0.7">慢速 0.7×</option><option value="1" selected>1×</option><option value="1.5">1.5×</option><option value="2">2×</option><option value="5">5×</option><option value="10">10×</option><option value="100" id="compSpeed100x1748" hidden>100×｜聯賽極速</option><option value="999" id="compSpeedFastest197" hidden>最快速｜聯賽</option></select><button id="compAuto1748" class="primary">⏸ 暫停競賽</button><button id="compNext1748" disabled>👆 手動下一擊</button><button id="compNextBO17414">🎯 手動下一BO</button><button id="compNextMatch17413">⏯ 手動下一場</button><button id="compSkip1748">⏭ 跳到結果</button><button id="compClose1748">✕ 關閉</button></div></div><div class="comp1748Body"><div class="compStage" id="compStage1748"></div><div class="compSide"><b>📊 即時排名</b><div id="compRank1748"></div></div></div></div></div>`);
     q('compSpeed1748').onchange=e=>{if(compState)compState.speed=Number(e.target.value)||1};
     q('compAuto1748').onclick=()=>setCompAuto(!compState?.auto);
     q('compNext1748').onclick=()=>{if(compState&&!compState.auto)runPending()};
@@ -1453,8 +1480,9 @@ if(location.hash==='#treasure')setTimeout(tOpen,80);
     const type=kind==='boss'?'🌐 世界 Boss':'🏆 城市聯賽・完整賽季';
     q('compTitle1748').textContent=type;q('compMode1748').innerHTML=official?'<span class="official1748">正式競賽｜有排名獎勵</span>':'<span class="practice1748">手動練習｜不發放獎勵，但結束會顯示完整獎勵預覽</span>';
     q('comp1748').classList.add('open');q('compSkip1748').style.display='';
-    const speedSel=q('compSpeed1748'),speed100=q('compSpeed100x1748');
+    const speedSel=q('compSpeed1748'),speed100=q('compSpeed100x1748'),speedFast=q('compSpeedFastest197');
     if(speed100)speed100.hidden=kind!=='league';
+    if(speedFast)speedFast.hidden=kind!=='league';
     if(kind!=='league'&&speedSel&&Number(speedSel.value)>=100)speedSel.value='10';
     const teams=Object.keys(R).map(city=>{const cs=pickEvent4(city);return{city,cs,base:teamEventPower(cs),score:0,wins:0,losses:0,gf:0,ga:0,diff:0,played:0,seed:0}});
     compState={kind,official,teams,skip:false,auto:true,speed:Number(speedSel?.value)||1,pending:null,pendingDelay:650,finish:null,currentMatch:null,nextBOOnce:false,pauseAfterBO:false,nextMatchOnce:false,pauseAfterSeries:false,lastSeries:null};updateCompControls();
@@ -1474,8 +1502,8 @@ if(location.hash==='#treasure')setTimeout(tOpen,80);
     const pool=(R[city]||[]).filter(c=>!used||!used.has(c.id));const src=pool.length?pool:(R[city]||[]);const c=src[Math.floor(Math.random()*src.length)];if(c&&used)used.add(c.id);return c
   }
   function tIcons(c){try{const items=typeof tForCharAll==='function'?tForCharAll(c):[];return items.length?items.slice(0,5).map(it=>`<img title="${it.tier} ${it.name}" src="${tSvg(it.type,it.tier)}">`).join(''):'<span class="none">未裝備寶物</span>'}catch(e){return '<span class="none">未裝備寶物</span>'}}
-  function shieldReduce(c){try{let r=0;for(const it of tForCharAll(c)){if(it.type!=='shield')continue;const x=it.tier==='X'?.35:it.tier==='U'?.18:it.tier==='S'?.08:0;r=1-(1-r)*(1-x)}return Math.min(.65,r)}catch(e){return 0}}
-  function bonusStrike(c,base,crit){try{let x=0;for(const it of tForCharAll(c)){if(it.type==='blade'){const ch=it.tier==='X'?.25:it.tier==='U'?.14:it.tier==='S'?.08:0,m=it.tier==='X'?.9:it.tier==='U'?.55:it.tier==='S'?.30:0;if(ch&&Math.random()<ch)x+=base*m}if(crit&&it.type==='sigil'){const ch=it.tier==='X'?.35:it.tier==='U'?.18:it.tier==='S'?.10:0,m=it.tier==='X'?1.10:it.tier==='U'?.65:it.tier==='S'?.35:0;if(ch&&Math.random()<ch)x+=base*m}}return Math.round(x)}catch(e){return 0}}
+  function shieldReduce(c){try{let r=0;for(const it of tForCharAll(c)){if(it.type!=='shield')continue;const sm=it.tier==='X'&&typeof tStarEffectMul==='function'?tStarEffectMul(it):1,x=it.tier==='X'?Math.min(.90,.35*sm):it.tier==='U'?.18:it.tier==='S'?.08:0;r=1-(1-r)*(1-x)}return Math.min(.90,r)}catch(e){return 0}}
+  function bonusStrike(c,base,crit){try{let x=0;for(const it of tForCharAll(c)){if(it.type==='blade'){const sm=it.tier==='X'&&typeof tStarEffectMul==='function'?tStarEffectMul(it):1,ch=it.tier==='X'?Math.min(1,.25*sm):it.tier==='U'?.14:it.tier==='S'?.08:0,m=it.tier==='X'?.9*sm:it.tier==='U'?.55:it.tier==='S'?.30:0;if(ch&&Math.random()<ch)x+=base*m}if(crit&&it.type==='sigil'){const sm=it.tier==='X'&&typeof tStarEffectMul==='function'?tStarEffectMul(it):1,ch=it.tier==='X'?Math.min(1,.35*sm):it.tier==='U'?.18:it.tier==='S'?.10:0,m=it.tier==='X'?1.10*sm:it.tier==='U'?.65:it.tier==='S'?.35:0;if(ch&&Math.random()<ch)x+=base*m}}return Math.round(x)}catch(e){return 0}}
   function duelPower(c){return Math.max(1,craw(c))}
   function duelWinProb(ca,cb){
     const A=duelPower(ca)*Math.sqrt(ctElementMultiplier180(ca.element,cb.element)),B=duelPower(cb)*Math.sqrt(ctElementMultiplier180(cb.element,ca.element));if(Math.abs(A-B)<1e-9)return .5;
@@ -1694,14 +1722,14 @@ function autoCloseMega17419(msg='競賽結束'){
 }
 function randChars(city,n){let a=[...(R[city]||[])];for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a.slice(0,n)}
 function its(c){try{return api()?.itemsForChar(c)||[]}catch(e){return[]}}
-function shield(c){let r=0;for(const it of its(c)){if(it.type!=='shield')continue;const x=it.tier==='X'?.35:it.tier==='U'?.18:it.tier==='S'?.08:0;r=1-(1-r)*(1-x)}return Math.min(.65,r)}
-function extra(c,dmg,crit){let z=0;for(const it of its(c)){if(it.type==='blade'){const ch=it.tier==='X'?.25:it.tier==='U'?.14:it.tier==='S'?.08:0,m=it.tier==='X'?.9:it.tier==='U'?.55:it.tier==='S'?.30:0;if(ch&&Math.random()<ch)z+=dmg*m}if(crit&&it.type==='sigil'){const ch=it.tier==='X'?.35:it.tier==='U'?.18:it.tier==='S'?.10:0,m=it.tier==='X'?1.1:it.tier==='U'?.65:it.tier==='S'?.35:0;if(ch&&Math.random()<ch)z+=dmg*m}}return Math.round(z)}
-function wing(c,n){let p=0;for(const it of its(c)){if(it.type!=='wing')continue;const every=it.tier==='X'?4:it.tier==='U'?5:it.tier==='S'?6:0,val=it.tier==='X'?60:it.tier==='U'?35:it.tier==='S'?18:0;if(every&&n%every===0)p+=val}return p}
+function shield(c){let r=0;for(const it of its(c)){if(it.type!=='shield')continue;const sm=it.tier==='X'&&typeof tStarEffectMul==='function'?tStarEffectMul(it):1,x=it.tier==='X'?Math.min(.90,.35*sm):it.tier==='U'?.18:it.tier==='S'?.08:0;r=1-(1-r)*(1-x)}return Math.min(.90,r)}
+function extra(c,dmg,crit){let z=0;for(const it of its(c)){if(it.type==='blade'){const sm=it.tier==='X'&&typeof tStarEffectMul==='function'?tStarEffectMul(it):1,ch=it.tier==='X'?Math.min(1,.25*sm):it.tier==='U'?.14:it.tier==='S'?.08:0,m=it.tier==='X'?.9*sm:it.tier==='U'?.55:it.tier==='S'?.30:0;if(ch&&Math.random()<ch)z+=dmg*m}if(crit&&it.type==='sigil'){const sm=it.tier==='X'&&typeof tStarEffectMul==='function'?tStarEffectMul(it):1,ch=it.tier==='X'?Math.min(1,.35*sm):it.tier==='U'?.18:it.tier==='S'?.10:0,m=it.tier==='X'?1.1*sm:it.tier==='U'?.65:it.tier==='S'?.35:0;if(ch&&Math.random()<ch)z+=dmg*m}}return Math.round(z)}
+function wing(c,n){let p=0;for(const it of its(c)){if(it.type!=='wing')continue;const every=it.tier==='X'?4:it.tier==='U'?5:it.tier==='S'?6:0,sm=it.tier==='X'&&typeof tStarEffectMul==='function'?tStarEffectMul(it):1,val=it.tier==='X'?Math.round(60*sm):it.tier==='U'?35:it.tier==='S'?18:0;if(every&&n%every===0)p+=val}return p}
 function gear(c){
  const A=api(),a=its(c).slice(0,5),slots=[];
  for(let i=0;i<5;i++){
   const x=a[i];
-  if(x){let src='';try{src=A?.svg?.(x.type,x.tier)||''}catch(e){}const pic=src?`<img class="activityTreasureImg ${x.tier}" src="${src}" title="${x.tier}｜${x.name}" alt="${x.tier}">`:`<span class="activityTreasureFallback ratingText ${x.tier}">${x.tier}</span>`;slots.push(`<span class="activityTreasureSlot179" title="${x.tier}｜${x.name}">${pic}<b class="activityTreasureTier179 ratingText ${x.tier}">${x.tier}</b></span>`)}
+  if(x){let src='';try{src=A?.svg?.(x.type,x.tier)||''}catch(e){}const pic=src?`<img class="activityTreasureImg ${x.tier}" src="${src}" title="${typeof tXDisplay==='function'?tXDisplay(x):x.tier}｜${x.name}" alt="${x.tier}">`:`<span class="activityTreasureFallback ratingText ${x.tier}">${x.tier}</span>`;slots.push(`<span class="activityTreasureSlot179" title="${typeof tXDisplay==='function'?tXDisplay(x):x.tier}｜${x.name}">${pic}<b class="activityTreasureTier179 ratingText ${x.tier}">${typeof tXDisplay==='function'?tXDisplay(x):x.tier}</b></span>`)}
   else slots.push('<span class="activityTreasureSlot179 empty"><span class="activityTreasureEmpty">◇</span><b class="activityTreasureTier179">空</b></span>')
  }
  return `<div class="activityTreasureRow">${slots.join('')}</div>`
@@ -1786,7 +1814,7 @@ function genesisBattle(){
  const godList=genesisSortedChars(godCity,cm);
  const opponentQueue=Object.keys(R).filter(city=>city!==godCity).flatMap(city=>(R[city]||[]).map(c=>({city,c,rank:Number(cm[c.id]?.rank)||999999,power:window.ctPowerCompress194(craw(c)/initialTop)}))).sort((a,b)=>b.rank-a.rank||a.power-b.power||String(a.c.id).localeCompare(String(b.c.id),'zh-Hant'));
  if(!godList.length||!opponentQueue.length){q('megaStage').innerHTML='<div class="noteMega">⚠️ 創世神或挑戰者名單不足，無法開始。</div>';return}
- let gi=0,ci=0,god=genesisFighter(godList[0],cm),oppEntry=opponentQueue[0],oppCity=oppEntry.city,opp=genesisFighter(oppEntry.c,cm),done=false,fightNo=1,defeatedOpp=0,currentStreak=0,godslayer=null;
+ let roundNo=1,completedRounds=0,gi=0,ci=0,god=genesisFighter(godList[0],cm),oppEntry=opponentQueue[0],oppCity=oppEntry.city,opp=genesisFighter(oppEntry.c,cm),done=false,fightNo=1,defeatedOpp=0,totalDefeatedOpp=0,currentStreak=0,godslayer=null;
  const damage=Object.fromEntries(opponentCities.map(city=>[city,0])),played=new Set([oppCity]),battleLog=[],charKills=new Map();
  const totalCoalition=opponentQueue.length,godTotalHp=godList.reduce((sum,c)=>sum+cstats(c).hp,0);
  const st=q('megaStage'),rankBox=q('megaRankList');
@@ -1794,68 +1822,56 @@ function genesisBattle(){
  function tierSpan(x){return `<span class="tier tierLetter tierMotion ${x}">${x}</span>`}
  function hpPct(x){return x?Math.max(0,Math.min(100,100*x.hp/x.max)):0}
  function card(x,city,isGod){if(!x)return'<div class="genesisCard">—</div>';return `<div class="genesisCard ${isGod?'god':''}"><div class="cityLine">${isGod?'👑 創世神｜':'⚔️ 挑戰者｜'}${city}・${TEAMN[city]||''}</div><div class="charName ratingText ${x.tier}">${ctElementBadge180(x.c.element)} ${x.c.name}</div><div class="globalRank">全服 #${x.rank}</div><div class="powerLine">${tierSpan(x.tier)}｜戰力 ${x.power.toFixed(2)}｜Lv.${x.c.lv}</div><div class="genesisHpTop"><span>HP ${Math.round(x.hp)} / ${x.max}</span><span>${hpPct(x).toFixed(1)}%</span></div><div class="hpMega"><i style="width:${hpPct(x)}%"></i></div><div class="gaugeMega17498"><i style="width:${Math.max(0,Math.min(100,x.g))}%"></i></div><div class="genesisStats"><div>HP<b>${Math.round(x.s.hp)}</b></div><div>ATK<b>${x.s.atk}</b></div><div>DEF<b>${x.s.def}</b></div><div>攻速<b>${x.s.speed.toFixed(1)}</b></div><div>爆率<b>${(x.s.crit*100).toFixed(1)}%</b></div><div>閃避<b>${(x.s.dodge*100).toFixed(1)}%</b></div><div>爆傷<b>+${(x.s.critDmg*100).toFixed(0)}%</b></div><div>穿透<b>${((x.s.penetration||0)*100).toFixed(1)}%</b></div><div>連擊<b>${((x.s.combo||0)*100).toFixed(1)}%</b></div></div>${gear(x.c)}</div>`}
- function damageRows(final=false){
-  let arr=opponentCities.map(city=>({city,damage:damage[city]||0,played:played.has(city)}));
-  arr.sort((a,b)=>b.damage-a.damage||opponentCities.indexOf(a.city)-opponentCities.indexOf(b.city));
-  if(final&&godslayer){const k=arr.findIndex(x=>x.city===godslayer);if(k>0){const [x]=arr.splice(k,1);arr.unshift(x)}}
-  return arr;
- }
+ function damageRows(final=false){let arr=opponentCities.map(city=>({city,damage:damage[city]||0,played:played.has(city)}));arr.sort((a,b)=>b.damage-a.damage||opponentCities.indexOf(a.city)-opponentCities.indexOf(b.city));if(final&&godslayer){const k=arr.findIndex(x=>x.city===godslayer);if(k>0){const [x]=arr.splice(k,1);arr.unshift(x)}}return arr}
+ function creatorTreasurePlan(){return{u:Math.floor(completedRounds/5),s:completedRounds%5}}
+ function trailingSChance(){if(completedRounds<5)return 0;return Math.min(.95,.20+Math.max(0,completedRounds-5)*.05)}
  function render(){
-  const area=q('genesisArena');if(!area)return;
-  const logRows=battleLog.slice(-40).reverse();
-  area.innerHTML=`<div class="genesisDuel">${card(god,godCity,true)}<div class="genesisVs"><div>全服 #${god?.rank??'—'}</div><div>VS</div><div>全服 #${opp?.rank??'—'}</div><small>第 ${fightNo} 戰｜${Math.min(ci+1,totalCoalition)}/${totalCoalition}</small></div>${card(opp,oppCity,false)}</div><div class="genesisProgress"><div>創世神剩餘<b>${Math.max(0,godList.length-gi)} / 12</b></div><div>聯軍剩餘<b>${Math.max(0,totalCoalition-defeatedOpp)} / ${totalCoalition}</b></div><div>已擊敗挑戰者<b>${defeatedOpp} / ${totalCoalition}</b></div><div>目前連斬<b>${currentStreak}</b></div></div><div class="genesisLog"><div class="genesisLogHead"><span>戰次</span><span>創世神</span><span>對手</span><span>勝者</span><span>剩HP</span></div>${logRows.map(r=>`<div class="genesisLogRow"><span>#${r.no}</span><span>${r.god}</span><span>${r.opp}</span><span>${r.winner}</span><span>${r.hp.toFixed(1)}%</span></div>`).join('')||'<div class="genesisLogRow"><span>—</span><span>尚未</span><span>開戰</span><span>—</span><span>—</span></div>'}</div>`;
-  const rows=damageRows(false);rankBox.innerHTML=rows.map((x,i)=>`<div class="rankMega ${i<3&&x.damage>0?'top':''} ${x.played?'':'genesisUnplayed'}"><b>#${i+1}</b><span>${x.city}${x.city===oppCity?'｜目前角色出戰':''}</span><span class="num">${x.played?'已出過角色':'尚未出場'}</span><span class="num">傷 ${Math.round(x.damage)}</span><span class="num">${godTotalHp?((x.damage/godTotalHp)*100).toFixed(2):'0.00'}%</span></div>`).join('')
+  const area=q('genesisArena');if(!area)return;const logRows=battleLog.slice(-40).reverse(),plan=creatorTreasurePlan(),chance=trailingSChance();
+  area.innerHTML=`<div class="genesisDuel">${card(god,godCity,true)}<div class="genesisVs"><div>第 ${roundNo} 輪</div><div>VS</div><div>全服 #${opp?.rank??'—'}</div><small>第 ${fightNo} 戰｜本輪 ${Math.min(ci+1,totalCoalition)}/${totalCoalition}</small></div>${card(opp,oppCity,false)}</div><div class="genesisProgress"><div>已完整守住<b>${completedRounds} 輪</b></div><div>本輪創世神剩餘<b>${Math.max(0,godList.length-gi)} / 12</b></div><div>本輪聯軍剩餘<b>${Math.max(0,totalCoalition-defeatedOpp)} / ${totalCoalition}</b></div><div>目前連斬<b>${currentStreak}</b></div></div><div class="noteMega"><b>🏆 輪迴獎勵</b>｜每完整守住1輪＝1個S額度；每5個S額度自動換成1U。現在預計：${plan.u?`${plan.u}U `:''}${plan.s?`${plan.s}S`:(plan.u?'':'尚未完成1輪')}。${plan.u?`後方前${plan.u}隊（#2～#${plan.u+1}）各有 ${(chance*100).toFixed(0)}% 機率把本次寶物升為S。`:''}</div><div class="genesisLog"><div class="genesisLogHead"><span>戰次</span><span>創世神</span><span>對手</span><span>勝者</span><span>剩HP</span></div>${logRows.map(r=>`<div class="genesisLogRow"><span>#${r.no}</span><span>${r.god}</span><span>${r.opp}</span><span>${r.winner}</span><span>${r.hp.toFixed(1)}%</span></div>`).join('')||'<div class="genesisLogRow"><span>—</span><span>尚未</span><span>開戰</span><span>—</span><span>—</span></div>'}</div>`;
+  const rows=damageRows(false);rankBox.innerHTML=rows.map((x,i)=>`<div class="rankMega ${i<3&&x.damage>0?'top':''} ${x.played?'':'genesisUnplayed'}"><b>#${i+1}</b><span>${x.city}${x.city===oppCity?'｜目前角色出戰':''}</span><span class="num">${x.played?'已出過角色':'尚未出場'}</span><span class="num">傷 ${Math.round(x.damage)}</span><span class="num">累積 ${godTotalHp?((x.damage/godTotalHp)*100).toFixed(2):'0.00'}%</span></div>`).join('')
  }
- function record(winner){const gwin=winner==='god',w=gwin?god:opp;battleLog.push({no:fightNo,god:`${god.c.name} #${god.rank}`,opp:`${oppCity}・${opp.c.name} #${opp.rank}`,winner:gwin?`${god.c.name} #${god.rank}`:`${opp.c.name} #${opp.rank}`,hp:hpPct(w)});fightNo++}
+ function record(winner){const gwin=winner==='god',w=gwin?god:opp;battleLog.push({no:fightNo,god:`R${roundNo} ${god.c.name} #${god.rank}`,opp:`${oppCity}・${opp.c.name} #${opp.rank}`,winner:gwin?`${god.c.name} #${god.rank}`:`${opp.c.name} #${opp.rank}`,hp:hpPct(w)});fightNo++}
  function enterGod(){god=genesisFighter(godList[gi],cm)}
  function enterOpp(){oppEntry=opponentQueue[ci];oppCity=oppEntry?.city||null;if(oppCity)played.add(oppCity);opp=oppEntry?genesisFighter(oppEntry.c,cm):null}
  function resetGauges(){if(god)god.g=0;if(opp)opp.g=0}
+ function startNextRound(schedule=true){completedRounds++;roundNo++;gi=0;ci=0;defeatedOpp=0;currentStreak=0;godslayer=null;god=genesisFighter(godList[0],cm);oppEntry=opponentQueue[0];oppCity=oppEntry.city;played.add(oppCity);opp=genesisFighter(oppEntry.c,cm);resetGauges();if(schedule){render();if(boundary()){queue(step,260);return}queue(step,360)}}
  function attackOnce(draw=true,schedule=true){
-  if(done||!god||!opp)return;
-  const pair=[god,opp],dt=Math.min(...pair.map(x=>(100-x.g)/Math.max(1,x.s.speed)));for(const x of pair)x.g+=x.s.speed*Math.max(.001,dt);
+  if(done||!god||!opp)return;const pair=[god,opp],dt=Math.min(...pair.map(x=>(100-x.g)/Math.max(1,x.s.speed)));for(const x of pair)x.g+=x.s.speed*Math.max(.001,dt);
   const a=[...pair].filter(x=>x.g>=99.999).sort((x,y)=>y.g-x.g)[0]||pair[0],b=a===god?opp:god;a.g-=100;a.att++;a.c.attacks=(Number(a.c.attacks)||0)+1;
-  const ed=typeof ctEffectiveDef182==='function'?ctEffectiveDef182(b.s.def,a.s.penetration):b.s.def;
-  const dodged=Math.random()<(b.s.dodge||0),crit=!dodged&&Math.random()<(a.s.crit||0);if(crit)a.c.crits=(Number(a.c.crits)||0)+1;
+  const ed=typeof ctEffectiveDef182==='function'?ctEffectiveDef182(b.s.def,a.s.penetration):b.s.def,dodged=Math.random()<(b.s.dodge||0),crit=!dodged&&Math.random()<(a.s.crit||0);if(crit)a.c.crits=(Number(a.c.crits)||0)+1;
   let d=dodged?0:Math.max(1,Math.round(a.s.atk*2.15*100/(100+ed)*rnd(.86,1.14)*(crit?(1+(a.s.critDmg||.50)):1)*(1-shield(b.c))*ctElementMultiplier180(a.c.element,b.c.element))),ex=dodged?0:extra(a.c,d,crit);d+=ex;
   let combo=false,comboDodged=false,crit2=false,d2=0,ex2=0;if(Math.random()<(a.s.combo||0)){combo=true;comboDodged=Math.random()<(b.s.dodge||0);crit2=!comboDodged&&(crit||Math.random()<(a.s.crit||0));if(crit2)a.c.crits=(Number(a.c.crits)||0)+1;if(!comboDodged){d2=Math.max(1,Math.round(a.s.atk*2.15*100/(100+ed)*rnd(.86,1.14)*(crit2?(1+(a.s.critDmg||.50)):1)*(1-shield(b.c))*ctElementMultiplier180(a.c.element,b.c.element)));ex2=extra(a.c,d2,crit2);d2+=ex2;d+=d2;a.c.attacks=(Number(a.c.attacks)||0)+1;}}
-  const eff=Math.min(b.hp,d);b.hp-=eff;a.g+=wing(a.c,a.att);
-  if(a===opp&&eff>0)damage[oppCity]=(damage[oppCity]||0)+eff;
+  const eff=Math.min(b.hp,d);b.hp-=eff;a.g+=wing(a.c,a.att);if(a===opp&&eff>0)damage[oppCity]=(damage[oppCity]||0)+eff;
   if(b.hp<=0){b.hp=0;a.c.kills=(Number(a.c.kills)||0)+1;charKills.set(a.c.id,(charKills.get(a.c.id)||0)+1);const godWon=a===god;record(godWon?'god':'opp');
-   if(godWon){currentStreak++;defeatedOpp++;ci++;if(ci>=opponentQueue.length){if(draw){render();ctCombatAttackFx(q('genesisArena')?.querySelector('.genesisCard.god'))}if(schedule)queue(()=>finish(true,null),240);else finish(true,null);return}enterOpp();if(opp)opp.g=0;}
+   if(godWon){currentStreak++;defeatedOpp++;totalDefeatedOpp++;ci++;if(ci>=opponentQueue.length){if(draw){render();ctCombatAttackFx(q('genesisArena')?.querySelector('.genesisCard.god'))}if(schedule)queue(()=>startNextRound(true),260);else startNextRound(false);return}enterOpp();if(opp)opp.g=0;}
    else{currentStreak=0;gi++;if(gi>=godList.length){godslayer=oppCity;if(draw){render();ctCombatAttackFx(q('genesisArena')?.querySelector('.genesisCard:not(.god)'))}if(schedule)queue(()=>finish(false,godslayer),240);else finish(false,godslayer);return}enterGod();resetGauges();}
    if(boundary()){render();if(schedule)queue(step,250);return}
   }
   if(draw){render();const ga164=q('genesisArena');ctCombatAttackFx(ga164?.querySelector(a===god?'.genesisCard.god':'.genesisCard:not(.god)'));if(dodged)ctCombatDodgeFx(ga164?.querySelector(b===god?'.genesisCard.god':'.genesisCard:not(.god)'))}if(schedule)queue(step,300)
  }
  function rewardBase(r){return r===1?[520,.016]:r===2?[450,.014]:r===3?[400,.012]:r<=5?[340,.010]:r<=10?[270,.0075]:r<=16?[200,.005]:[140,.003]}
- function rewardTreasure(city,r,boost,origin){const A=api();if(!A)return null;try{const ss=states.find(z=>z.city===city),f=ss?.floor||1;let tier=A.compTier(f,r,boost,city);if(['X','U','S'].includes(tier))tier='A';return A.award(city,tier,origin,f,false)}catch(e){console.error('genesis treasure',e);return null}}
+ function rewardTreasure(city,r,boost,origin,forcedTier=null){const A=api();if(!A)return null;try{const ss=states.find(z=>z.city===city),f=ss?.floor||1;if(forcedTier)return A.award(city,forcedTier,origin,f,false);let tier=A.compTier(f,r,boost,city);if(['X','U','S'].includes(tier))tier='A';return A.award(city,tier,origin,f,false)}catch(e){console.error('genesis treasure',e);return null}}
  function giveRewards(success,killer){
-  const rewards=[],rows=damageRows(true),maxD=Math.max(1,...rows.map(x=>x.damage));
+  const rewards=[],rows=damageRows(true),maxD=Math.max(1,...rows.map(x=>x.damage)),plan=creatorTreasurePlan(),sChance=trailingSChance();
   if(C.official){
-   if(success){for(const c of godList){gain(c,1200);c.bonus=(Number(c.bonus)||0)+.035}let it=null;try{const A=api(),ss=states.find(z=>z.city===godCity),f=ss?.floor||1;it=A?.award(godCity,'S','👑 創世神挑戰賽｜守擂成功',f,false)||null}catch(e){}rewards.push({city:godCity,label:'創世神守擂成功',xp:1200,g:.035,it,special:true})}
-   else{const progress=defeatedOpp/Math.max(1,totalCoalition),xp=Math.round(180+420*progress),g=.003+.012*progress;for(const c of godList){gain(c,xp);c.bonus=(Number(c.bonus)||0)+g}const rr=Math.max(1,Math.min(21,22-Math.floor(progress*20))),it=rewardTreasure(godCity,rr,Math.round(progress*18),'👑 創世神挑戰賽｜挑戰失敗進度獎勵');rewards.push({city:godCity,label:'創世神失敗進度獎勵',xp,g,it,special:true})}
-   rows.forEach((x,i)=>{if(!x.played||x.damage<=0)return;const r=i+1,[xp,g]=rewardBase(r),ratio=x.damage/maxD,boost=Math.round(ratio*20);for(const c of R[x.city]||[]){gain(c,xp);c.bonus=(Number(c.bonus)||0)+g}const it=rewardTreasure(x.city,r,boost,`👑 創世神挑戰賽｜${killer===x.city?'弒神者':'傷害'} #${r}`);rewards.push({city:x.city,label:killer===x.city?'⚔️ 弒神者':'傷害 #'+r,xp,g,it,damage:x.damage,rank:r})});
+   const currentProgress=defeatedOpp/Math.max(1,totalCoalition),xp=completedRounds>0?1200*completedRounds:Math.round(180+420*currentProgress),g=completedRounds>0?.035*completedRounds:.003+.012*currentProgress;
+   for(const c of godList){gain(c,xp);c.bonus=(Number(c.bonus)||0)+g}
+   const creatorItems=[];if(completedRounds>0){for(let i=0;i<plan.u;i++)creatorItems.push(rewardTreasure(godCity,1,0,`👑 創世神挑戰賽｜守住${completedRounds}輪｜U ${i+1}/${plan.u}`,'U'));for(let i=0;i<plan.s;i++)creatorItems.push(rewardTreasure(godCity,1,0,`👑 創世神挑戰賽｜守住${completedRounds}輪｜S ${i+1}/${plan.s}`,'S'))}else creatorItems.push(rewardTreasure(godCity,Math.max(1,Math.min(21,22-Math.floor(currentProgress*20))),Math.round(currentProgress*18),'👑 創世神挑戰賽｜未滿1輪進度獎勵'));
+   rewards.push({city:godCity,label:completedRounds?`創世神守住 ${completedRounds} 輪`:'創世神未滿1輪',xp,g,items:creatorItems,it:creatorItems[0]||null,special:true,plan});
+   const eligibleCities=new Set(teamRows.slice(1,1+plan.u).map(x=>x.city));
+   rows.forEach((x,i)=>{if(!x.played||x.damage<=0)return;const r=i+1,[rxp,rg]=rewardBase(r),ratio=x.damage/maxD,boost=Math.round(ratio*20);for(const c of R[x.city]||[]){gain(c,rxp);c.bonus=(Number(c.bonus)||0)+rg}const eligible=eligibleCities.has(x.city),wonS=eligible&&Math.random()<sChance,it=rewardTreasure(x.city,r,boost,`👑 創世神挑戰賽｜${killer===x.city?'弒神者':'傷害'} #${r}${wonS?'｜追趕S獎勵':''}`,wonS?'S':null);rewards.push({city:x.city,label:killer===x.city?'⚔️ 弒神者':'傷害 #'+r,xp:rxp,g:rg,it,damage:x.damage,rank:r,eligibleS:eligible,sWon:wonS,sChance})});
    try{api()?.save()}catch(e){}
-   lastEvent={type:'👑 創世神挑戰賽',turn,official:true,creator:godCity,success,godslayer:killer||null,rows:rows.map((x,i)=>({city:x.city,score:x.damage,damage:x.damage,pct:godTotalHp?100*x.damage/godTotalHp:0,rank:i+1,played:x.played})),top:rows.slice(0,5).map((x,i)=>({city:x.city,score:x.damage,pct:godTotalHp?100*x.damage/godTotalHp:0,rank:i+1})),treasureRewards:rewards.filter(x=>x.it).map(x=>({city:x.city,tier:x.it.tier,name:x.it.name,label:x.label}))};save(true);try{render()}catch(e){}
+   lastEvent={type:'👑 創世神挑戰賽',turn,official:true,creator:godCity,success:false,godslayer:killer||null,rounds:completedRounds,currentRound:roundNo,creatorU:plan.u,creatorS:plan.s,trailingSChance:sChance,rows:rows.map((x,i)=>({city:x.city,score:x.damage,damage:x.damage,pct:godTotalHp?100*x.damage/godTotalHp:0,rank:i+1,played:x.played})),top:rows.slice(0,5).map((x,i)=>({city:x.city,score:x.damage,pct:godTotalHp?100*x.damage/godTotalHp:0,rank:i+1})),treasureRewards:rewards.flatMap(x=>(x.items||[x.it]).filter(Boolean).map(it=>({city:x.city,tier:it.tier,name:it.name,label:x.label,stars:it.stars||0})))};save(true);try{render()}catch(e){}
   }
-  return{rewards,rows}
+  return{rewards,rows,plan,sChance}
  }
  function finish(success,killer){
-  if(done)return;done=true;clearTimer();const out=giveRewards(success,killer),rows=out.rows,rewards=out.rewards;
-  render();const area=q('genesisArena');if(area){const rewardMap=new Map(rewards.map(x=>[x.city,x])),godReward=rewardMap.get(godCity);const tableRows=[];tableRows.push([success?'👑 守擂成功':'👑 守擂失敗',godCity,success?`擊敗 ${defeatedOpp}/${totalCoalition} 名挑戰者`:`擊敗 ${defeatedOpp}/${totalCoalition} 名挑戰者`,godReward?`全隊每人 +${godReward.xp} EXP`:'—',godReward?`+${(godReward.g*100).toFixed(2)}%`:'—',godReward?window.ctTreasureCell166(godReward.it):'—',success?'🏆 保證 S 級寶物':'失敗進度獎勵｜寶物最高 A']);rows.forEach((x,i)=>{const rw=rewardMap.get(x.city),role=x.city===killer?'⚔️ 弒神者':x.played?`傷害 #${i+1}`:'未出場';tableRows.push([role,x.city,x.played?`傷 ${Math.round(x.damage)}｜${godTotalHp?((x.damage/godTotalHp)*100).toFixed(2):'0.00'}%`:'0 傷害',rw?`全隊每人 +${rw.xp} EXP`:'—',rw?`+${(rw.g*100).toFixed(2)}%`:'—',rw?window.ctTreasureCell166(rw.it):'—',x.played?(x.city===killer?'本屆最高獎勵挑戰隊':'依傷害排名發獎'):'創世神已提前敗北｜未出場不發傷害獎勵'])});const title=success?'👑 創世神挑戰賽｜守擂成功正式結算表':'👑 創世神挑戰賽｜弒神者正式結算表';area.insertAdjacentHTML('beforeend',window.ctSettlement166(title,['身分／名次','隊伍','表現','EXP','永久成長','寶物','備註'],tableRows,''));}
-  rankBox.innerHTML=rows.map((x,i)=>`<div class="rankMega ${i<3&&x.damage>0?'top':''} ${x.played?'':'genesisUnplayed'}"><b>#${i+1}</b><span>${x.city}${x.city===killer?'｜⚔️弒神者':''}</span><span class="num">${x.played?'已出過角色':'未出場'}</span><span class="num">傷 ${Math.round(x.damage)}</span><span class="num">${godTotalHp?((x.damage/godTotalHp)*100).toFixed(2):'0.00'}%</span></div>`).join('');
-  if(C)C.pending=null;ctl();autoCloseMega17419(success?'創世神挑戰賽｜創世神守擂成功':'創世神挑戰賽｜弒神者誕生')
+  if(done)return;done=true;clearTimer();const out=giveRewards(success,killer),rows=out.rows,rewards=out.rewards,plan=out.plan,sChance=out.sChance;
+  render();const area=q('genesisArena');if(area){const rewardMap=new Map(rewards.map(x=>[x.city,x])),godReward=rewardMap.get(godCity),tableRows=[];const godItems=(godReward?.items||[]).map(x=>window.ctTreasureCell166(x)).join(' ')||'—';tableRows.push([`👑 守住 ${completedRounds} 輪後失守`,godCity,`完整 ${completedRounds} 輪｜本輪 ${defeatedOpp}/${totalCoalition}`,godReward?`全隊每人 +${godReward.xp} EXP`:'—',godReward?`+${(godReward.g*100).toFixed(2)}%`:'—',godItems,completedRounds?`輪迴寶物：${plan.u}U＋${plan.s}S`:'未完成1輪｜進度獎勵最高A']);rows.forEach((x,i)=>{const rw=rewardMap.get(x.city),role=x.city===killer?'⚔️ 弒神者':x.played?`傷害 #${i+1}`:'未出場',snote=rw?.eligibleS?`｜追趕S機率 ${(sChance*100).toFixed(0)}%：${rw.sWon?'成功':'未中'}`:'';tableRows.push([role,x.city,x.played?`累積傷 ${Math.round(x.damage)}`:'0 傷害',rw?`全隊每人 +${rw.xp} EXP`:'—',rw?`+${(rw.g*100).toFixed(2)}%`:'—',rw?window.ctTreasureCell166(rw.it):'—',x.played?`依累積傷害排名發獎${snote}`:'未出場不發傷害獎勵'])});area.insertAdjacentHTML('beforeend',window.ctSettlement166(`👑 創世神挑戰賽｜守住 ${completedRounds} 輪後失守`,['身分／名次','隊伍','表現','EXP','永久成長','寶物','備註'],tableRows,''));}
+  rankBox.innerHTML=rows.map((x,i)=>`<div class="rankMega ${i<3&&x.damage>0?'top':''} ${x.played?'':'genesisUnplayed'}"><b>#${i+1}</b><span>${x.city}${x.city===killer?'｜⚔️弒神者':''}</span><span class="num">${x.played?'已出過角色':'未出場'}</span><span class="num">傷 ${Math.round(x.damage)}</span><span class="num">${godTotalHp?((x.damage/godTotalHp)*100).toFixed(2):'0.00'}%</span></div>`).join('');if(C)C.pending=null;ctl();autoCloseMega17419(`創世神挑戰賽｜守住 ${completedRounds} 輪後失守`)
  }
  let genesisSkipBusy172=false,genesisSkipLastPaint172=0;
- function genesisFastChunk172(){
-  if(done){genesisSkipBusy172=false;return}
-  if(!C?.skip){genesisSkipBusy172=false;attackOnce(true);return}
-  const started=performance.now();let n=0;
-  while(!done&&C?.skip&&n<320&&performance.now()-started<8){attackOnce(false,false);n++}
-  if(done){genesisSkipBusy172=false;return}
-  const now=performance.now();if(now-genesisSkipLastPaint172>70){genesisSkipLastPaint172=now;render();ctl()}
-  timer=setTimeout(genesisFastChunk172,MEGA_SKIP_YIELD_MS172)
- }
+ function genesisFastChunk172(){if(done){genesisSkipBusy172=false;return}if(!C?.skip){genesisSkipBusy172=false;attackOnce(true);return}const started=performance.now();let n=0;while(!done&&C?.skip&&n<320&&performance.now()-started<8){attackOnce(false,false);n++}if(done){genesisSkipBusy172=false;return}const now=performance.now();if(now-genesisSkipLastPaint172>70){genesisSkipLastPaint172=now;render();ctl()}timer=setTimeout(genesisFastChunk172,MEGA_SKIP_YIELD_MS172)}
  function step(){if(done)return;if(C?.skip){if(!genesisSkipBusy172){genesisSkipBusy172=true;genesisFastChunk172()}return}attackOnce(true)}
  render();queue(step,450)
 }
@@ -3016,12 +3032,12 @@ function applyTreasure127(s,c){
   for(const it of items127(c)){
     if(!it||seen.has(it.type))continue; seen.add(it.type);
     if(it.tier==='X'){
-      const x=XFX127[it.type]||{};
-      if(it.type==='blade'){s.atk*=1+(x.atk||0)/100;s.crit+=(x.crit||0)/100}
-      else if(it.type==='shield'){s.hp*=1+(x.hp||0)/100;s.def*=1+(x.def||0)/100}
-      else if(it.type==='wing'){s.speed*=1+(x.speed||0)/100;s.crit+=(x.crit||0)/100;s.dodge+=(DODGE_BY_TIER.X||0)}
-      else if(it.type==='core'){s.hp*=1+(x.hp||0)/100;s.atk*=1+(x.atk||0)/100;s.def*=1+(x.def||0)/100}
-      else if(it.type==='sigil'){s.crit+=(x.crit||0)/100;s.speed*=1+(x.speed||0)/100;s.critDmg+=(CRITDMG_BY_TIER.X||0)}
+      const x=XFX127[it.type]||{},sm=typeof tStarEffectMul==='function'?tStarEffectMul(it):1;
+      if(it.type==='blade'){s.atk*=1+(x.atk||0)*sm/100;s.crit+=(x.crit||0)*sm/100}
+      else if(it.type==='shield'){s.hp*=1+(x.hp||0)*sm/100;s.def*=1+(x.def||0)*sm/100}
+      else if(it.type==='wing'){s.speed*=1+(x.speed||0)*sm/100;s.crit+=(x.crit||0)*sm/100;s.dodge+=(DODGE_BY_TIER.X||0)*sm}
+      else if(it.type==='core'){s.hp*=1+(x.hp||0)*sm/100;s.atk*=1+(x.atk||0)*sm/100;s.def*=1+(x.def||0)*sm/100}
+      else if(it.type==='sigil'){s.crit+=(x.crit||0)*sm/100;s.speed*=1+(x.speed||0)*sm/100;s.critDmg+=(CRITDMG_BY_TIER.X||0)*sm}
       continue;
     }
     const v=TREASURE_PWR[it.tier]||0;
@@ -3661,7 +3677,7 @@ html,body{padding-top:0!important}
       if(p>=0 && c>=0 && c<p)cur.tier=prev.tier;
     }
 
-    // V17.4.196：U 改為「同梯隊斷層」判定。
+    // V17.4.198：U 改為「同梯隊斷層」判定。
     // 規則：
     // 1) 只看主排行榜前 3 名中的最強非 X 集團。
     // 2) 戰力皆需 >= 10.00。
@@ -4726,8 +4742,8 @@ window.render=function(){
  }catch(e){console.warn('CT164 tower combat fx',e)}
  return out
 };
-try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.196');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.196')}catch(e){}
-window.__CT_BUILD='V17.4.196-power-compression-05';
+try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.198');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.198')}catch(e){}
+window.__CT_BUILD='V17.4.198-power-compression-05';
 })();
 </script>
 
@@ -5140,8 +5156,8 @@ window.hit=hit=function(s,p){
 // UI is rendered canonically in V17.4.184 CLEAN; no post-render DOM patch is needed.
 
 try{render()}catch(e){console.warn('CT182 initial render',e)}
-try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.196')}catch(_e){}
-window.__CT_BUILD='V17.4.196-power-compression-05';
+try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.198')}catch(_e){}
+window.__CT_BUILD='V17.4.198-power-compression-05';
 })();
 </script>
 
@@ -5167,7 +5183,7 @@ window.__CT_BUILD='V17.4.196-power-compression-05';
 <script id="ct174190RootPerformance">
 (()=>{
 'use strict';
-/* V17.4.196: V17.4.190 root performance fix retained; league adds 100x speed.
+/* V17.4.198: V17.4.190 root performance fix retained; league adds 100x speed.
    No visual/effect/gameplay multiplier is changed here.
    The expensive full-server rating calculations are memoized within one tower turn,
    and derived character stats are memoized until their actual stat inputs change. */
@@ -5259,8 +5275,8 @@ try{
   if(bad)bad.remove();
 }catch(_e){}
 
-try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.196')}catch(_e){}
-window.__CT_BUILD='V17.4.196-power-compression-05';
+try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.198')}catch(_e){}
+window.__CT_BUILD='V17.4.198-power-compression-05';
 })();
 </script>
 
@@ -5268,7 +5284,7 @@ window.__CT_BUILD='V17.4.196-power-compression-05';
 <script id="ct174192ElementPowerNormalization">
 (()=>{
 'use strict';
-/* V17.4.196 — canonical attribute power coefficients + 0.5 power compression.
+/* V17.4.198 — canonical attribute power coefficients + 0.5 power compression.
    These coefficients affect displayed character/team power only; combat element multipliers remain unchanged.
    New-game baseline is recalculated AFTER fixed character elements are assigned; visible/rating power then uses 10*sqrt(raw/baseline), so the strongest opening TEAM is exactly 10.00. */
 const ELEMENT_POWER_192=Object.freeze({water:1.00,fire:1.00,wood:1.00,light:1.20,dark:1.19,thunder:1.70});
@@ -5331,8 +5347,8 @@ window.CT_POWER_RULE_192={
   xThresholdUnchanged:true
 };
 try{if(window.CT_TEAM_PR_RATING?.u)window.CT_TEAM_PR_RATING.u.minPower=10}catch(_e){}
-try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.196')}catch(_e){}
-window.__CT_BUILD='V17.4.196-power-compression-05';
+try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.198')}catch(_e){}
+window.__CT_BUILD='V17.4.198-power-compression-05';
 })();
 </script>
 
@@ -5340,7 +5356,7 @@ window.__CT_BUILD='V17.4.196-power-compression-05';
 <script id="ct174193FairKoTowerFx">
 (()=>{
 'use strict';
-/* V17.4.196
+/* V17.4.198
    1) Every team gets the same one-turn KO hold before entering the next floor.
    2) The watched tower battle keeps the KO attack gold flash.
    3) Tower enemy attacks have their own attack FX.
@@ -5431,22 +5447,23 @@ if(typeof prevEhit193==='function'){
 
 // Recover old saves that happened to be stored on a pre-193 KO frame.
 try{for(const s of states||[])if(s)delete s.ctKoHoldTurn193}catch(_e){}
-try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.196');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.196')}catch(_e){}
-window.__CT_BUILD='V17.4.196-fair-ko-tower-fx';
+try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.198');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.198')}catch(_e){}
+window.__CT_BUILD='V17.4.198-fair-ko-tower-fx';
 })();
 </script>
 
 <script id="ct174195RankAttackFlashAllTeamsMarker">
 (()=>{
 'use strict';
-window.__CT_BUILD='V17.4.196-rank-attack-flash-all-teams';
+window.__CT_BUILD='V17.4.198-rank-attack-flash-all-teams';
 })();
 </script>
 
 <script id="ct174196UTierClusterMarker">
 (()=>{
-  try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.196')}catch(_e){}
-  window.__CT_BUILD='V17.4.196-u-tier-cluster';
+  try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.198')}catch(_e){}
+  window.__CT_BUILD='V17.4.198-u-tier-cluster';
 })();
 </script>
+<script id="ct174198BuildMarker">(()=>{try{document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.198');const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.198')}catch(e){}window.__CT_BUILD='V17.4.198-genesis-loop-fastest-xstar-roman';})();</script>
 </body></html>
