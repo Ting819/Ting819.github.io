@@ -145,7 +145,7 @@ window.ctBattleTreasureInline126=function(c){
 </script>
 <script>
 const SAVE='CITY_TOWER_V17_SAVE';
-const CT_BUILD_VERSION='V17.4.207';
+const CT_BUILD_VERSION='V17.4.208';
 const CT_SAVE_PREUPDATE='CITY_TOWER_V17_PREUPDATE_BACKUP';
 const CT_TREASURE_SAVE_KEY='CITY_TOWER_V1743_TREASURE';
 const CT_TREASURE_PREUPDATE='CITY_TOWER_V1743_TREASURE_PREUPDATE_BACKUP';
@@ -5537,7 +5537,7 @@ try{for(const s of states||[])if(s)delete s.ctKoHoldTurn193}catch(_e){}
 <script id="ct174205EconomyMiningHeadquarters">
 (()=>{
 'use strict';
-/* V17.4.207 — City economy layer.
+/* V17.4.208 — City economy layer.
    One cohesive subsystem: gold/diamonds, shop, mining, HQ raids/repair and AI decisions.
    It never advances in the background; all progress is tied to the existing foreground game turn. */
 const CITIES=()=>Object.keys(R||{});
@@ -5646,7 +5646,7 @@ function shopHtml(city){const e=E[city];ensureShop(city);const cost=[5,10,20,40]
 function attackHtml(city){const e=E[city],targets=CITIES().filter(c=>c!==city);return commonTop(city)+`<div class="econ205Attack"><div class="econ205Card"><h3>⚔️ 手動攻擊其他總部</h3><label>目標</label><select id="econ205Target">${targets.map(t=>`<option value="${esc(t)}">${esc(t)}｜HQ ${Math.round(E[t].hq.hp)}%｜🪙${fmt(E[t].gold)}</option>`).join('')}</select><label>攻城規模</label><select id="econ205RaidScale"><option value="scout">小型突襲｜30K｜300回</option><option value="normal">正規攻城｜100K｜600回</option><option value="total">全面進攻｜300K｜1000回</option></select><div id="econ205RaidPreview" class="econ205Warn"></div><button id="econ205RaidGo">確認出征</button><div class="econ205Sub">成功：有限金幣掠奪＋威望＋極低機率B/A補給箱。失敗：出征費全失＋20～50%傷兵費＋額外撤退200回。鑽石不會被偷。</div></div><div class="econ205Card"><h3>🛡️ 防止刷弱隊</h3><div>戰力≤1.25×對手：100%掠奪</div><div>1.25～2×：70%</div><div>2～4×：40%</div><div>&gt;4×：10%</div><div class="econ205Sub">弱隊若成功攻破更強的總部，會增加掠奪與威望價值。</div><h3 style="margin-top:10px">🕊️ 被攻擊保護</h3><div>一般：1000回</div><div>HQ&lt;40%：2000回</div><div>HQ&lt;20%：3000回</div></div></div>`}
 function logHtml(city){const e=E[city];return commonTop(city)+`<div class="econ205Log">${e.log.map(x=>`<div>${esc(x)}</div>`).join('')||'<div>尚無經濟紀錄。</div>'}</div>`}
 function renderModal(){createUI();if(!E[uiCity])uiCity=selected&&E[selected]?selected:CITIES()[0];const citySel=document.getElementById('econ205City');citySel.innerHTML=CITIES().map(c=>`<option ${c===uiCity?'selected':''}>${esc(c)}</option>`).join('');citySel.onchange=ev=>{uiCity=ev.target.value;renderModal()};const tabs=[['hq','🏰 總部'],['mine','⛏️ 挖礦'],['shop','🏪 商店'],['attack','⚔️ 攻城'],['log','📜 收支']];const tb=document.getElementById('econ205Tabs');tb.innerHTML=tabs.map(([k,n])=>`<button data-tab="${k}" class="${uiTab===k?'on':''}">${n}</button>`).join('');tb.querySelectorAll('button').forEach(b=>b.onclick=()=>{uiTab=b.dataset.tab;renderModal()});const body=document.getElementById('econ205Body');body.innerHTML=uiTab==='mine'?mineHtml(uiCity):uiTab==='shop'?shopHtml(uiCity):uiTab==='attack'?attackHtml(uiCity):uiTab==='log'?logHtml(uiCity):hqHtml(uiCity);
- const hqUp=document.getElementById('econ205HqUp');if(hqUp)hqUp.onclick=()=>upgradeHQ(uiCity);const vu=document.getElementById('econ205VaultUp');if(vu)vu.onclick=()=>upgradeVault(uiCity);const ai=document.getElementById('econ205AiToggle');if(ai)ai.onclick=()=>setAi(uiCity,E[uiCity].aiMode==='auto'?'manual':'auto');const allAuto=document.getElementById('econ205AllAuto');if(allAuto)allAuto.onclick=()=>setAllAi('auto');const allManual=document.getElementById('econ205AllManual');if(allManual)allManual.onclick=()=>setAllAi('manual');document.querySelectorAll('.econ205MineStart').forEach(b=>b.onclick=()=>{if(confirm(`進入礦場後 ${uiCity} 會暫停爬塔，入場費立即扣除且不退。確定？`)){startMine(uiCity,b.dataset.id,true);renderModal()}});const mc=document.getElementById('econ205MineCancel');if(mc)mc.onclick=()=>{if(confirm('確定中途撤離？入場費不退，且只能帶走部分已採收益。')){cancelMine(uiCity);renderModal()}};document.querySelectorAll('.econ205Buy').forEach(b=>b.onclick=()=>{buyOffer(uiCity,b.dataset.id,true);renderModal();try{render()}catch(_){}});const rf=document.getElementById('econ205Refresh');if(rf)rf.onclick=()=>{refreshShop(uiCity,true);renderModal()};const target=document.getElementById('econ205Target'),scale=document.getElementById('econ205RaidScale'),preview=document.getElementById('econ205RaidPreview');function raidPreview(){if(!target||!scale||!preview)return;const t=target.value,r=RAID[scale.value],chance=raidChance(uiCity,t,scale.value),ok=raidTargetAllowed(uiCity,t);preview.innerHTML=`預估勝率 <b>${(chance*100).toFixed(1)}%</b>｜出征費 🪙${fmt(r.fee)}｜停止爬塔 ${r.turns}回｜成功掠奪上限 ${fmt(r.cap)}｜${ok?'✅ 目前可出征':'⛔ 目標保護／冷卻或本隊忙碌'}`;const go=document.getElementById('econ205RaidGo');if(go)go.disabled=!ok||E[uiCity].gold<r.fee}if(target){target.onchange=raidPreview;scale.onchange=raidPreview;raidPreview()}const go=document.getElementById('econ205RaidGo');if(go)go.onclick=()=>{const t=target.value,sc=scale.value,r=RAID[sc];if(confirm(`${uiCity} → ${t}\n${r.name}：先扣 🪙${fmt(r.fee)}，並停止爬塔至少 ${r.turns}回。失敗還有傷兵費與額外撤退。確定出征？`)){doRaid(uiCity,t,sc,true);renderModal();try{render()}catch(_){}}}}
+ const hqUp=document.getElementById('econ205HqUp');if(hqUp)hqUp.onclick=()=>upgradeHQ(uiCity);const vu=document.getElementById('econ205VaultUp');if(vu)vu.onclick=()=>upgradeVault(uiCity);const ai=document.getElementById('econ205AiToggle');if(ai)ai.onclick=()=>setAi(uiCity,E[uiCity].aiMode==='auto'?'manual':'auto');const allAuto=document.getElementById('econ205AllAuto');if(allAuto)allAuto.onclick=()=>setAllAi('auto');const allManual=document.getElementById('econ205AllManual');if(allManual)allManual.onclick=()=>setAllAi('manual');document.querySelectorAll('.econ205MineStart').forEach(b=>b.onclick=()=>{if(confirm(`進入礦場後 ${uiCity} 會暫停爬塔，入場費立即扣除且不退。確定？`)){startMine(uiCity,b.dataset.id,true);renderModal();try{render()}catch(_){}}});const mc=document.getElementById('econ205MineCancel');if(mc)mc.onclick=()=>{if(confirm('確定中途撤離？入場費不退，且只能帶走部分已採收益。')){cancelMine(uiCity);renderModal();try{render()}catch(_){}}};document.querySelectorAll('.econ205Buy').forEach(b=>b.onclick=()=>{buyOffer(uiCity,b.dataset.id,true);renderModal();try{render()}catch(_){}});const rf=document.getElementById('econ205Refresh');if(rf)rf.onclick=()=>{refreshShop(uiCity,true);renderModal()};const target=document.getElementById('econ205Target'),scale=document.getElementById('econ205RaidScale'),preview=document.getElementById('econ205RaidPreview');function raidPreview(){if(!target||!scale||!preview)return;const t=target.value,r=RAID[scale.value],chance=raidChance(uiCity,t,scale.value),ok=raidTargetAllowed(uiCity,t);preview.innerHTML=`預估勝率 <b>${(chance*100).toFixed(1)}%</b>｜出征費 🪙${fmt(r.fee)}｜停止爬塔 ${r.turns}回｜成功掠奪上限 ${fmt(r.cap)}｜${ok?'✅ 目前可出征':'⛔ 目標保護／冷卻或本隊忙碌'}`;const go=document.getElementById('econ205RaidGo');if(go)go.disabled=!ok||E[uiCity].gold<r.fee}if(target){target.onchange=raidPreview;scale.onchange=raidPreview;raidPreview()}const go=document.getElementById('econ205RaidGo');if(go)go.onclick=()=>{const t=target.value,sc=scale.value,r=RAID[sc];if(confirm(`${uiCity} → ${t}\n${r.name}：先扣 🪙${fmt(r.fee)}，並停止爬塔至少 ${r.turns}回。失敗還有傷兵費與額外撤退。確定出征？`)){doRaid(uiCity,t,sc,true);renderModal();try{render()}catch(_){}}}}
 function openUI(city=selected){uiCity=E[city]?city:CITIES()[0];uiTab='hq';createUI();renderModal();document.getElementById('econ205Back').classList.add('open')}
 window.__CT_OPEN_ECON205=openUI;
 createUI();const btn=document.getElementById('econ205Btn');if(btn)btn.onclick=()=>openUI(selected);
@@ -5656,16 +5656,70 @@ const prevRender205=window.render;
 window.render=render=function(...args){const out=prevRender205.apply(this,args);const e=E[selected];const g=document.getElementById('econ205Gold'),d=document.getElementById('econ205Diamond');if(g)g.textContent=e?fmt(e.gold):'—';if(d)d.textContent=e?String(e.diamonds):'—';return out};
 
 loadEconomy();processLastEvent();try{render()}catch(e){console.warn('economy initial render',e)}try{save(true)}catch(e){console.warn('economy initial save',e)}
+window.__CT_ECON205_LIVE=city=>E[city]||null;
 window.CT_ECONOMY_205={mining:{tiers:MINE_TIERS.map(x=>({...x})),vitalityRecovery:'每實際爬塔20回+1',repeatPenalty:[1,.85,.65,.45]},shop:{refresh:1000,paidRefresh:[5,10,20,40],maxTier:'S',noDirect:['U','X']},hq:{defenseBonus:HQ_DEF,protection:[1000,2000,3000],sameTargetCooldown:5000,noDiamondLoot:true},foregroundOnly:true,globalTeamAiToggle:true,globalAiMaster:true};
 })();
 </script>
-<script id="ct174207BuildMarker">
+<style id="ct174208MiningMainStatusStyle">
+#arena .ctMiningMain208{min-height:360px;display:flex;align-items:center;justify-content:center;padding:22px;border:1px solid #5e4a24;border-radius:14px;background:radial-gradient(circle at 50% 10%,#49371955,#111c2c 48%,#0b1422 100%);position:relative;overflow:hidden}
+#arena .ctMiningMain208::before{content:'⛏️';position:absolute;right:28px;top:14px;font-size:88px;opacity:.08;transform:rotate(-12deg);pointer-events:none}
+#arena .ctMiningPanel208{width:min(760px,100%);background:#111d2fdd;border:1px solid #6b5427;border-radius:15px;padding:18px;box-shadow:0 16px 50px #0008}
+#arena .ctMiningTitle208{font-size:22px;font-weight:1000;color:#ffd46f;text-align:center;margin-bottom:4px}
+#arena .ctMiningSub208{text-align:center;color:#aebbd0;font-size:11px;margin-bottom:16px}
+#arena .ctMiningProgress208{height:20px;background:#2b2417;border:1px solid #6e5730;border-radius:999px;overflow:hidden;box-shadow:inset 0 2px 8px #0008}
+#arena .ctMiningProgress208>i{display:block;height:100%;background:linear-gradient(90deg,#9c6b24,#f4c75e,#ffe79b);box-shadow:0 0 15px #f5c95a88;transition:width .15s linear}
+#arena .ctMiningPct208{text-align:center;margin-top:5px;font-size:12px;font-weight:900;color:#ffe6a1}
+#arena .ctMiningGrid208{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:14px}
+#arena .ctMiningStat208{background:#17243a;border:1px solid #304664;border-radius:10px;padding:9px;text-align:center;font-size:9px;color:#a9bbd3}
+#arena .ctMiningStat208 b{display:block;font-size:14px;color:#eef5ff;margin-top:3px}
+#arena .ctMiningWarn208{margin-top:13px;border:1px solid #745a25;background:#2a2112;border-radius:10px;padding:9px;text-align:center;font-size:10px;line-height:1.55;color:#ffd987}
+#arena .ctMiningActions208{display:flex;justify-content:center;gap:7px;flex-wrap:wrap;margin-top:12px}
+@media(max-width:700px){#arena .ctMiningMain208{min-height:300px;padding:12px}#arena .ctMiningGrid208{grid-template-columns:repeat(2,minmax(0,1fr))}#arena .ctMiningTitle208{font-size:18px}}
+</style>
+<script id="ct174208MiningMainStatus">
+(()=>{
+  function miningArenaHtml208(city,e){
+    const mine=e&&e.mine;if(!mine)return'';
+    const tiers=window.CT_ECONOMY_205?.mining?.tiers||[];
+    const m=tiers.find(x=>x.id===mine.id)||{};
+    const total=Math.max(1,Number(mine.total)||Number(m.turns)||1),remaining=Math.max(0,Number(mine.remaining)||0);
+    const progress=Math.max(0,Math.min(100,100*(1-remaining/total)));
+    const fee=Math.max(0,Number(mine.fee)||Number(m.fee)||0),vitality=Math.max(0,Math.min(100,Number(e.vitality)||0));
+    const repeat=Number(mine.repeat)||1,energy=Number(mine.energy)||1;
+    const name=m.name||'⛏️ 礦場';
+    return `<div class="ctMiningMain208"><div class="ctMiningPanel208"><div class="ctMiningTitle208">${name}｜${city}正在挖礦</div><div class="ctMiningSub208">🗼 該隊爬塔已完全暫停｜怪物、塔層、塔怪EXP與塔怪掉落目前都不會推進</div><div class="ctMiningProgress208"><i style="width:${progress.toFixed(2)}%"></i></div><div class="ctMiningPct208">挖礦進度 ${progress.toFixed(1)}%｜剩餘 ${Math.ceil(remaining)} 回</div><div class="ctMiningGrid208"><div class="ctMiningStat208">⏳ 總工期<b>${Math.ceil(total)} 回</b></div><div class="ctMiningStat208">🪙 已付入場費<b>${fee.toLocaleString('zh-TW')}</b></div><div class="ctMiningStat208">🔋 礦脈活力<b>${vitality.toFixed(0)} / 100</b></div><div class="ctMiningStat208">🔁 連採倍率<b>×${repeat.toFixed(2)}</b></div><div class="ctMiningStat208">⚙️ 活力效率<b>×${energy.toFixed(2)}</b></div><div class="ctMiningStat208">🎲 最終礦況<b>完成時揭曉</b></div></div><div class="ctMiningWarn208">挖礦不是額外掛機收益：這 ${Math.ceil(remaining)} 回期間，其他隊伍仍會正常爬塔；中途撤離入場費不退，而且只能帶走部分已採收益。</div><div class="ctMiningActions208"><button id="ctMiningManage208">⛏️ 開啟挖礦管理</button></div></div></div>`;
+  }
+  function paintMiningArena208(){
+    try{
+      const econ=window.__CT_ECON205_DUMP?.()||null;
+      // Prefer live economy object through dump only when it contains the selected city.
+      let e=econ&&econ.cities?econ.cities[selected]:econ&&econ[selected]?econ[selected]:null;
+      // V205 exposes live status through its floor helper even when dump shape differs; use a small bridge stored below.
+      if(!e&&window.__CT_ECON208_LIVE)e=window.__CT_ECON208_LIVE(selected);
+      if(!e?.mine)return false;
+      const arena=document.getElementById('arena');if(!arena)return false;
+      arena.innerHTML=miningArenaHtml208(selected,e);
+      const b=document.getElementById('ctMiningManage208');if(b)b.onclick=()=>{try{window.__CT_OPEN_ECON205?.(selected)}catch(_){}};
+      return true;
+    }catch(err){console.warn('mining main status',err);return false}
+  }
+  // Economy itself owns the live E object; bridge it without copying state or creating a second economy source of truth.
+  try{
+    if(typeof window.__CT_ECON205_LIVE==='function')window.__CT_ECON208_LIVE=window.__CT_ECON205_LIVE;
+  }catch(_){ }
+  const prev=window.render;
+  window.render=render=function(...args){const out=prev.apply(this,args);paintMiningArena208();return out};
+  window.__CT_PAINT_MINING_MAIN208=paintMiningArena208;
+  try{paintMiningArena208()}catch(_){ }
+})();
+</script>
+<script id="ct174208BuildMarker">
 (()=>{
  try{
-  document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.207');
-  const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.207');
+  document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.208');
+  const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.208');
  }catch(e){}
- window.__CT_BUILD='V17.4.207-global-ai-master-fix';
+ window.__CT_BUILD='V17.4.208-mining-main-battle-status';
  window.CT_BALANCE_204={genesis:{perRoundXp:120,perRoundGrowth:.002,ratios:{1:1,2:.75,3:.65,4:.55,5:.50,'6-10':.40,'11-15':.25,'16-22':.15},maxRounds:10},leaguePools:{1:'U/S/A','2-3':'S/A','4-10':'A/B','11-22':'B/C',ratingBoost:'隊伍+角色平均加成會提高池內高階率'},megaPools:{1:'S/A/B','2-3':'A/B','4-10':'B/C','11-22':'C/D'}};
  window.CT_GENESIS_RULE_203={interval:10000,maxRounds:10,maxCreatorTreasure:'2U',manualPracticeNoReward:true,guaranteedS:{oneU:[2],twoU:[2,3]},treasureCountByTowerRank:{'2-3':5,'4-5':4,'6-10':3,'11-15':2,'16-22':1}};
 })();
