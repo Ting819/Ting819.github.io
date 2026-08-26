@@ -145,7 +145,7 @@ window.ctBattleTreasureInline126=function(c){
 </script>
 <script>
 const SAVE='CITY_TOWER_V17_SAVE';
-const CT_BUILD_VERSION='V17.4.208';
+const CT_BUILD_VERSION='V17.4.209';
 const CT_SAVE_PREUPDATE='CITY_TOWER_V17_PREUPDATE_BACKUP';
 const CT_TREASURE_SAVE_KEY='CITY_TOWER_V1743_TREASURE';
 const CT_TREASURE_PREUPDATE='CITY_TOWER_V1743_TREASURE_PREUPDATE_BACKUP';
@@ -5537,7 +5537,7 @@ try{for(const s of states||[])if(s)delete s.ctKoHoldTurn193}catch(_e){}
 <script id="ct174205EconomyMiningHeadquarters">
 (()=>{
 'use strict';
-/* V17.4.208 — City economy layer.
+/* V17.4.209 — City economy layer.
    One cohesive subsystem: gold/diamonds, shop, mining, HQ raids/repair and AI decisions.
    It never advances in the background; all progress is tied to the existing foreground game turn. */
 const CITIES=()=>Object.keys(R||{});
@@ -5562,7 +5562,7 @@ const MILESTONES=[[100,5],[500,10],[1000,15],[2500,20],[5000,30],[10000,50],[200
 const SHOP_PRICE={D:5000,C:12000,B:30000,A:90000,S:260000};
 let E={},offerSeq=1,uiCity=selected,uiTab='hq',lastUiTurn=-999,rankCache={},lastRankCacheTurn=-999,globalAiMode='auto';
 const esc=x=>String(x??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-const fmt=n=>{n=Math.max(0,Number(n)||0);return n>=1e9?(n/1e9).toFixed(2)+'B':n>=1e6?(n/1e6).toFixed(2)+'M':n>=1e3?(n/1e3).toFixed(n>=1e5?0:1)+'K':Math.round(n).toLocaleString('zh-TW')};
+const fmt=n=>Math.round(Math.max(0,Number(n)||0)).toLocaleString('zh-TW');
 const stateOf=city=>states.find(s=>s.city===city);
 function blank(city){return{gold:5000,diamonds:5,vitality:100,recovery:0,towerSinceMine:999,mineStreak:0,mine:null,aiMode:'auto',shop:{offers:[],nextRefresh:Math.max(1000,(Math.floor((Number(turn)||0)/1000)+1)*1000),refreshStage:0},hq:{hp:100,level:1,vault:0,protectionUntil:0,raidUntil:0,buildUntil:0,cooldowns:{},prestige:0},milestones:{},log:[],awardedEvents:[]}}
 function normalize(city,x){const b=blank(city),v=(x&&typeof x==='object')?x:{};const h=v.hq||{},sh=v.shop||{};return{
@@ -5716,10 +5716,10 @@ window.CT_ECONOMY_205={mining:{tiers:MINE_TIERS.map(x=>({...x})),vitalityRecover
 <script id="ct174208BuildMarker">
 (()=>{
  try{
-  document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.208');
-  const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.208');
+  document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.209');
+  const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.209');
  }catch(e){}
- window.__CT_BUILD='V17.4.208-mining-main-battle-status';
+ window.__CT_BUILD='V17.4.209-full-gold-numbers';
  window.CT_BALANCE_204={genesis:{perRoundXp:120,perRoundGrowth:.002,ratios:{1:1,2:.75,3:.65,4:.55,5:.50,'6-10':.40,'11-15':.25,'16-22':.15},maxRounds:10},leaguePools:{1:'U/S/A','2-3':'S/A','4-10':'A/B','11-22':'B/C',ratingBoost:'隊伍+角色平均加成會提高池內高階率'},megaPools:{1:'S/A/B','2-3':'A/B','4-10':'B/C','11-22':'C/D'}};
  window.CT_GENESIS_RULE_203={interval:10000,maxRounds:10,maxCreatorTreasure:'2U',manualPracticeNoReward:true,guaranteedS:{oneU:[2],twoU:[2,3]},treasureCountByTowerRank:{'2-3':5,'4-5':4,'6-10':3,'11-15':2,'16-22':1}};
 })();
