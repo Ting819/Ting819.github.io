@@ -93,6 +93,13 @@ html,body,.app,.modal,button,select,input,textarea{
 </style>
 
 <meta content="ct-v17.4.177-preview-safe-cloud" name="ct-app-build"/>
+
+<style id="ct174210MiningRankStyle">
+#rank tr.econMiningRow210{background:linear-gradient(90deg,rgba(125,91,27,.16),rgba(19,34,55,.96))!important}
+#rank tr.econMiningRow210 td{border-bottom-color:#5d4823}
+.ctRankMining210,.ctRankMiningEnemy210{min-height:50px;border:1px solid #6a5227;border-radius:9px;background:#2a2114;padding:8px 10px;display:flex;flex-direction:column;justify-content:center;gap:3px;color:#ffd980}
+.ctRankMining210 b,.ctRankMiningEnemy210 b{font-size:11px;color:#ffe49b}.ctRankMining210 span,.ctRankMiningEnemy210 span{font-size:9px;color:#b9aa87}
+</style>
 </head><body>
 <div class="app">
 <div class="top">
@@ -145,7 +152,7 @@ window.ctBattleTreasureInline126=function(c){
 </script>
 <script>
 const SAVE='CITY_TOWER_V17_SAVE';
-const CT_BUILD_VERSION='V17.4.209';
+const CT_BUILD_VERSION='V17.4.210';
 const CT_SAVE_PREUPDATE='CITY_TOWER_V17_PREUPDATE_BACKUP';
 const CT_TREASURE_SAVE_KEY='CITY_TOWER_V1743_TREASURE';
 const CT_TREASURE_PREUPDATE='CITY_TOWER_V1743_TREASURE_PREUPDATE_BACKUP';
@@ -2187,9 +2194,20 @@ const wb=q('manualWB'),br=q('manualBrawl');if(wb)wb.onclick=()=>open('boss',fals
           const fill=mg&&mg.querySelector('i');if(fill)fill.style.width=Math.max(0,Math.min(100,Number(p.g)||0))+'%';
           const xp=box.querySelector('.xp173');if(xp)xp.style.display='none';
         });
+        const econ210=window.__CT_ECON205_LIVE?.(s.city)||null;
+        if(econ210?.mine){
+          const tiers210=window.CT_ECONOMY_205?.mining?.tiers||[],mt210=tiers210.find(x=>x.id===econ210.mine.id)||{};
+          const rem210=Math.max(0,Math.ceil(Number(econ210.mine.remaining)||0)),tot210=Math.max(1,Number(econ210.mine.total)||Number(mt210.turns)||1),prog210=Math.max(0,Math.min(100,100*(1-rem210/tot210)));
+          tr.classList.add('econMiningRow210');
+          const fc210=tr.children[4];if(fc210){fc210.innerHTML=`<b>${s.floor}F ⏸</b><div class="sub">⛏️ 爬塔暫停｜剩 ${rem210}回</div><div class="econ205RankStatus mine">${mt210.name||'⛏️ 挖礦'}｜${prog210.toFixed(1)}%</div>`;}
+          const pc210=tr.children[5];if(pc210)pc210.innerHTML=`<div class="ctRankMining210"><b>⛏️ ${mt210.name||'礦場'}開採中</b><span>4人爬塔隊伍暫停｜剩 ${rem210}回</span></div>`;
+          const ec210=tr.children[6];if(ec210)ec210.innerHTML=`<div class="ctRankMiningEnemy210"><b>🗼 怪物戰鬥暫停</b><span>挖完後自動回到 ${s.floor}F</span></div>`;
+          return;
+        }
+        tr.classList.remove('econMiningRow210');
         const e=s.enemy,pct=Math.max(0,Math.min(100,100*e.hp/Math.max(1,e.max)));
         const floorCell=tr.children[4];
-        if(floorCell){const fb=floorCell.querySelector('b');if(fb)fb.textContent=s.floor+'F';const fs=floorCell.querySelector('.sub');if(fs)fs.textContent=`${s.ft}T｜敵剩${Math.round(pct)}%`;}
+        if(floorCell){const fb=floorCell.querySelector('b');if(fb)fb.textContent=s.floor+'F';const fs=floorCell.querySelector('.sub');if(fs)fs.textContent=`${s.ft}T｜敵剩${Math.round(pct)}%`;const ms=floorCell.querySelector('.econ205RankStatus.mine');if(ms)ms.remove();}
         const td=tr.lastElementChild;
         if(td){
           let box=td.querySelector('.rankEnemy174');
@@ -2802,11 +2820,20 @@ td,th,.ev173row,.rankMega,.rewardMega>div,.bf .nm,.compChar b,.compChar .sub{
       }
       const ptxt=m[s.city].power.toFixed(2);
       if(powCell.textContent!==ptxt)powCell.textContent=ptxt;
-      const floorCell=tr.children[4];
-      floorCell.querySelector('b').textContent=s.floor+'F';
-      floorCell.querySelector('.sub').textContent=s.ft+'T｜敵剩'+Math.round(s.enemy.hp/s.enemy.max*100)+'%';
-      tr.children[5].innerHTML='<div class="partyMini">'+s.party.map(p=>{const c=(window.__CT_FAST_CHAR_BY_ID?.(s.city,p.id)||R[s.city].find(x=>x.id===p.id));return `<div class="${window.__CT_RANK_ATTACK_FLASH_ACTIVE?.(p.id)?'miniGaugeFiredCT':''}"><div class="miniName">${ctElementBadge180(c.element,true)} ${p.name} Lv.${c.lv}</div><div class="bar"><i style="width:${100*p.hp/p.max}%"></i></div><div class="sub">${Math.round(p.hp)}/${p.max}｜👟 ${Math.round(p.g)}/100</div><div class="miniGauge17425" aria-label="攻擊條"><i style="width:${Math.max(0,Math.min(100,Number(p.g)||0))}%"></i></div></div>`}).join('')+'</div>';
-      {const ep=Math.max(0,Math.min(100,100*s.enemy.hp/Math.max(1,s.enemy.max)));tr.children[6].innerHTML=`<div class="rankEnemy174"><div class="reh174name">${ctElementBadge180(s.enemy.element,true)} ${s.enemy.name}</div><div class="reh174top"><span>${Math.round(s.enemy.hp)} / ${s.enemy.max}</span><span>${Math.round(ep)}%</span></div><div class="reh174track"><div class="reh174fill" style="width:${ep}%"></div></div></div>`;}
+      const floorCell=tr.children[4],econ210=window.__CT_ECON205_LIVE?.(s.city)||null;
+      if(econ210?.mine){
+        const tiers210=window.CT_ECONOMY_205?.mining?.tiers||[],mt210=tiers210.find(x=>x.id===econ210.mine.id)||{};
+        const rem210=Math.max(0,Math.ceil(Number(econ210.mine.remaining)||0)),tot210=Math.max(1,Number(econ210.mine.total)||Number(mt210.turns)||1),prog210=Math.max(0,Math.min(100,100*(1-rem210/tot210)));
+        tr.classList.add('econMiningRow210');
+        floorCell.innerHTML=`<b>${s.floor}F ⏸</b><div class="sub">⛏️ 爬塔暫停｜剩 ${rem210}回</div><div class="econ205RankStatus mine">${mt210.name||'⛏️ 挖礦'}｜${prog210.toFixed(1)}%</div>`;
+        tr.children[5].innerHTML=`<div class="ctRankMining210"><b>⛏️ ${mt210.name||'礦場'}開採中</b><span>4人爬塔隊伍暫停｜剩 ${rem210}回</span></div>`;
+        tr.children[6].innerHTML=`<div class="ctRankMiningEnemy210"><b>🗼 怪物戰鬥暫停</b><span>挖完後自動回到 ${s.floor}F</span></div>`;
+      }else{
+        tr.classList.remove('econMiningRow210');
+        floorCell.innerHTML=`<b>${s.floor}F</b><div class="sub">${s.ft}T｜敵剩${Math.round(s.enemy.hp/s.enemy.max*100)}%</div>${window.__CT_ECON205_FLOOR_HTML?window.__CT_ECON205_FLOOR_HTML(s):''}`;
+        tr.children[5].innerHTML='<div class="partyMini">'+s.party.map(p=>{const c=(window.__CT_FAST_CHAR_BY_ID?.(s.city,p.id)||R[s.city].find(x=>x.id===p.id));return `<div class="${window.__CT_RANK_ATTACK_FLASH_ACTIVE?.(p.id)?'miniGaugeFiredCT':''}"><div class="miniName">${ctElementBadge180(c.element,true)} ${p.name} Lv.${c.lv}</div><div class="bar"><i style="width:${100*p.hp/p.max}%"></i></div><div class="sub">${Math.round(p.hp)}/${p.max}｜👟 ${Math.round(p.g)}/100</div><div class="miniGauge17425" aria-label="攻擊條"><i style="width:${Math.max(0,Math.min(100,Number(p.g)||0))}%"></i></div></div>`}).join('')+'</div>';
+        {const ep=Math.max(0,Math.min(100,100*s.enemy.hp/Math.max(1,s.enemy.max)));tr.children[6].innerHTML=`<div class="rankEnemy174"><div class="reh174name">${ctElementBadge180(s.enemy.element,true)} ${s.enemy.name}</div><div class="reh174top"><span>${Math.round(s.enemy.hp)} / ${s.enemy.max}</span><span>${Math.round(ep)}%</span></div><div class="reh174track"><div class="reh174fill" style="width:${ep}%"></div></div></div>`;}
+      }
       rows.push(tr);
       oldRows.delete(s.city);
     });
@@ -5537,7 +5564,7 @@ try{for(const s of states||[])if(s)delete s.ctKoHoldTurn193}catch(_e){}
 <script id="ct174205EconomyMiningHeadquarters">
 (()=>{
 'use strict';
-/* V17.4.209 — City economy layer.
+/* V17.4.210 — City economy layer.
    One cohesive subsystem: gold/diamonds, shop, mining, HQ raids/repair and AI decisions.
    It never advances in the background; all progress is tied to the existing foreground game turn. */
 const CITIES=()=>Object.keys(R||{});
@@ -5716,10 +5743,10 @@ window.CT_ECONOMY_205={mining:{tiers:MINE_TIERS.map(x=>({...x})),vitalityRecover
 <script id="ct174208BuildMarker">
 (()=>{
  try{
-  document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.209');
-  const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.209');
+  document.title=document.title.replace(/V17\.4\.\d+/g,'V17.4.210');
+  const h1=document.querySelector('h1');if(h1)h1.innerHTML=h1.innerHTML.replace(/V17\.4\.\d+/g,'V17.4.210');
  }catch(e){}
- window.__CT_BUILD='V17.4.209-full-gold-numbers';
+ window.__CT_BUILD='V17.4.210-mining-rank-status-fix';
  window.CT_BALANCE_204={genesis:{perRoundXp:120,perRoundGrowth:.002,ratios:{1:1,2:.75,3:.65,4:.55,5:.50,'6-10':.40,'11-15':.25,'16-22':.15},maxRounds:10},leaguePools:{1:'U/S/A','2-3':'S/A','4-10':'A/B','11-22':'B/C',ratingBoost:'隊伍+角色平均加成會提高池內高階率'},megaPools:{1:'S/A/B','2-3':'A/B','4-10':'B/C','11-22':'C/D'}};
  window.CT_GENESIS_RULE_203={interval:10000,maxRounds:10,maxCreatorTreasure:'2U',manualPracticeNoReward:true,guaranteedS:{oneU:[2],twoU:[2,3]},treasureCountByTowerRank:{'2-3':5,'4-5':4,'6-10':3,'11-15':2,'16-22':1}};
 })();
