@@ -217,8 +217,7 @@ body.ctGameUI176::after{content:"";position:fixed;width:440px;height:440px;borde
 <section class="panel"><h2>🏆 22隊即時排行榜</h2><div class="tablewrap"><table id="rankTable121"><colgroup><col class="c121Rank"/><col class="c121Team"/><col class="c121Tier"/><col class="c121Power"/><col class="c121Floor"/><col class="c121Party"/><col class="c121Enemy"/></colgroup><thead><tr><th>#</th><th>隊伍</th><th>評級</th><th>戰力指數</th><th>樓層</th><th>4人HP（完全分開）</th><th>怪物HP</th></tr></thead><tbody id="rank"></tbody></table></div></section>
 <div class="bottom">
 <section class="panel"><h2>🎮 即時戰鬥</h2><div class="arena" id="arena"></div></section>
-<div><section class="panel"><h2>📜 Battle Log</h2><div class="log" id="log"></div></section>
-<section class="panel" style="margin-top:8px"><h2>🌐 最近特殊事件</h2><div class="event" id="event">尚未觸發。</div></section></div>
+
 </div></div>
 <div class="modalBack" id="mb"><div class="modal"><div class="modalHead"><b id="mt">📚 勢力資料｜22勢力</b><div><button id="aiReview155">🤖 ChatGPT銳評</button><button id="exportReview155">📦 匯出銳評</button><button id="back" style="display:none">← 22勢力</button><button id="close">✕</button></div></div><div class="modalBody" id="mbo"></div></div></div>
 
@@ -437,8 +436,8 @@ function render(){
  $('rank').innerHTML=rr.map((s,i)=>`<tr class="team ${s.city===selected?'sel':''}" data-city="${s.city}"><td>${i+1}</td><td class="teamTint ${m[s.city].tier}"><div class="city" style="color:${ctFactionColor1751(s.city)}">${ctFactionLabel1751(s.city)}</div><div class="sub">${window.__CT_ECON205_INLINE?window.__CT_ECON205_INLINE(s.city):''}</div></td><td class="rankTierCell"><span class="rankTierAnchor"><span class="tier tierLetter tierMotion ${m[s.city].tier}">${m[s.city].tier}</span></span></td><td class="powerTint ${m[s.city].tier}">${m[s.city].power.toFixed(2)}</td><td><b>${s.floor}F</b><div class="sub">${s.ft}T｜敵剩${Math.round(s.enemy.hp/s.enemy.max*100)}%</div>${window.__CT_ECON205_FLOOR_HTML?window.__CT_ECON205_FLOOR_HTML(s):''}</td><td><div class="partyMini">${s.party.map(p=>`<div class="${window.__CT_RANK_ATTACK_FLASH_ACTIVE?.(p.id)?'miniGaugeFiredCT':''}"><div class="miniName">${ctElementBadge180(R[s.city].find(c=>c.id===p.id)?.element,true)} ${p.name} Lv.${R[s.city].find(c=>c.id===p.id).lv}</div><div class="bar"><i style="width:${100*p.hp/p.max}%"></i></div><div class="sub">${Math.round(p.hp)}/${p.max}</div></div>`).join('')}</div></td><td class="ctMonsterRank184"><div>${ctElementBadge180(s.enemy.element)} <b>${s.enemy.name}</b></div><div class="sub">HP ${Math.round(s.enemy.hp)} / ${s.enemy.max}</div></td></tr>`).join('');
  document.querySelectorAll('tr.team').forEach(x=>x.onclick=()=>{selected=x.dataset.city;render()});
  let e=sel.enemy;$('arena').innerHTML=`<div class="enemy"><div class="cardTop"><div><b class="ctMonsterTitle184">${ctElementBadge180(e.element)} <span>${e.name}</span></b><div class="sub">屬性 ${ctElementInfo180(e.element).name}｜ATK ${e.atk.toFixed(0)}｜DEF ${e.def.toFixed(0)}｜攻速 ${e.speed.toFixed(1)}</div></div><b>${Math.round(e.hp)} / ${e.max}</b></div><div class="monsterHp174"><div class="mh174top"><span>❤️ ${ctElementBadge180(e.element,true)} ${ctElementInfo180(e.element).name}｜怪物 HP</span><span class="mh174num">${Math.round(e.hp)} / ${e.max}</span></div><div class="mh174track"><div class="mh174fill" style="width:${Math.max(0,Math.min(100,100*e.hp/e.max))}%"></div></div><div class="mh174pct">剩餘 ${Math.round(Math.max(0,Math.min(100,100*e.hp/e.max)))}%</div></div><div class="gbar" style="margin-top:5px"><i style="width:${e.g}%"></i></div></div><div class="cards">${sel.party.map(p=>{let c=R[sel.city].find(x=>x.id===p.id),ss=cstats(c);return `<div class="card ${p.alive?'':'dead'}"><div class="cardTop"><div><div class="name">${ctElementBadge180(c.element)} ${p.name}</div></div><b>${Math.round(p.hp)}/${p.max}</b></div><div class="ctExpRowFinal"><span class="ctLvFinal">Lv.${c.lv}</span><span class="ctExpValueFinal">EXP ${c.xp}/${xpNeed(c.lv)}</span></div><div class="xp173" aria-label="EXP進度"><i style="width:${Math.max(0,Math.min(100,100*c.xp/xpNeed(c.lv)))}%"></i></div><div class="bar"><i style="width:${100*p.hp/p.max}%"></i></div><div class="gbar" style="margin-top:5px"><i style="width:${p.g}%"></i></div>${window.ctBattleTreasureInline126(c)}<div class="stats"><div class="stat">ATK<b>${p.atk}</b></div><div class="stat">DEF<b>${p.def}</b></div><div class="stat">攻速<b>${p.speed.toFixed(1)}</b></div><div class="stat">爆擊<b>${Math.round(p.crit*100)}%</b></div><div class="stat">閃避<b>${Math.round((p.dodge||0)*100)}%</b></div><div class="stat">爆傷<b>+${Math.round((p.critDmg||.50)*100)}%</b></div><div class="stat ct182PenStat">穿透<b>${(((Number.isFinite(Number(p.penetration))?p.penetration:ss.penetration)||0)*100).toFixed(1)}%</b></div><div class="stat ct182ComboStat">連擊<b>${(((Number.isFinite(Number(p.combo))?p.combo:ss.combo)||0)*100).toFixed(1)}%</b></div></div></div>`}).join('')}</div>`;
- $('log').innerHTML=sel.log.map(x=>'<div>'+x+'</div>').join('')||'<span class="sub">尚無戰鬥紀錄</span>';
- $('event').innerHTML=lastEvent?'<b>'+lastEvent.type+'</b><br>'+lastEvent.top.map((x,i)=>(i+1)+'. '+ctFactionLabel1751(x.city)+'｜'+x.score.toFixed(0)).join('<br>'):'尚未觸發。';
+ const _battleLogEl=$('log');if(_battleLogEl)_battleLogEl.innerHTML=sel.log.map(x=>'<div>'+x+'</div>').join('')||'<span class="sub">尚無戰鬥紀錄</span>';
+ const _eventEl=$('event');if(_eventEl)_eventEl.innerHTML=lastEvent?'<b>'+lastEvent.type+'</b><br>'+lastEvent.top.map((x,i)=>(i+1)+'. '+ctFactionLabel1751(x.city)+'｜'+x.score.toFixed(0)).join('<br>'):'尚未觸發。';
 }
 function loop(ts){if(!running)return;let sp=+$('speed').value,ms=1000/sp,dt=Math.min(250,ts-last);last=ts;acc+=dt;let n=Math.min(8,Math.floor(acc/ms));for(let i=0;i<n&&running;i++){tick(false);acc-=ms}if(n>0&&ts-lastPaint>(sp>=25?240:sp>=10?190:sp>=5?180:850)){render();lastPaint=ts}raf=requestAnimationFrame(loop)}
 function start(){if(running){stop();return}running=true;$('auto').textContent='⏸ 暫停';last=performance.now();acc=0;lastPaint=0;raf=requestAnimationFrame(loop)}
@@ -6910,7 +6909,7 @@ function draw(nowMs,dt){const c=fx.ctx;if(!c)return;c.clearRect(0,0,fx.w,fx.h);c
 function loop(t){if(document.hidden){fx.raf=requestAnimationFrame(loop);return}const dt=Math.min(.05,Math.max(0,(t-(fx.lastFrame||t))/1000));fx.lastFrame=t;if(t-fx.lastUi>100){ui();fx.lastUi=t}draw(t,dt);if(fx.lockUntil&&t>fx.lockUntil){fx.lockUntil=0;fx.enemySnapshot=null;syncEnemy(true)}fx.raf=requestAnimationFrame(loop)}
 
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',build,{once:true});else build();
-try{document.title='Taiwan City Tower｜V19.1.3';window.__CT_BUILD='V19.1.3-tiered-affix-counts';window.CT_MOBILE_RPG_1800={projectileBattle:true,visualDamageOnImpact:true,equipmentRebrand:true,eventCycle:'boss-brawl-boss-league',permanentGrowthReduced:true};}catch(_){ }
+try{document.title='Taiwan City Tower｜V19.1.6';window.__CT_BUILD='V19.1.6-no-side-panel';window.CT_MOBILE_RPG_1800={projectileBattle:true,visualDamageOnImpact:true,equipmentRebrand:true,eventCycle:'boss-brawl-boss-league',permanentGrowthReduced:true};}catch(_){ }
 })();
 </script>
 
@@ -7410,7 +7409,7 @@ try{document.title='Taiwan City Tower｜V18.2.0';window.__CT_BUILD='V18.2.0-mobi
 </style>
 <script id="ct1822ActivityGuard">
 try{
- document.title='Taiwan City Tower｜V19.1.3';window.__CT_BUILD='V19.1.3-tiered-affix-counts';
+ document.title='Taiwan City Tower｜V19.1.6';window.__CT_BUILD='V19.1.6-no-side-panel';
  /* Safety fallback in case an older cached activity script calls these names directly. */
  if(typeof window.factionIcon!=='function')window.factionIcon=(city)=>typeof ctFactionIcon1751==='function'?ctFactionIcon1751(city):'⚔️';
  if(typeof window.brawlDash!=='function')window.brawlDash=()=>{};
@@ -7434,7 +7433,7 @@ try{
 @media(max-width:680px){.arenaFighterGrid18010 .bf{padding-top:52px!important}.arenaChibiFixed18023{top:-6px;width:68px;height:72px}.arenaChibiFixed18023 .ctMascot1822{width:46px;height:46px}}
 </style>
 <script id="ct1823ChibiStableArenaScript">
-try{document.title='Taiwan City Tower｜V19.1.3';window.__CT_BUILD='V19.1.3-tiered-affix-counts'}catch(_e){}
+try{document.title='Taiwan City Tower｜V19.1.6';window.__CT_BUILD='V19.1.6-no-side-panel'}catch(_e){}
 </script>
 
 
@@ -7537,8 +7536,8 @@ try{document.title='Taiwan City Tower｜V19.1.3';window.__CT_BUILD='V19.1.3-tier
 try{
   const a=document.getElementById('ctBattleJump176');if(a)a.innerHTML='⚔️ 戰鬥';
   const b=document.getElementById('ctRankJump176');if(b)b.innerHTML='🏆 排行';
-  document.title='Taiwan City Tower｜V19.1.3';
-  window.__CT_BUILD='V19.1.3-tiered-affix-counts';
+  document.title='Taiwan City Tower｜V19.1.6';
+  window.__CT_BUILD='V19.1.6-no-side-panel';
 }catch(_e){}
 </script>
 
@@ -7577,8 +7576,8 @@ try{
 </style>
 <script id="ct18211BuildStamp">
 try{
-  document.title='Taiwan City Tower｜V19.1.3';
-  window.__CT_BUILD='V19.1.3-tiered-affix-counts';
+  document.title='Taiwan City Tower｜V19.1.6';
+  window.__CT_BUILD='V19.1.6-no-side-panel';
 }catch(_e){}
 </script>
 
@@ -7589,7 +7588,7 @@ try{
 .ct18-stat-attr{padding:1px 6px;border-radius:999px;background:rgba(122,193,255,.12);border:1px solid rgba(122,193,255,.18);color:#dff5ff}
 .ct18-hero-meta{line-height:1.35}
 </style>
-<script id="ct1812BuildStamp">try{document.title='Taiwan City Tower｜V19.1.3';window.__CT_BUILD='V19.1.3-tiered-affix-counts'}catch(_e){}</script>
+<script id="ct1812BuildStamp">try{document.title='Taiwan City Tower｜V19.1.6';window.__CT_BUILD='V19.1.6-no-side-panel'}catch(_e){}</script>
 
 
 <style id="ct1830RoleImpactStyle">
@@ -7726,7 +7725,7 @@ const ROGUE=[
 ];
 function localDay(){const d=new Date(),z=n=>String(n).padStart(2,'0');return `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}`}
 function localWeek(){const d=new Date(),a=new Date(d.getFullYear(),0,1),days=Math.floor((d-a)/86400000);return `${d.getFullYear()}-W${Math.floor((days+a.getDay())/7)+1}`}
-function blank(){return {v:1,starDust:0,skillPts:0,chars:{},run:{},daily:{key:localDay(),floors:0,crit:0,boss:0,claimed:{}},weekly:{key:localWeek(),floors:0,events:0,levels:0,claimed:{}},ach:{claimed:{}},season:{id:1,xp:0,claimed:0,startTurn:Number(window.turn)||0},settings:{fx:'high',damage:'all',powerSaver:false,autoUlt:true,pauseChoice:true,settlement:true},eventLog:[]}}
+function blank(){return {v:1,starDust:0,skillPts:0,chars:{},run:{},daily:{key:localDay(),floors:0,crit:0,boss:0,claimed:{}},weekly:{key:localWeek(),floors:0,events:0,levels:0,claimed:{}},ach:{claimed:{}},season:{id:1,xp:0,claimed:0,startTurn:Number(window.turn)||0},settings:{fx:'high',damage:'all',powerSaver:false,autoUlt:true,autoChoice:true,pauseChoice:true,settlement:true},eventLog:[]}}
 let M=blank();try{const x=JSON.parse(localStorage.getItem(KEY)||'null');if(x&&x.v===1)M=Object.assign(blank(),x)}catch(_e){}
 M.settings=Object.assign(blank().settings,M.settings||{});M.chars=M.chars||{};M.run=M.run||{};M.daily=M.daily||blank().daily;M.weekly=M.weekly||blank().weekly;M.ach=M.ach||{claimed:{}};M.season=M.season||blank().season;M.eventLog=M.eventLog||[];
 function saveM(){try{localStorage.setItem(KEY,JSON.stringify(M))}catch(_e){}}
@@ -7778,12 +7777,51 @@ function tickStatuses(s){ensureEnemyRole(s);if(!s.v19Stats)initPartyMeta(s);boss
 function addLog(t){M.eventLog.unshift(`T${Number(window.turn)||0}｜${t}`);if(M.eventLog.length>50)M.eventLog.length=50}
 function eventRoom(s){if(Math.random()>.085)return;M.weekly.events++;const r=Math.floor(Math.random()*4);if(r===0){const h=healParty(s,.20);addLog(`⛲ ${ctFactionName1751(s.city)} 發現恢復祭壇｜+${h} HP`)}else if(r===1){M.starDust+=5;addLog(`💎 ${ctFactionName1751(s.city)} 發現星塵寶箱｜+5 星塵`)}else if(r===2){try{window.__CT_TREASURE?.award?.(s.city,'C','事件寶箱',s.floor,false,false);addLog(`🎁 ${ctFactionName1751(s.city)} 發現事件寶箱`)}catch(_e){M.starDust+=3}}else{const rr=runMeta(s.city,s.floor);rr.atk+=.02;rr.guard+=.02;addLog(`🗿 ${ctFactionName1751(s.city)} 接受古代試煉｜本章 ATK +2%、承傷 -2%`)}saveM()}
 function showResult(s,cleared,key,stats=null){if(s.city!==selected||!M.settings.settlement)return;if(key==='normal'&&cleared%5!==0)return;const stage=document.getElementById('ct18Stage');if(!stage)return;let o=document.getElementById('ct19Result');if(!o){o=document.createElement('div');o.id='ct19Result';stage.appendChild(o)}const st=stats||s.v19LastStats||s.v19Stats||{};o.innerHTML=`<div class="ct19ResultCard"><h2>VICTORY</h2><div>🏆 ${cleared}F CLEAR｜${key==='normal'?'一般戰鬥':'Boss / 菁英戰'}</div><div class="ct19ResultStats"><div>總傷害<b>${Math.round(st.damage||0).toLocaleString()}</b></div><div>承受傷害<b>${Math.round(st.taken||0).toLocaleString()}</b></div><div>治療<b>${Math.round(st.heal||0).toLocaleString()}</b></div><div>暴擊<b>${st.crits||0}</b></div><div>大招<b>${st.skills||0}</b></div><div>星塵<b>+${key==='normal'?0:2}</b></div></div></div>`;o.classList.add('show');setTimeout(()=>o.classList.remove('show'),2200)}
-function rogueChoices(city,floor){const arr=[...ROGUE].sort(()=>Math.random()-.5).slice(0,3);if(city!==selected){applyChoice(city,floor,arr[Math.floor(Math.random()*arr.length)]);return}if(!M.settings.pauseChoice){applyChoice(city,floor,arr[0]);return}const was=running;try{running=false}catch(_e){}let b=document.getElementById('ct19RogueBack');if(!b){b=document.createElement('div');b.id='ct19RogueBack';document.body.appendChild(b)}b.innerHTML=`<div class="ct19Rogue"><h2>🔮 戰術三選一</h2><div class="sub">${floor}F 里程碑｜效果持續到本章結束</div><div class="ct19ChoiceGrid">${arr.map((x,i)=>`<div class="ct19Choice" data-i="${i}"><div class="ico">${x.icon}</div><b>${x.name}</b><span>${x.desc}</span></div>`).join('')}</div></div>`;b.classList.add('open');b.querySelectorAll('.ct19Choice').forEach(el=>el.onclick=()=>{applyChoice(city,floor,arr[Number(el.dataset.i)]);b.classList.remove('open');if(was)try{running=true}catch(_e){}})}
+function tacticChoiceScore1914(city,floor,x){
+  const s=states?.find?.(z=>z.city===city),r=runMeta(city,floor),party=(s?.party||[]),chars=party.map(p=>R?.[city]?.find(c=>c.id===p.id)).filter(Boolean);
+  const roles=chars.map(roleKey),els=chars.map(c=>c.element),alive=party.filter(p=>p.alive!==false);
+  const avgHp=alive.length?alive.reduce((a,p)=>a+(Number(p.hp)||0)/Math.max(1,Number(p.max)||1),0)/alive.length:1;
+  const cnt=k=>roles.filter(v=>v===k).length;
+  let score=x.inc*100;
+  score/=1+Math.max(0,Number(r[x.key])||0)*2.2;
+  if(x.key==='hp'){
+    score+=avgHp<.72?8:2;if(cnt('tank')===0)score+=3;
+  }else if(x.key==='guard'){
+    score+=avgHp<.60?11:3;if(cnt('tank')===0)score+=4;
+  }else if(x.key==='atk'){
+    score+=cnt('warrior')*2.3+cnt('mage')*1.6;if(avgHp>.72)score+=3;
+  }else if(x.key==='speed'){
+    score+=cnt('archer')*2.8+cnt('support')*2.0+cnt('mage')*.8;
+  }else if(x.key==='crit'){
+    score+=cnt('archer')*3.0+cnt('mage')*1.8;if((Number(r.crit)||0)>.30)score-=3;
+  }else if(x.key==='element'){
+    const ec={};els.forEach(e=>ec[e]=(ec[e]||0)+1);const maxSame=Math.max(0,...Object.values(ec));
+    score+=maxSame>=2?7:3;if(els.includes('thunder'))score+=2;if(els.includes('light')||els.includes('dark'))score+=1.5;
+  }
+  if(avgHp<.45){if(x.key==='hp'||x.key==='guard')score+=10;else score-=2}
+  else if(avgHp>.85&&['atk','speed','crit','element'].includes(x.key))score+=2.5;
+  return score;
+}
+function bestTacticChoice1914(city,floor,arr){return [...arr].sort((a,b)=>tacticChoiceScore1914(city,floor,b)-tacticChoiceScore1914(city,floor,a))[0]||arr[0]}
+function tacticAutoNotice1914(city,x){if(city!==selected)return;levelFx(`🤖 自動戰術｜${ctFactionName1751(city)}｜${x.name}｜${x.desc}`)}
+function rogueChoices(city,floor){
+  const arr=[...ROGUE].sort(()=>Math.random()-.5).slice(0,3);
+  if(city!==selected){const pick=bestTacticChoice1914(city,floor,arr);applyChoice(city,floor,pick);return}
+  if(M.settings.autoChoice){const pick=bestTacticChoice1914(city,floor,arr);applyChoice(city,floor,pick);tacticAutoNotice1914(city,pick);return}
+  if(!M.settings.pauseChoice){const pick=bestTacticChoice1914(city,floor,arr);applyChoice(city,floor,pick);tacticAutoNotice1914(city,pick);return}
+  const was=running;try{running=false}catch(_e){}let b=document.getElementById('ct19RogueBack');if(!b){b=document.createElement('div');b.id='ct19RogueBack';document.body.appendChild(b)}
+  const ai=bestTacticChoice1914(city,floor,arr);
+  b.innerHTML=`<div class="ct19Rogue"><h2>🔮 戰術三選一</h2><div class="sub">${floor}F 里程碑｜效果持續到本章結束</div><div class="ct19ChoiceGrid">${arr.map((x,i)=>`<div class="ct19Choice ${x===ai?'aiBest':''}" data-i="${i}"><div class="ico">${x.icon}</div><b>${x.name}</b><span>${x.desc}</span>${x===ai?'<em>🤖 AI 推薦</em>':''}</div>`).join('')}</div><button id="ct19AutoPickNow" class="ct19AutoPickNow">🤖 自動選擇本次</button></div>`;
+  b.classList.add('open');
+  const choose=x=>{applyChoice(city,floor,x);b.classList.remove('open');if(was)try{running=true}catch(_e){}};
+  b.querySelectorAll('.ct19Choice').forEach(el=>el.onclick=()=>choose(arr[Number(el.dataset.i)]));
+  b.querySelector('#ct19AutoPickNow')?.addEventListener('click',()=>{choose(ai);tacticAutoNotice1914(city,ai)});
+}
 function applyChoice(city,floor,x){const r=runMeta(city,floor);r[x.key]=(r[x.key]||0)+x.inc;r.picks=(r.picks||0)+1;r.lastChoice=floor;addLog(`🔮 ${ctFactionName1751(city)}｜${x.name}｜${x.desc}`);saveM()}
 function onClear(s,cleared,key,stats=null){resetPeriod();const player=s.city===selected;if(player){M.daily.floors++;M.weekly.floors++;M.season.xp+=key==='normal'?8:key==='elite'?20:key==='small'?28:key==='big'?40:60;if(key!=='normal'){M.daily.boss++;M.starDust+=2}if(cleared%25===0)M.starDust+=3;eventRoom(s)}else if(Math.random()<.04){const r=runMeta(s.city,cleared);r.atk+=.01}if(cleared%10===0){const r=runMeta(s.city,cleared);if(r.lastChoice!==cleared)rogueChoices(s.city,cleared)}if(stats)s.v19LastStats=stats;showResult(s,cleared,key,stats);saveM()}
 const PREV_ROUND=window.round;if(typeof PREV_ROUND==='function')window.round=round=function(s){const f=s.floor,key=s.enemy?.key||'normal',stats=s.v19Stats?{...s.v19Stats}:null;tickStatuses(s);PREV_ROUND(s);if(s.floor>f)onClear(s,f,key,stats)};
 
-const PREV_GAIN=window.gain;if(typeof PREV_GAIN==='function')window.gain=gain=function(c,n){const lv=c?.lv||1,z=PREV_GAIN(c,n),newLv=c?.lv||lv;if(newLv>lv){const d=newLv-lv,isPlayer=cityOf(c)===selected;if(isPlayer){M.skillPts+=d;M.weekly.levels+=d;if(newLv%5===0)M.starDust+=2}const m=cm(c),tier=charTier(c);if(m.lastTier&&m.lastTier!==tier&&cityOf(c)===selected)levelFx(`✨ 評級突破 ${m.lastTier} → ${tier}`,true);m.lastTier=tier;if(cityOf(c)===selected)levelFx(`LEVEL UP  Lv.${newLv}`);saveM()}return z};
+const PREV_GAIN=window.gain;if(typeof PREV_GAIN==='function')window.gain=gain=function(c,n){const lv=c?.lv||1,z=PREV_GAIN(c,n),newLv=c?.lv||lv;if(newLv>lv){const d=newLv-lv,city=cityOf(c),isPlayer=city===selected,label=`${ctFactionName1751(city)}・${c?.name||'角色'}`;if(isPlayer){M.skillPts+=d;M.weekly.levels+=d;if(newLv%5===0)M.starDust+=2}const m=cm(c),tier=charTier(c);if(m.lastTier&&m.lastTier!==tier&&isPlayer)levelFx(`✨ ${label}｜評級突破 ${m.lastTier} → ${tier}`,true);m.lastTier=tier;if(isPlayer)levelFx(`⬆️ ${label}｜Lv.${lv} → Lv.${newLv}`);saveM()}return z};
 
 function achievementDefs(){let maxF=0,kills=0;try{for(const s of states||[])maxF=Math.max(maxF,s.floor||0);for(const arr of Object.values(R||{}))for(const c of arr||[])kills+=Number(c.kills)||0}catch(_e){}return[
  {id:'f100',name:'百層冒險者',desc:'任一勢力抵達 100F',ok:maxF>=100,reward:20},{id:'f1000',name:'千層征服者',desc:'任一勢力抵達 1,000F',ok:maxF>=1000,reward:60},{id:'f10000',name:'深淵之門',desc:'任一勢力抵達 10,000F',ok:maxF>=10000,reward:200},{id:'k1000',name:'千敵斬',desc:'累積擊殺 1,000 隻敵人',ok:kills>=1000,reward:40},{id:'star6',name:'六星覺醒',desc:'擁有 1 名六星角色',ok:Object.values(M.chars).some(x=>x.stars>=6),reward:100}
@@ -7791,8 +7829,8 @@ function achievementDefs(){let maxF=0,kills=0;try{for(const s of states||[])maxF
 const DAILY=[['floors','今日推進',20,12],['crit','暴擊演練',30,10],['boss','Boss 討伐',3,15]],WEEKLY=[['floors','本週遠征',200,45],['events','事件探索',5,35],['levels','角色成長',10,35]];
 function claimTask(kind,key,target,reward){const o=M[kind];if((o[key]||0)<target||o.claimed[key])return;o.claimed[key]=1;M.starDust+=reward;M.season.xp+=reward*3;saveM();renderAdventure()}
 function claimAch(id,reward){const a=achievementDefs().find(x=>x.id===id);if(!a?.ok||M.ach.claimed[id])return;M.ach.claimed[id]=1;M.starDust+=reward;saveM();renderAdventure()}
-function upgradeStar(id){const c=Object.values(R||{}).flat().find(x=>x.id===id);if(!c)return;const m=cm(c);if(m.stars>=6)return;const cost=20*m.stars*m.stars;if(M.starDust<cost)return alert(`需要 ${cost} 星塵，目前 ${M.starDust}`);M.starDust-=cost;m.stars++;saveM();try{if(typeof render==='function')render()}catch(_e){}renderAdventure()}
-function upgradeSkill(id,key){const c=Object.values(R||{}).flat().find(x=>x.id===id);if(!c)return;const m=cm(c),field=key==='skill'?'skillLv':'passiveLv',cost=m[field];if(m[field]>=10)return;if(M.skillPts<cost)return alert(`需要 ${cost} 技能點，目前 ${M.skillPts}`);M.skillPts-=cost;m[field]++;saveM();renderAdventure()}
+function upgradeStar(id){const c=Object.values(R||{}).flat().find(x=>x.id===id);if(!c)return;const m=cm(c);if(m.stars>=6)return;const cost=20*m.stars*m.stars;if(M.starDust<cost)return alert(`需要 ${cost} 星塵，目前 ${M.starDust}`);const before=m.stars;M.starDust-=cost;m.stars++;saveM();levelFx(`⭐ ${ctFactionName1751(cityOf(c))}・${c.name}｜${before}★ → ${m.stars}★`);try{if(typeof render==='function')render()}catch(_e){}renderAdventure()}
+function upgradeSkill(id,key){const c=Object.values(R||{}).flat().find(x=>x.id===id);if(!c)return;const m=cm(c),field=key==='skill'?'skillLv':'passiveLv',cost=m[field];if(m[field]>=10)return;if(M.skillPts<cost)return alert(`需要 ${cost} 技能點，目前 ${M.skillPts}`);const before=m[field];M.skillPts-=cost;m[field]++;saveM();const nm=key==='skill'?'大招':'被動';levelFx(`🌀 ${ctFactionName1751(cityOf(c))}・${c.name}｜${nm} Lv.${before} → Lv.${m[field]}`);renderAdventure()}
 function autoEquip(city,mode='balanced'){const api=window.__CT_TREASURE;if(!api?.inventory)return alert('裝備系統尚未就緒');const cs=R?.[city]||[],inv=api.inventory(city).filter(it=>!it.ctMaterialized175);for(const c of cs){c.treasureIds=[];c.treasureId=null}for(const it of inv)it.equippedTo=null;const tierScore={Z:1,F:2,E:3,D:4,C:5,B:6,A:8,S:11,U:15,X:22};const balanced={tank:{shield:8,core:6,wing:5,sigil:2,blade:1},warrior:{blade:8,core:6,wing:5,shield:3,sigil:2},archer:{blade:8,wing:7,core:5,sigil:3,shield:1},mage:{sigil:9,core:7,wing:5,blade:2,shield:1},support:{sigil:8,wing:7,core:6,shield:3,blade:1}},dps={tank:{blade:8,sigil:7,wing:6,core:5,shield:2},warrior:{blade:10,sigil:6,wing:7,core:5,shield:1},archer:{blade:10,wing:9,sigil:7,core:5,shield:1},mage:{sigil:10,blade:7,wing:6,core:6,shield:1},support:{sigil:9,blade:6,wing:7,core:6,shield:2}},tankMode={tank:{shield:10,core:9,wing:7,sigil:2,blade:1},warrior:{shield:8,core:8,wing:7,blade:4,sigil:2},archer:{shield:6,core:8,wing:8,blade:5,sigil:2},mage:{shield:6,core:8,wing:7,sigil:5,blade:1},support:{shield:7,core:9,wing:8,sigil:5,blade:1}};const pref=mode==='dps'?dps:mode==='tank'?tankMode:balanced;const unused=new Set(inv.map(x=>x.id));for(const c of cs){const r=roleKey(c),types=['blade','shield','wing','core','sigil'];for(const type of types){const cand=inv.filter(it=>unused.has(it.id)&&it.type===type).sort((a,b)=>(tierScore[b.tier]||0)+(pref[r]?.[b.type]||0)-(tierScore[a.tier]||0)-(pref[r]?.[a.type]||0))[0];if(cand){c.treasureIds.push(cand.id);c.treasureId=c.treasureIds[0];cand.equippedTo=c.id;unused.delete(cand.id)}}}api.save?.();try{save(true)}catch(_e){}alert(`${ctFactionName1751(city)} 已完成「${mode==='dps'?'最大輸出':mode==='tank'?'最大生存':'職業推薦'}」自動配裝。`);renderAdventure()}
 window.__CT19_AUTO_EQUIP=autoEquip;
 
@@ -7840,10 +7878,10 @@ function tabHtml(){
     const lv=Math.floor(M.season.xp/500)+1,pct=(M.season.xp%500)/5;
     return `<div class="ct19Grid two"><div class="ct19Card"><h3>🎟️ S${M.season.id}｜世界遠征賽季</h3><div class="big">Lv.${lv}</div><div class="ct19Progress"><i style="width:${pct}%"></i></div><div class="sub">EXP ${M.season.xp%500}/500｜每 10,000 世界回合進入下一季，不重置角色與裝備。</div></div><div class="ct19Card"><h3>🎁 賽季里程碑</h3><div class="sub">每提升 1 級可領星塵；高階獎勵以養成資源為主。</div><button id="ct19SeasonClaim" ${lv<=M.season.claimed?'disabled':''}>領取 Lv.${M.season.claimed+1}～${lv} 獎勵</button></div></div>`;
   }
-  return `<div class="ct19Grid two ct19Settings"><div class="ct19Card"><h3>🎨 戰鬥顯示</h3><label>特效品質<select id="ct19Fx"><option value="high">高</option><option value="medium">中</option><option value="low">低</option><option value="off">關閉</option></select></label><label>傷害數字<select id="ct19Damage"><option value="all">全部</option><option value="crit">只顯示暴擊</option><option value="off">關閉</option></select></label><label>省電模式<input id="ct19Saver" type="checkbox"></label></div><div class="ct19Card"><h3>⚙️ 戰鬥自動化</h3><label>自動施放大招<input id="ct19AutoUlt" type="checkbox"></label><label>戰術三選一自動暫停<input id="ct19PauseChoice" type="checkbox"></label><label>Boss／菁英勝利結算<input id="ct19Settlement" type="checkbox"></label><div class="sub">設定只影響演出與自動操作，不會清除任何養成。</div></div></div>`;
+  return `<div class="ct19Grid two ct19Settings"><div class="ct19Card"><h3>🎨 戰鬥顯示</h3><label>特效品質<select id="ct19Fx"><option value="high">高</option><option value="medium">中</option><option value="low">低</option><option value="off">關閉</option></select></label><label>傷害數字<select id="ct19Damage"><option value="all">全部</option><option value="crit">只顯示暴擊</option><option value="off">關閉</option></select></label><label>省電模式<input id="ct19Saver" type="checkbox"></label></div><div class="ct19Card"><h3>⚙️ 戰鬥自動化</h3><label>自動施放大招<input id="ct19AutoUlt" type="checkbox"></label><label>🤖 戰術三選一自動選擇<input id="ct19AutoChoice" type="checkbox"></label><label>手動選擇時自動暫停<input id="ct19PauseChoice" type="checkbox"></label><label>Boss／菁英勝利結算<input id="ct19Settlement" type="checkbox"></label><div class="sub">設定只影響演出與自動操作，不會清除任何養成。</div></div></div>`;
 }
 function ensureAdventure(){let b=document.getElementById('ct19AdventureBack');if(b)return b;b=document.createElement('div');b.id='ct19AdventureBack';b.innerHTML=`<div class="ct19Modal"><div class="ct19Head"><div><b>🧭 冒險中心</b><div class="sub">技能・星級・羈絆・地圖・任務・成就・賽季・設定</div></div><button id="ct19Close">✕ 關閉</button></div><div class="ct19Tabs" id="ct19Tabs"></div><div class="ct19Body" id="ct19Body"></div></div>`;document.body.appendChild(b);b.querySelector('#ct19Close').onclick=()=>b.classList.remove('open');b.addEventListener('click',e=>{if(e.target===b)b.classList.remove('open')});return b}
-function renderAdventure(){resetPeriod();const b=ensureAdventure(),tabs=b.querySelector('#ct19Tabs'),body=b.querySelector('#ct19Body');tabs.innerHTML=adventureTabs();body.innerHTML=tabHtml();if(typeof bindHorizontalMap1902==='function')bindHorizontalMap1902(body);tabs.querySelectorAll('[data-tab]').forEach(x=>x.onclick=()=>{advTab=x.dataset.tab;renderAdventure()});body.querySelectorAll('[data-star]').forEach(x=>x.onclick=()=>upgradeStar(x.dataset.star));body.querySelectorAll('[data-skill]').forEach(x=>x.onclick=()=>upgradeSkill(x.dataset.skill,'skill'));body.querySelectorAll('[data-passive]').forEach(x=>x.onclick=()=>upgradeSkill(x.dataset.passive,'passive'));body.querySelectorAll('[data-autoeq]').forEach(x=>x.onclick=()=>autoEquip(selectedCity(),x.dataset.autoeq));body.querySelectorAll('[data-task]').forEach(x=>x.onclick=()=>{const [k,key,t,r]=x.dataset.task.split('|');claimTask(k,key,Number(t),Number(r))});body.querySelectorAll('[data-ach]').forEach(x=>x.onclick=()=>{const [id,r]=x.dataset.ach.split('|');claimAch(id,Number(r))});const sc=body.querySelector('#ct19SeasonClaim');if(sc)sc.onclick=()=>{const lv=Math.floor(M.season.xp/500)+1,gain=Math.max(0,lv-M.season.claimed)*10;M.starDust+=gain;M.season.claimed=lv;saveM();renderAdventure()};const fx=body.querySelector('#ct19Fx'),dm=body.querySelector('#ct19Damage'),sv=body.querySelector('#ct19Saver'),au=body.querySelector('#ct19AutoUlt'),pc=body.querySelector('#ct19PauseChoice'),st=body.querySelector('#ct19Settlement');if(fx){fx.value=M.settings.fx;dm.value=M.settings.damage;sv.checked=M.settings.powerSaver;au.checked=M.settings.autoUlt;pc.checked=M.settings.pauseChoice;st.checked=M.settings.settlement;const apply=()=>{M.settings.fx=fx.value;M.settings.damage=dm.value;M.settings.powerSaver=sv.checked;M.settings.autoUlt=au.checked;M.settings.pauseChoice=pc.checked;M.settings.settlement=st.checked;applySettings();saveM()};[fx,dm,sv,au,pc,st].forEach(x=>x.onchange=apply)}}
+function renderAdventure(){resetPeriod();const b=ensureAdventure(),tabs=b.querySelector('#ct19Tabs'),body=b.querySelector('#ct19Body');tabs.innerHTML=adventureTabs();body.innerHTML=tabHtml();if(typeof bindHorizontalMap1902==='function')bindHorizontalMap1902(body);tabs.querySelectorAll('[data-tab]').forEach(x=>x.onclick=()=>{advTab=x.dataset.tab;renderAdventure()});body.querySelectorAll('[data-star]').forEach(x=>x.onclick=()=>upgradeStar(x.dataset.star));body.querySelectorAll('[data-skill]').forEach(x=>x.onclick=()=>upgradeSkill(x.dataset.skill,'skill'));body.querySelectorAll('[data-passive]').forEach(x=>x.onclick=()=>upgradeSkill(x.dataset.passive,'passive'));body.querySelectorAll('[data-autoeq]').forEach(x=>x.onclick=()=>autoEquip(selectedCity(),x.dataset.autoeq));body.querySelectorAll('[data-task]').forEach(x=>x.onclick=()=>{const [k,key,t,r]=x.dataset.task.split('|');claimTask(k,key,Number(t),Number(r))});body.querySelectorAll('[data-ach]').forEach(x=>x.onclick=()=>{const [id,r]=x.dataset.ach.split('|');claimAch(id,Number(r))});const sc=body.querySelector('#ct19SeasonClaim');if(sc)sc.onclick=()=>{const lv=Math.floor(M.season.xp/500)+1,gain=Math.max(0,lv-M.season.claimed)*10;M.starDust+=gain;M.season.claimed=lv;saveM();renderAdventure()};const fx=body.querySelector('#ct19Fx'),dm=body.querySelector('#ct19Damage'),sv=body.querySelector('#ct19Saver'),au=body.querySelector('#ct19AutoUlt'),ac=body.querySelector('#ct19AutoChoice'),pc=body.querySelector('#ct19PauseChoice'),st=body.querySelector('#ct19Settlement');if(fx){fx.value=M.settings.fx;dm.value=M.settings.damage;sv.checked=M.settings.powerSaver;au.checked=M.settings.autoUlt;if(ac)ac.checked=M.settings.autoChoice!==false;pc.checked=M.settings.pauseChoice;st.checked=M.settings.settlement;const apply=()=>{M.settings.fx=fx.value;M.settings.damage=dm.value;M.settings.powerSaver=sv.checked;M.settings.autoUlt=au.checked;if(ac)M.settings.autoChoice=ac.checked;M.settings.pauseChoice=pc.checked;M.settings.settlement=st.checked;applySettings();saveM()};[fx,dm,sv,au,ac,pc,st].filter(Boolean).forEach(x=>x.onchange=apply)}}
 function openAdventure(){const b=ensureAdventure();renderAdventure();b.classList.add('open')}
 function installButton(){if(document.getElementById('ct19AdventureBtn'))return;const dock=document.querySelector('.ctDock176')||document.querySelector('.topBtns')||document.querySelector('.controls');if(!dock)return;const b=document.createElement('button');b.id='ct19AdventureBtn';b.innerHTML='🧭 冒險';b.onclick=openAdventure;dock.appendChild(b)}
 function boot(){resetPeriod();applySettings();try{for(const s of states||[])if(s&&!s.v19Stats)initPartyMeta(s)}catch(_e){}installButton();ensureBattleHud();decorateBattle();setInterval(decorateBattle,M.settings.powerSaver?800:400);saveM()}
@@ -7894,7 +7932,7 @@ window.__CT19={meta:M,save:saveM,open:openAdventure,role:roleInfo,skills:SKILLS,
   .ct19EnemyRoleLine,.ct19EnemyStateLine{font-size:10px!important}
 }
 </style>
-<script id="ct1901BuildStamp">try{document.title='Taiwan City Tower｜V19.1.3';window.__CT_BUILD='V19.1.3-tiered-affix-counts'}catch(_e){}</script>
+<script id="ct1901BuildStamp">try{document.title='Taiwan City Tower｜V19.1.6';window.__CT_BUILD='V19.1.6-no-side-panel'}catch(_e){}</script>
 
 
 <style id="ct1902HorizontalDragMapStyle">
@@ -8038,8 +8076,8 @@ function bindHorizontalMap1902(root=document){
   });
 }
 try{
-  document.title='Taiwan City Tower｜V19.1.3';
-  window.__CT_BUILD='V19.1.3-tiered-affix-counts';
+  document.title='Taiwan City Tower｜V19.1.6';
+  window.__CT_BUILD='V19.1.6-no-side-panel';
 }catch(_e){}
 </script>
 
@@ -8047,19 +8085,19 @@ try{
 <style id="ct191EquipmentReforgeStyle">
 #mbo.ct182EquipmentUI{padding:12px!important;background:linear-gradient(180deg,#091525,#07111f)!important}.t191Top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border:1px solid #315078;border-radius:18px;background:linear-gradient(135deg,#172d4e,#0e2039);margin-bottom:9px}.t191Top>div{display:flex;flex-direction:column}.t191Top b{font-size:20px;color:#f2f7ff}.t191Top span{font-size:11px;color:#9db4d3}.t191Top select{min-width:200px}.t191Stats{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:9px}.t191Stats span{padding:9px 12px;border:1px solid #29466c;border-radius:13px;background:#10233e;color:#a9bedb;font-size:11px}.t191Stats b{float:right;color:#fff;font-size:15px}.t191Tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:12px;padding:6px;border:1px solid #29476d;border-radius:15px;background:#0b1b30}.t191Tabs button{min-height:44px;border-radius:11px;background:#132947;border-color:#31557f;font-weight:900}.t191Tabs button.on{background:linear-gradient(180deg,#316db9,#1b4b86);box-shadow:0 0 18px #3989df33}.t191Auto{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:12px;border:1px solid #31547d;border-radius:16px;background:#112744;margin-bottom:11px}.t191Auto>div{margin-right:auto;display:flex;flex-direction:column}.t191Auto span{font-size:10px;color:#9cb2cf}.t191CharGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.t191Char{padding:12px;border:1px solid #2b486e;border-radius:17px;background:linear-gradient(180deg,#132947,#0a1b31)}.t191CharHead{display:flex;justify-content:space-between;gap:8px;margin-bottom:9px}.t191CharHead b{font-size:15px}.t191CharHead span{font-size:10px;color:#9fb5d1}.t191Slots{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}.t191Slot{min-height:88px;padding:6px 4px;border:1px solid #3b577b;border-radius:11px;background:#0b1a2d;text-align:center;overflow:hidden}.t191Slot>span{font-size:22px;display:block}.t191Slot>b{font-size:11px;display:block;margin:3px 0}.t191Slot small{font-size:8px;color:#aabbd0;display:block;line-height:1.25}.t191Slot.empty{opacity:.38}.t191Manage{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-bottom:8px;padding:9px;border:1px solid #315075;border-radius:14px;background:#0d2038}.t191Manage select{min-width:135px}.t191Manage button{min-height:38px}.t191Filter{display:flex;gap:8px;align-items:center;margin-bottom:10px;padding:9px;border:1px solid #2e4b70;border-radius:14px;background:#102039}.t191Filter select{min-width:150px}.t191Filter span{margin-left:auto;color:#9fb6d5}.t191BagGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.t191Item{padding:10px;border:1px solid color-mix(in srgb,var(--tg,#577) 45%,#34506e);border-radius:17px;background:linear-gradient(180deg,#132947,#091a2f);box-shadow:0 8px 22px #0004}.t191ItemVisual{height:116px;position:relative;display:grid;place-items:center;border-radius:13px;background:radial-gradient(circle at 50% 45%,color-mix(in srgb,var(--tg) 22%,transparent),transparent 58%),#081522}.t191ItemVisual img{width:100%;height:100%;object-fit:contain}.t191ItemVisual>span{position:absolute;right:7px;bottom:7px;width:28px;height:28px;display:grid;place-items:center;border-radius:9px;background:#07101dee;border:1px solid #ffffff22}.t191ItemTop{display:flex;justify-content:space-between;gap:7px;margin-top:7px}.t191ItemTop em{font-size:9px;font-style:normal;padding:2px 6px;border-radius:99px;background:#ffffff0d;color:#c8d7ea}.t191Item h3{font-size:14px;margin:5px 0}.t191Base,.t191Variant,.t191Origin{font-size:9px;line-height:1.55;margin:4px 0}.t191Base{color:#aebfd4}.t191Variant{padding:5px 7px;border-radius:8px;background:#213b5d;color:#d9ebff}.t191Origin{color:#8da3bf}.t191Item select,.t191Item button{width:100%;margin-top:5px}.t191ForgeHero{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:15px;border:1px solid #725f29;border-radius:17px;background:linear-gradient(135deg,#2b2614,#15243a);margin-bottom:8px}.t191ForgeHero>div{display:flex;flex-direction:column}.t191ForgeHero b{font-size:20px;color:#ffe49a}.t191ForgeHero span{font-size:11px;color:#cbbf9b}.t191ForgeHero strong{font-size:18px;color:#ffd56c}.t191Rate{padding:10px 12px;border:1px solid #365475;border-radius:13px;background:#10223b;font-size:10px;line-height:1.7;color:#b8c9dd;margin-bottom:8px}.t191Rate b{color:#76edab}.t191Rate span{color:#ffe28a}.t191ForgeActions{display:flex;gap:7px;margin-bottom:9px}.t191ForgeGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.t191ForgeCard{padding:11px;border:1px solid #304c70;border-radius:16px;background:linear-gradient(180deg,#122642,#09192d);opacity:.72}.t191ForgeCard.ready{opacity:1;border-color:#5e8dcc;box-shadow:0 0 18px #4c98ef1e}.t191ForgeItem{display:flex;align-items:center;gap:9px}.t191ForgeItem>span{width:42px;height:42px;display:grid;place-items:center;border-radius:12px;background:#203b60;font-size:24px}.t191ForgeItem>div{display:flex;flex-direction:column;min-width:0}.t191ForgeItem b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.t191ForgeItem small{font-size:9px;color:#95aac5}.t191Recipe{display:grid;grid-template-columns:1fr 28px 1fr;align-items:center;gap:5px;margin:10px 0;padding:8px;border-radius:11px;background:#081625;text-align:center}.t191Recipe div{display:flex;flex-direction:column}.t191Recipe small{font-size:8px;color:#91a8c5}.t191Recipe i{font-style:normal;font-size:18px;color:#ffd968}.t191ForgeMeta{display:flex;justify-content:space-between;font-size:9px;color:#a7bad2;margin-bottom:6px}.t191ForgeMeta b{color:#78edac;font-size:13px}.t191ForgeCard button{width:100%}.t191CatalogTier{margin-bottom:18px}.t191CatalogTier>h2{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid #334c6c}.t191CatalogTier>h2 span{font-size:11px;color:#9cb2cf}.t191CatGroup h3{font-size:12px;color:#adc4df;margin:9px 0 5px}.t191CatalogGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.t191CatItem{min-height:98px;padding:9px;border:1px solid #2e496b;border-radius:13px;background:#10233d;display:flex;flex-direction:column;align-items:center;text-align:center}.t191CatIcon{font-size:27px;margin-bottom:4px}.t191CatItem b{font-size:11px}.t191CatItem small{font-size:8px;color:#9eb2cc;margin-top:4px;line-height:1.35}@media(max-width:1100px){.t191CharGrid{grid-template-columns:repeat(2,1fr)}.t191BagGrid{grid-template-columns:repeat(3,1fr)}.t191ForgeGrid{grid-template-columns:repeat(2,1fr)}}@media(max-width:760px){.t191Stats,.t191Tabs{grid-template-columns:repeat(2,1fr)}.t191CharGrid,.t191BagGrid,.t191ForgeGrid{grid-template-columns:1fr}.t191CatalogGrid{grid-template-columns:repeat(2,1fr)}.t191Slots{grid-template-columns:repeat(5,minmax(48px,1fr));overflow-x:auto}.t191Top{align-items:flex-start;flex-direction:column}.t191Top select{width:100%}}
 </style>
-<script id="ct191BuildStamp">try{document.title='Taiwan City Tower｜V19.1.3';window.__CT_BUILD='V19.1.3-tiered-affix-counts'}catch(_e){}</script>
+<script id="ct191BuildStamp">try{document.title='Taiwan City Tower｜V19.1.6';window.__CT_BUILD='V19.1.6-no-side-panel'}catch(_e){}</script>
 
 
 <style id="ct1911PowerStyle">
 .t191Power1911{display:flex;align-items:center;justify-content:space-between;margin:7px 0 5px;padding:7px 9px;border-radius:10px;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.08)}.t191Power1911 span{font-size:9px;color:#9eb3ce}.t191Power1911 b{font-size:17px;letter-spacing:.3px}.t191Power1911.X{background:rgba(255,225,80,.10);border-color:rgba(255,225,80,.25)}.t191Power1911.U{background:rgba(255,110,210,.10);border-color:rgba(255,110,210,.22)}.t191SlotPower{display:block;margin-top:4px;font-size:8px;color:#e8f1ff}.t191ForgePower{display:flex;align-items:center;justify-content:center;gap:12px;margin:6px 0 8px;padding:7px;border-radius:10px;background:#0b1a2d;font-size:11px}.t191ForgePower i{font-style:normal;color:#8ea6c3}.t191ForgePower b{font-size:13px}.t191CharHead>span{white-space:nowrap}
 </style>
-<script id="ct1911BuildStamp">try{document.title='Taiwan City Tower｜V19.1.3';window.__CT_BUILD='V19.1.3-tiered-affix-counts'}catch(_e){}</script>
+<script id="ct1911BuildStamp">try{document.title='Taiwan City Tower｜V19.1.6';window.__CT_BUILD='V19.1.6-no-side-panel'}catch(_e){}</script>
 
 
 <style id="ct1912EffectGapStyle">
 .t191Variant{font-weight:900!important}.t191Item.X .t191Variant,.t191CatItem.X small{color:#fff4a0!important;text-shadow:0 0 8px rgba(255,232,92,.32)}.t191Item.U .t191Variant,.t191CatItem.U small{color:#ffd2f4!important}.t191Item.S .t191Variant,.t191CatItem.S small{color:#ffb6bd!important}
 </style>
-<script id="ct1912BuildStamp">try{document.title='Taiwan City Tower｜V19.1.3';window.__CT_BUILD='V19.1.3-tiered-affix-counts'}catch(_e){}</script>
+<script id="ct1912BuildStamp">try{document.title='Taiwan City Tower｜V19.1.6';window.__CT_BUILD='V19.1.6-no-side-panel'}catch(_e){}</script>
 
 
 <style id="ct1913AffixStyle">
@@ -8068,6 +8106,85 @@ try{
 .t1913Affix{font-size:10px;color:#c9d8ed;padding:3px 0;border-top:1px dashed rgba(120,157,205,.10)}.t1913Affix.main{color:#fff0a5;border-top:0;font-weight:800}
 .t191ForgeMeta{flex-wrap:wrap!important}.t191ForgeMeta span{white-space:nowrap}
 </style>
-<script id="ct1913BuildStamp">try{document.title='Taiwan City Tower｜V19.1.3';window.__CT_BUILD='V19.1.3-tiered-affix-counts'}catch(_e){}</script>
+<script id="ct1913BuildStamp">try{document.title='Taiwan City Tower｜V19.1.6';window.__CT_BUILD='V19.1.6-no-side-panel'}catch(_e){}</script>
+
+
+<style id="ct1914AutoTacticStyle">
+.ct19Choice.aiBest{border-color:rgba(104,226,164,.65)!important;box-shadow:0 0 0 1px rgba(104,226,164,.18),0 10px 28px rgba(33,169,104,.15)!important}
+.ct19Choice.aiBest em{display:inline-flex;margin-top:8px;padding:3px 8px;border-radius:999px;background:rgba(74,208,132,.14);border:1px solid rgba(74,208,132,.28);color:#8ff0b8;font-style:normal;font-size:11px;font-weight:900}
+.ct19AutoPickNow{display:block!important;margin:14px auto 0!important;padding:9px 18px!important;border-radius:12px!important;background:linear-gradient(180deg,#2879c8,#1c5790)!important;color:#fff!important;font-weight:900!important}
+</style>
+<script id="ct1914BuildStamp">try{document.title='Taiwan City Tower｜V19.1.6';window.__CT_BUILD='V19.1.6-no-side-panel'}catch(_e){}</script>
+
+
+<style id="ct1915NoBattleLogStyle">
+/* V19.1.6｜主畫面移除戰鬥記錄 */
+.ct1915SideEventOnly{
+  min-width:0;
+}
+.ct1915SideEventOnly .panel{
+  height:100%;
+  min-height:150px;
+}
+.ct1915SideEventOnly .event{
+  min-height:110px!important;
+  height:auto!important;
+}
+body.ct18-mobile-rpg .ct1915SideEventOnly .panel{
+  display:flex;
+  flex-direction:column;
+}
+body.ct18-mobile-rpg .ct1915SideEventOnly .event{
+  flex:1;
+}
+</style>
+<script id="ct1915BuildStamp">
+try{
+  document.title='Taiwan City Tower｜V19.1.6';
+  window.__CT_BUILD='V19.1.6-no-side-panel';
+}catch(_e){}
+</script>
+
+
+<style id="ct1916NoSidePanelStyle">
+/* V19.1.6｜主戰鬥區取消右側整個框 */
+.ctMain176{
+  grid-template-columns:minmax(0,1fr)!important;
+  gap:0!important;
+}
+.ctSideCol176{
+  display:none!important;
+  width:0!important;
+  min-width:0!important;
+  max-width:0!important;
+  margin:0!important;
+  padding:0!important;
+}
+.ctBattleCol176{
+  width:100%!important;
+  min-width:0!important;
+}
+.ctBattlePanel176{
+  width:100%!important;
+}
+.ctGameUI176 .arena{
+  width:100%!important;
+}
+.bottom{
+  grid-template-columns:1fr!important;
+}
+.ct1915SideEventOnly{
+  display:none!important;
+}
+@media(max-width:1200px){
+  .ctMain176{grid-template-columns:minmax(0,1fr)!important}
+}
+</style>
+<script id="ct1916BuildStamp">
+try{
+  document.title='Taiwan City Tower｜V19.1.6';
+  window.__CT_BUILD='V19.1.6-no-side-panel';
+}catch(_e){}
+</script>
 
 </body></html>
