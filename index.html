@@ -6801,7 +6801,7 @@ function build(){
   if($('manualLeague'))$('manualLeague').textContent='🏆 賽季聯賽';
   if($('manualGenesis'))$('manualGenesis').textContent='👑 終局挑戰';
   if($('globalHelp169'))$('globalHelp169').textContent='📘 遊戲指南';
-  const v=document.querySelector('.ctVersion176');if(v)v.innerHTML='<b>V19.0.1</b><span>ENEMY HUD STABLE</span>';
+  const v=document.querySelector('.ctVersion176');if(v)v.innerHTML='<b>V19.1.7</b><span>COMBAT FOCUS</span>';
   const sub=document.querySelector('.ctLogoText176 .sub');if(sub)sub.textContent='勢力養成RPG｜即時彈道戰鬥・裝備・討伐・競技場・賽季聯賽';
   // 角色舞台
   const party=$('ct18Party');
@@ -6909,7 +6909,7 @@ function draw(nowMs,dt){const c=fx.ctx;if(!c)return;c.clearRect(0,0,fx.w,fx.h);c
 function loop(t){if(document.hidden){fx.raf=requestAnimationFrame(loop);return}const dt=Math.min(.05,Math.max(0,(t-(fx.lastFrame||t))/1000));fx.lastFrame=t;if(t-fx.lastUi>100){ui();fx.lastUi=t}draw(t,dt);if(fx.lockUntil&&t>fx.lockUntil){fx.lockUntil=0;fx.enemySnapshot=null;syncEnemy(true)}fx.raf=requestAnimationFrame(loop)}
 
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',build,{once:true});else build();
-try{document.title='Taiwan City Tower｜V19.1.6';window.__CT_BUILD='V19.1.6-no-side-panel';window.CT_MOBILE_RPG_1800={projectileBattle:true,visualDamageOnImpact:true,equipmentRebrand:true,eventCycle:'boss-brawl-boss-league',permanentGrowthReduced:true};}catch(_){ }
+try{document.title='Taiwan City Tower｜V19.1.7';window.__CT_BUILD='V19.1.7-combat-focus-layout';window.CT_MOBILE_RPG_1800={projectileBattle:true,visualDamageOnImpact:true,equipmentRebrand:true,eventCycle:'boss-brawl-boss-league',permanentGrowthReduced:true};}catch(_){ }
 })();
 </script>
 
@@ -7409,7 +7409,7 @@ try{document.title='Taiwan City Tower｜V18.2.0';window.__CT_BUILD='V18.2.0-mobi
 </style>
 <script id="ct1822ActivityGuard">
 try{
- document.title='Taiwan City Tower｜V19.1.6';window.__CT_BUILD='V19.1.6-no-side-panel';
+ document.title='Taiwan City Tower｜V19.1.7';window.__CT_BUILD='V19.1.7-combat-focus-layout';
  /* Safety fallback in case an older cached activity script calls these names directly. */
  if(typeof window.factionIcon!=='function')window.factionIcon=(city)=>typeof ctFactionIcon1751==='function'?ctFactionIcon1751(city):'⚔️';
  if(typeof window.brawlDash!=='function')window.brawlDash=()=>{};
@@ -7433,7 +7433,7 @@ try{
 @media(max-width:680px){.arenaFighterGrid18010 .bf{padding-top:52px!important}.arenaChibiFixed18023{top:-6px;width:68px;height:72px}.arenaChibiFixed18023 .ctMascot1822{width:46px;height:46px}}
 </style>
 <script id="ct1823ChibiStableArenaScript">
-try{document.title='Taiwan City Tower｜V19.1.6';window.__CT_BUILD='V19.1.6-no-side-panel'}catch(_e){}
+try{document.title='Taiwan City Tower｜V19.1.7';window.__CT_BUILD='V19.1.7-combat-focus-layout'}catch(_e){}
 </script>
 
 
@@ -7536,8 +7536,8 @@ try{document.title='Taiwan City Tower｜V19.1.6';window.__CT_BUILD='V19.1.6-no-s
 try{
   const a=document.getElementById('ctBattleJump176');if(a)a.innerHTML='⚔️ 戰鬥';
   const b=document.getElementById('ctRankJump176');if(b)b.innerHTML='🏆 排行';
-  document.title='Taiwan City Tower｜V19.1.6';
-  window.__CT_BUILD='V19.1.6-no-side-panel';
+  document.title='Taiwan City Tower｜V19.1.7';
+  window.__CT_BUILD='V19.1.7-combat-focus-layout';
 }catch(_e){}
 </script>
 
@@ -7576,8 +7576,8 @@ try{
 </style>
 <script id="ct18211BuildStamp">
 try{
-  document.title='Taiwan City Tower｜V19.1.6';
-  window.__CT_BUILD='V19.1.6-no-side-panel';
+  document.title='Taiwan City Tower｜V19.1.7';
+  window.__CT_BUILD='V19.1.7-combat-focus-layout';
 }catch(_e){}
 </script>
 
@@ -7588,7 +7588,7 @@ try{
 .ct18-stat-attr{padding:1px 6px;border-radius:999px;background:rgba(122,193,255,.12);border:1px solid rgba(122,193,255,.18);color:#dff5ff}
 .ct18-hero-meta{line-height:1.35}
 </style>
-<script id="ct1812BuildStamp">try{document.title='Taiwan City Tower｜V19.1.6';window.__CT_BUILD='V19.1.6-no-side-panel'}catch(_e){}</script>
+<script id="ct1812BuildStamp">try{document.title='Taiwan City Tower｜V19.1.7';window.__CT_BUILD='V19.1.7-combat-focus-layout'}catch(_e){}</script>
 
 
 <style id="ct1830RoleImpactStyle">
@@ -7932,7 +7932,7 @@ window.__CT19={meta:M,save:saveM,open:openAdventure,role:roleInfo,skills:SKILLS,
   .ct19EnemyRoleLine,.ct19EnemyStateLine{font-size:10px!important}
 }
 </style>
-<script id="ct1901BuildStamp">try{document.title='Taiwan City Tower｜V19.1.6';window.__CT_BUILD='V19.1.6-no-side-panel'}catch(_e){}</script>
+<script id="ct1901BuildStamp">try{document.title='Taiwan City Tower｜V19.1.7';window.__CT_BUILD='V19.1.7-combat-focus-layout'}catch(_e){}</script>
 
 
 <style id="ct1902HorizontalDragMapStyle">
@@ -8076,8 +8076,8 @@ function bindHorizontalMap1902(root=document){
   });
 }
 try{
-  document.title='Taiwan City Tower｜V19.1.6';
-  window.__CT_BUILD='V19.1.6-no-side-panel';
+  document.title='Taiwan City Tower｜V19.1.7';
+  window.__CT_BUILD='V19.1.7-combat-focus-layout';
 }catch(_e){}
 </script>
 
@@ -8085,19 +8085,19 @@ try{
 <style id="ct191EquipmentReforgeStyle">
 #mbo.ct182EquipmentUI{padding:12px!important;background:linear-gradient(180deg,#091525,#07111f)!important}.t191Top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border:1px solid #315078;border-radius:18px;background:linear-gradient(135deg,#172d4e,#0e2039);margin-bottom:9px}.t191Top>div{display:flex;flex-direction:column}.t191Top b{font-size:20px;color:#f2f7ff}.t191Top span{font-size:11px;color:#9db4d3}.t191Top select{min-width:200px}.t191Stats{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:9px}.t191Stats span{padding:9px 12px;border:1px solid #29466c;border-radius:13px;background:#10233e;color:#a9bedb;font-size:11px}.t191Stats b{float:right;color:#fff;font-size:15px}.t191Tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:12px;padding:6px;border:1px solid #29476d;border-radius:15px;background:#0b1b30}.t191Tabs button{min-height:44px;border-radius:11px;background:#132947;border-color:#31557f;font-weight:900}.t191Tabs button.on{background:linear-gradient(180deg,#316db9,#1b4b86);box-shadow:0 0 18px #3989df33}.t191Auto{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:12px;border:1px solid #31547d;border-radius:16px;background:#112744;margin-bottom:11px}.t191Auto>div{margin-right:auto;display:flex;flex-direction:column}.t191Auto span{font-size:10px;color:#9cb2cf}.t191CharGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.t191Char{padding:12px;border:1px solid #2b486e;border-radius:17px;background:linear-gradient(180deg,#132947,#0a1b31)}.t191CharHead{display:flex;justify-content:space-between;gap:8px;margin-bottom:9px}.t191CharHead b{font-size:15px}.t191CharHead span{font-size:10px;color:#9fb5d1}.t191Slots{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}.t191Slot{min-height:88px;padding:6px 4px;border:1px solid #3b577b;border-radius:11px;background:#0b1a2d;text-align:center;overflow:hidden}.t191Slot>span{font-size:22px;display:block}.t191Slot>b{font-size:11px;display:block;margin:3px 0}.t191Slot small{font-size:8px;color:#aabbd0;display:block;line-height:1.25}.t191Slot.empty{opacity:.38}.t191Manage{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-bottom:8px;padding:9px;border:1px solid #315075;border-radius:14px;background:#0d2038}.t191Manage select{min-width:135px}.t191Manage button{min-height:38px}.t191Filter{display:flex;gap:8px;align-items:center;margin-bottom:10px;padding:9px;border:1px solid #2e4b70;border-radius:14px;background:#102039}.t191Filter select{min-width:150px}.t191Filter span{margin-left:auto;color:#9fb6d5}.t191BagGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.t191Item{padding:10px;border:1px solid color-mix(in srgb,var(--tg,#577) 45%,#34506e);border-radius:17px;background:linear-gradient(180deg,#132947,#091a2f);box-shadow:0 8px 22px #0004}.t191ItemVisual{height:116px;position:relative;display:grid;place-items:center;border-radius:13px;background:radial-gradient(circle at 50% 45%,color-mix(in srgb,var(--tg) 22%,transparent),transparent 58%),#081522}.t191ItemVisual img{width:100%;height:100%;object-fit:contain}.t191ItemVisual>span{position:absolute;right:7px;bottom:7px;width:28px;height:28px;display:grid;place-items:center;border-radius:9px;background:#07101dee;border:1px solid #ffffff22}.t191ItemTop{display:flex;justify-content:space-between;gap:7px;margin-top:7px}.t191ItemTop em{font-size:9px;font-style:normal;padding:2px 6px;border-radius:99px;background:#ffffff0d;color:#c8d7ea}.t191Item h3{font-size:14px;margin:5px 0}.t191Base,.t191Variant,.t191Origin{font-size:9px;line-height:1.55;margin:4px 0}.t191Base{color:#aebfd4}.t191Variant{padding:5px 7px;border-radius:8px;background:#213b5d;color:#d9ebff}.t191Origin{color:#8da3bf}.t191Item select,.t191Item button{width:100%;margin-top:5px}.t191ForgeHero{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:15px;border:1px solid #725f29;border-radius:17px;background:linear-gradient(135deg,#2b2614,#15243a);margin-bottom:8px}.t191ForgeHero>div{display:flex;flex-direction:column}.t191ForgeHero b{font-size:20px;color:#ffe49a}.t191ForgeHero span{font-size:11px;color:#cbbf9b}.t191ForgeHero strong{font-size:18px;color:#ffd56c}.t191Rate{padding:10px 12px;border:1px solid #365475;border-radius:13px;background:#10223b;font-size:10px;line-height:1.7;color:#b8c9dd;margin-bottom:8px}.t191Rate b{color:#76edab}.t191Rate span{color:#ffe28a}.t191ForgeActions{display:flex;gap:7px;margin-bottom:9px}.t191ForgeGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.t191ForgeCard{padding:11px;border:1px solid #304c70;border-radius:16px;background:linear-gradient(180deg,#122642,#09192d);opacity:.72}.t191ForgeCard.ready{opacity:1;border-color:#5e8dcc;box-shadow:0 0 18px #4c98ef1e}.t191ForgeItem{display:flex;align-items:center;gap:9px}.t191ForgeItem>span{width:42px;height:42px;display:grid;place-items:center;border-radius:12px;background:#203b60;font-size:24px}.t191ForgeItem>div{display:flex;flex-direction:column;min-width:0}.t191ForgeItem b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.t191ForgeItem small{font-size:9px;color:#95aac5}.t191Recipe{display:grid;grid-template-columns:1fr 28px 1fr;align-items:center;gap:5px;margin:10px 0;padding:8px;border-radius:11px;background:#081625;text-align:center}.t191Recipe div{display:flex;flex-direction:column}.t191Recipe small{font-size:8px;color:#91a8c5}.t191Recipe i{font-style:normal;font-size:18px;color:#ffd968}.t191ForgeMeta{display:flex;justify-content:space-between;font-size:9px;color:#a7bad2;margin-bottom:6px}.t191ForgeMeta b{color:#78edac;font-size:13px}.t191ForgeCard button{width:100%}.t191CatalogTier{margin-bottom:18px}.t191CatalogTier>h2{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid #334c6c}.t191CatalogTier>h2 span{font-size:11px;color:#9cb2cf}.t191CatGroup h3{font-size:12px;color:#adc4df;margin:9px 0 5px}.t191CatalogGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.t191CatItem{min-height:98px;padding:9px;border:1px solid #2e496b;border-radius:13px;background:#10233d;display:flex;flex-direction:column;align-items:center;text-align:center}.t191CatIcon{font-size:27px;margin-bottom:4px}.t191CatItem b{font-size:11px}.t191CatItem small{font-size:8px;color:#9eb2cc;margin-top:4px;line-height:1.35}@media(max-width:1100px){.t191CharGrid{grid-template-columns:repeat(2,1fr)}.t191BagGrid{grid-template-columns:repeat(3,1fr)}.t191ForgeGrid{grid-template-columns:repeat(2,1fr)}}@media(max-width:760px){.t191Stats,.t191Tabs{grid-template-columns:repeat(2,1fr)}.t191CharGrid,.t191BagGrid,.t191ForgeGrid{grid-template-columns:1fr}.t191CatalogGrid{grid-template-columns:repeat(2,1fr)}.t191Slots{grid-template-columns:repeat(5,minmax(48px,1fr));overflow-x:auto}.t191Top{align-items:flex-start;flex-direction:column}.t191Top select{width:100%}}
 </style>
-<script id="ct191BuildStamp">try{document.title='Taiwan City Tower｜V19.1.6';window.__CT_BUILD='V19.1.6-no-side-panel'}catch(_e){}</script>
+<script id="ct191BuildStamp">try{document.title='Taiwan City Tower｜V19.1.7';window.__CT_BUILD='V19.1.7-combat-focus-layout'}catch(_e){}</script>
 
 
 <style id="ct1911PowerStyle">
 .t191Power1911{display:flex;align-items:center;justify-content:space-between;margin:7px 0 5px;padding:7px 9px;border-radius:10px;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.08)}.t191Power1911 span{font-size:9px;color:#9eb3ce}.t191Power1911 b{font-size:17px;letter-spacing:.3px}.t191Power1911.X{background:rgba(255,225,80,.10);border-color:rgba(255,225,80,.25)}.t191Power1911.U{background:rgba(255,110,210,.10);border-color:rgba(255,110,210,.22)}.t191SlotPower{display:block;margin-top:4px;font-size:8px;color:#e8f1ff}.t191ForgePower{display:flex;align-items:center;justify-content:center;gap:12px;margin:6px 0 8px;padding:7px;border-radius:10px;background:#0b1a2d;font-size:11px}.t191ForgePower i{font-style:normal;color:#8ea6c3}.t191ForgePower b{font-size:13px}.t191CharHead>span{white-space:nowrap}
 </style>
-<script id="ct1911BuildStamp">try{document.title='Taiwan City Tower｜V19.1.6';window.__CT_BUILD='V19.1.6-no-side-panel'}catch(_e){}</script>
+<script id="ct1911BuildStamp">try{document.title='Taiwan City Tower｜V19.1.7';window.__CT_BUILD='V19.1.7-combat-focus-layout'}catch(_e){}</script>
 
 
 <style id="ct1912EffectGapStyle">
 .t191Variant{font-weight:900!important}.t191Item.X .t191Variant,.t191CatItem.X small{color:#fff4a0!important;text-shadow:0 0 8px rgba(255,232,92,.32)}.t191Item.U .t191Variant,.t191CatItem.U small{color:#ffd2f4!important}.t191Item.S .t191Variant,.t191CatItem.S small{color:#ffb6bd!important}
 </style>
-<script id="ct1912BuildStamp">try{document.title='Taiwan City Tower｜V19.1.6';window.__CT_BUILD='V19.1.6-no-side-panel'}catch(_e){}</script>
+<script id="ct1912BuildStamp">try{document.title='Taiwan City Tower｜V19.1.7';window.__CT_BUILD='V19.1.7-combat-focus-layout'}catch(_e){}</script>
 
 
 <style id="ct1913AffixStyle">
@@ -8106,7 +8106,7 @@ try{
 .t1913Affix{font-size:10px;color:#c9d8ed;padding:3px 0;border-top:1px dashed rgba(120,157,205,.10)}.t1913Affix.main{color:#fff0a5;border-top:0;font-weight:800}
 .t191ForgeMeta{flex-wrap:wrap!important}.t191ForgeMeta span{white-space:nowrap}
 </style>
-<script id="ct1913BuildStamp">try{document.title='Taiwan City Tower｜V19.1.6';window.__CT_BUILD='V19.1.6-no-side-panel'}catch(_e){}</script>
+<script id="ct1913BuildStamp">try{document.title='Taiwan City Tower｜V19.1.7';window.__CT_BUILD='V19.1.7-combat-focus-layout'}catch(_e){}</script>
 
 
 <style id="ct1914AutoTacticStyle">
@@ -8114,11 +8114,11 @@ try{
 .ct19Choice.aiBest em{display:inline-flex;margin-top:8px;padding:3px 8px;border-radius:999px;background:rgba(74,208,132,.14);border:1px solid rgba(74,208,132,.28);color:#8ff0b8;font-style:normal;font-size:11px;font-weight:900}
 .ct19AutoPickNow{display:block!important;margin:14px auto 0!important;padding:9px 18px!important;border-radius:12px!important;background:linear-gradient(180deg,#2879c8,#1c5790)!important;color:#fff!important;font-weight:900!important}
 </style>
-<script id="ct1914BuildStamp">try{document.title='Taiwan City Tower｜V19.1.6';window.__CT_BUILD='V19.1.6-no-side-panel'}catch(_e){}</script>
+<script id="ct1914BuildStamp">try{document.title='Taiwan City Tower｜V19.1.7';window.__CT_BUILD='V19.1.7-combat-focus-layout'}catch(_e){}</script>
 
 
 <style id="ct1915NoBattleLogStyle">
-/* V19.1.6｜主畫面移除戰鬥記錄 */
+/* V19.1.7｜主畫面移除戰鬥記錄 */
 .ct1915SideEventOnly{
   min-width:0;
 }
@@ -8140,14 +8140,14 @@ body.ct18-mobile-rpg .ct1915SideEventOnly .event{
 </style>
 <script id="ct1915BuildStamp">
 try{
-  document.title='Taiwan City Tower｜V19.1.6';
-  window.__CT_BUILD='V19.1.6-no-side-panel';
+  document.title='Taiwan City Tower｜V19.1.7';
+  window.__CT_BUILD='V19.1.7-combat-focus-layout';
 }catch(_e){}
 </script>
 
 
 <style id="ct1916NoSidePanelStyle">
-/* V19.1.6｜主戰鬥區取消右側整個框 */
+/* V19.1.7｜主戰鬥區取消右側整個框 */
 .ctMain176{
   grid-template-columns:minmax(0,1fr)!important;
   gap:0!important;
@@ -8182,9 +8182,358 @@ try{
 </style>
 <script id="ct1916BuildStamp">
 try{
-  document.title='Taiwan City Tower｜V19.1.6';
-  window.__CT_BUILD='V19.1.6-no-side-panel';
+  document.title='Taiwan City Tower｜V19.1.7';
+  window.__CT_BUILD='V19.1.7-combat-focus-layout';
 }catch(_e){}
+</script>
+
+
+<style id="ct1917CombatFocusStyle">
+/* =========================================================
+   V19.1.7｜戰鬥專注模式
+   目的：把非戰鬥必要資訊縮小/隱藏，完整露出四名角色與敵人。
+   ========================================================= */
+
+/* 專注模式避免 sticky 頂欄在捲動時蓋住戰鬥舞台 */
+body.ct1917Focus.ctGameUI176 .top{
+  position:relative!important;
+  top:auto!important;
+  padding:6px 8px 7px!important;
+  border-radius:0 0 15px 15px!important;
+  box-shadow:0 7px 20px rgba(0,0,0,.24)!important;
+}
+
+/* 品牌區縮小 */
+body.ct1917Focus .ctBrand176{
+  margin:0 2px 4px!important;
+  gap:9px!important;
+}
+body.ct1917Focus .ctLogoMark176{
+  width:38px!important;
+  height:38px!important;
+  border-radius:11px!important;
+  font-size:20px!important;
+}
+body.ct1917Focus .ctLogoText176 h1{
+  font-size:17px!important;
+}
+body.ct1917Focus .ctLogoText176 .sub{
+  display:none!important;
+}
+body.ct1917Focus .ctVersion176{
+  padding-left:9px!important;
+}
+body.ct1917Focus .ctVersion176 b{
+  font-size:10px!important;
+}
+body.ct1917Focus .ctVersion176 span{
+  display:none!important;
+}
+
+/* 上方控制列只留真正會在戰鬥中使用的項目 */
+body.ct1917Focus.ctGameUI176 .controls{
+  padding:4px!important;
+  gap:4px!important;
+  min-height:0!important;
+}
+body.ct1917Focus.ctGameUI176 .controls button,
+body.ct1917Focus.ctGameUI176 .controls select{
+  height:29px!important;
+  padding:0 9px!important;
+  font-size:8px!important;
+  border-radius:8px!important;
+}
+body.ct1917Focus #step,
+body.ct1917Focus #install,
+body.ct1917Focus #cloud175{
+  display:none!important;
+}
+
+/* 9 格總覽仍保留，但大幅壓縮 */
+body.ct1917Focus.ctGameUI176 .kpis{
+  gap:4px!important;
+  margin:4px 0!important;
+}
+body.ct1917Focus.ctGameUI176 .kpi{
+  min-height:39px!important;
+  padding:4px 7px!important;
+  border-radius:9px!important;
+}
+body.ct1917Focus.ctGameUI176 .kpi .sub{
+  font-size:7px!important;
+}
+body.ct1917Focus.ctGameUI176 .kpi b{
+  font-size:12px!important;
+  margin-top:2px!important;
+}
+body.ct1917Focus.ctGameUI176 .kpi:has(#ks){
+  display:none!important;
+}
+body.ct1917Focus.ctGameUI176 .kpis{
+  grid-template-columns:repeat(8,minmax(82px,1fr))!important;
+}
+
+/* 世界時代資訊縮成單行，移除說明性長句 */
+body.ct1917Focus #ct175WorldBar{
+  flex-wrap:nowrap!important;
+  overflow-x:auto!important;
+  scrollbar-width:none!important;
+  white-space:nowrap!important;
+  gap:7px!important;
+  margin-top:4px!important;
+  padding:4px 7px!important;
+  min-height:27px!important;
+  font-size:8px!important;
+  border-radius:8px!important;
+}
+body.ct1917Focus #ct175WorldBar::-webkit-scrollbar{display:none!important}
+body.ct1917Focus #ct175WorldBar .ct175Dim{
+  display:none!important;
+}
+body.ct1917Focus #ct175WorldBar .ct175EraChip{
+  padding:1px 6px!important;
+}
+
+/* 即時戰鬥面板標題縮薄 */
+body.ct1917Focus .ctBattlePanel176>h2{
+  min-height:28px!important;
+  padding:5px 10px!important;
+  font-size:9px!important;
+}
+body.ct1917Focus .ctMain176{
+  margin-top:6px!important;
+}
+
+/* 戰鬥舞台取得更多真正可用空間 */
+body.ct1917Focus #ct18Stage{
+  min-height:650px!important;
+}
+body.ct1917Focus .ctGameUI176 .arena{
+  padding:6px!important;
+}
+body.ct1917Focus .ct18-stage-top{
+  top:8px!important;
+  left:10px!important;
+  right:10px!important;
+}
+body.ct1917Focus .ct18-stage-title{
+  padding:5px 8px!important;
+  border-radius:9px!important;
+}
+body.ct1917Focus .ct18-stage-title b{
+  font-size:13px!important;
+}
+body.ct1917Focus .ct18-stage-title span{
+  font-size:8px!important;
+}
+body.ct1917Focus .ct18-activity{
+  padding:5px 8px!important;
+  min-width:190px!important;
+  border-radius:9px!important;
+}
+body.ct1917Focus .ct18-activity b{
+  font-size:10px!important;
+}
+body.ct1917Focus .ct18-activity span{
+  font-size:8px!important;
+}
+
+/* 四個角色完整顯示：上移一點，讓底部不再被提示框吃掉 */
+body.ct1917Focus .ct18-party{
+  left:3.2%!important;
+  top:14%!important;
+  width:53%!important;
+  height:76%!important;
+  gap:10px 14px!important;
+}
+body.ct1917Focus .ct18-hero{
+  padding:7px 9px!important;
+  border-radius:14px!important;
+  min-height:0!important;
+}
+body.ct1917Focus .ct18-avatar{
+  width:48px!important;
+  height:48px!important;
+  flex-basis:48px!important;
+}
+body.ct1917Focus .ct18-hero-meta{
+  font-size:8px!important;
+}
+body.ct1917Focus .ct18-hero-stats{
+  margin-top:3px!important;
+  gap:4px!important;
+  font-size:8px!important;
+}
+body.ct1917Focus .ct18-equip{
+  margin-top:4px!important;
+}
+body.ct1917Focus .ct18-eq{
+  width:20px!important;
+  height:20px!important;
+  font-size:11px!important;
+}
+body.ct1917Focus .ct19UltTop,
+body.ct1917Focus .ct19Status{
+  font-size:8px!important;
+}
+
+/* 敵人區稍微緊湊，避免 HP 資訊壓到下方 */
+body.ct1917Focus .ct18-enemy{
+  right:5.5%!important;
+  top:20%!important;
+  width:245px!important;
+}
+body.ct1917Focus .ct18-enemy-face{
+  width:128px!important;
+  height:128px!important;
+  font-size:66px!important;
+}
+body.ct1917Focus .ct18-enemy-name{
+  font-size:14px!important;
+  margin-top:5px!important;
+}
+body.ct1917Focus .ct18-enemy-sub{
+  font-size:9px!important;
+}
+body.ct1917Focus #ct19EnemyFixedSlot{
+  min-height:36px!important;
+  margin-top:4px!important;
+  padding:3px 5px!important;
+}
+body.ct1917Focus .ct18-enemy-hp{
+  margin-top:5px!important;
+  padding:5px 7px!important;
+}
+
+/* 這個就是截圖中會壓住角色的戰況說明框：專注模式直接隱藏 */
+body.ct1917Focus .ct18-hint{
+  display:none!important;
+}
+body.ct1917Focus .ct18-bottom-hud{
+  left:auto!important;
+  right:8px!important;
+  bottom:8px!important;
+  justify-content:flex-end!important;
+  width:auto!important;
+}
+body.ct1917Focus .ct18-speed-read{
+  padding:4px 7px!important;
+  border-radius:8px!important;
+  opacity:.82!important;
+  font-size:8px!important;
+}
+body.ct1917Focus #ct18PerfRead{
+  display:none!important;
+}
+
+/* 底部導覽也縮短，減少遮到排行榜 */
+body.ct1917Focus{
+  padding-bottom:66px!important;
+}
+body.ct1917Focus .ctDock176{
+  bottom:6px!important;
+  padding:4px!important;
+  gap:4px!important;
+  border-radius:13px!important;
+}
+body.ct1917Focus .ctDock176 button{
+  height:43px!important;
+  min-width:76px!important;
+  flex-basis:82px!important;
+  padding:3px 5px!important;
+  font-size:8px!important;
+  border-radius:9px!important;
+}
+
+/* 排行榜不是戰鬥必要資訊，專注時只留下標題列。
+   按底部「排行」仍可正常跳過去，退出專注即可看完整表格。 */
+body.ct1917Focus .ctRankPanel176 .tablewrap{
+  max-height:160px!important;
+}
+
+/* 專注模式按鈕 */
+#ct1917FocusBtn{
+  border-color:rgba(105,214,255,.34)!important;
+  color:#d9f6ff!important;
+}
+#ct1917FocusBtn.on{
+  background:linear-gradient(180deg,#184154,#102b3b)!important;
+  border-color:rgba(105,224,255,.68)!important;
+  box-shadow:0 0 14px rgba(75,203,255,.12)!important;
+}
+
+/* 螢幕高度較小時再進一步壓縮，但四名角色仍保留 */
+@media(max-height:900px) and (min-width:901px){
+  body.ct1917Focus #ct18Stage{min-height:570px!important}
+  body.ct1917Focus .ct18-party{top:13%!important;height:78%!important}
+  body.ct1917Focus .ct18-hero{padding:5px 7px!important}
+  body.ct1917Focus .ct18-avatar{width:42px!important;height:42px!important;flex-basis:42px!important}
+  body.ct1917Focus .ct18-enemy{top:18%!important}
+  body.ct1917Focus .ct18-enemy-face{width:108px!important;height:108px!important;font-size:56px!important}
+}
+
+/* 手機不強迫桌機式座標，延用原本手機排版；只保留資訊精簡 */
+@media(max-width:900px){
+  body.ct1917Focus #ct18Stage{min-height:700px!important}
+  body.ct1917Focus .ct18-party{
+    left:3%!important;
+    right:3%!important;
+    width:auto!important;
+    top:42%!important;
+    height:48%!important;
+  }
+  body.ct1917Focus .ct18-enemy{
+    right:50%!important;
+    transform:translateX(50%)!important;
+    top:10%!important;
+    width:220px!important;
+  }
+  body.ct1917Focus.ctGameUI176 .kpis{
+    display:flex!important;
+  }
+}
+</style>
+
+<script id="ct1917CombatFocusScript">
+(function(){
+  const KEY='ct1917CombatFocus';
+  function enabled(){
+    try{
+      const v=localStorage.getItem(KEY);
+      return v===null ? true : v==='1';
+    }catch(_){ return true; }
+  }
+  function setFocus(on){
+    document.body.classList.toggle('ct1917Focus',!!on);
+    const b=document.getElementById('ct1917FocusBtn');
+    if(b){
+      b.classList.toggle('on',!!on);
+      b.textContent=on?'👁 專注 ON':'👁 專注 OFF';
+      b.title=on?'目前隱藏/縮小非必要資訊，按下恢復完整資訊':'按下啟用戰鬥專注模式';
+    }
+    try{localStorage.setItem(KEY,on?'1':'0')}catch(_){}
+  }
+  function install(){
+    const controls=document.querySelector('.controls');
+    if(controls && !document.getElementById('ct1917FocusBtn')){
+      const b=document.createElement('button');
+      b.id='ct1917FocusBtn';
+      b.type='button';
+      b.addEventListener('click',()=>setFocus(!document.body.classList.contains('ct1917Focus')));
+      const save=document.getElementById('save');
+      controls.insertBefore(b,save||null);
+    }
+    setFocus(enabled());
+
+    // 修正舊腳本仍可能覆蓋的版本標示
+    const v=document.querySelector('.ctVersion176');
+    if(v)v.innerHTML='<b>V19.1.7</b><span>COMBAT FOCUS</span>';
+    document.title='Taiwan City Tower｜V19.1.7';
+    window.__CT_BUILD='V19.1.7-combat-focus-layout';
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});
+  else install();
+})();
 </script>
 
 </body></html>
